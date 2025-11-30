@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
 // --- Types ---
@@ -143,6 +144,29 @@ export interface DatabaseConfig {
   pass: string;
   name: string;
   uploadScriptUrl: string;
+  photoFolder: string;
+  videoFolder: string;
+}
+
+export interface Song {
+    id: string;
+    title: string;
+    artist: string;
+    genre?: string;
+    language?: string;
+}
+
+export interface Booking {
+    id: string;
+    customerName: string;
+    email: string;
+    phone: string;
+    date: string;
+    time: string;
+    guests: number;
+    room: string;
+    status: 'pending' | 'confirmed' | 'cancelled';
+    notes?: string;
 }
 
 interface DataContextType {
@@ -170,6 +194,13 @@ interface DataContextType {
   updateGalleryData: (newData: GalleryData) => void;
   dbConfig: DatabaseConfig;
   updateDbConfig: (newData: DatabaseConfig) => void;
+  
+  // New CMS Features
+  songs: Song[];
+  updateSongs: (newSongs: Song[]) => void;
+  bookings: Booking[];
+  updateBookings: (newBookings: Booking[]) => void;
+
   resetToDefaults: () => void;
 }
 
@@ -182,17 +213,17 @@ const INITIAL_HEADER_DATA: HeaderData = {
 const INITIAL_HERO_DATA: HeroData = {
     backgroundImageUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
     slides: [
-        "https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop", // Father Xmas Singing
-        "https://images.unsplash.com/photo-1516450360452-631d408d8495?q=80&w=1920&auto=format&fit=crop", // Neon Party Night
-        "https://images.unsplash.com/photo-1514525253440-b393452e8d26?q=80&w=1920&auto=format&fit=crop", // Vibrant Club Lights
-        "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?q=80&w=1920&auto=format&fit=crop", // Christmas Decorations Party
-        "https://images.unsplash.com/photo-1576692828388-75e921867175?q=80&w=1920&auto=format&fit=crop", // Sparklers and Celebration
-        "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920&auto=format&fit=crop", // Dynamic Crowd
-        "https://images.unsplash.com/photo-1525268323886-2818bc24d2bd?q=80&w=1920&auto=format&fit=crop", // Happy Friends Singing
-        "https://images.unsplash.com/photo-1572569766952-b6736780c354?q=80&w=1920&auto=format&fit=crop", // Festive Toast
-        "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1920&auto=format&fit=crop",  // Concert Silhouette
-        "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=1920&auto=format&fit=crop", // New Party 1
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1920&auto=format&fit=crop"  // New Party 2
+        "https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1516450360452-631d408d8495?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1514525253440-b393452e8d26?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1576692828388-75e921867175?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1525268323886-2818bc24d2bd?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1572569766952-b6736780c354?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1920&auto=format&fit=crop",  
+        "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=1920&auto=format&fit=crop", 
+        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1920&auto=format&fit=crop"  
     ],
     badgeText: "Winter Wonderland Karaoke",
     headingText: "Unleash Your Inner Star",
@@ -306,8 +337,28 @@ const INITIAL_DB_CONFIG: DatabaseConfig = {
   user: "root",
   pass: "",
   name: "london_karaoke_db",
-  uploadScriptUrl: "https://londonkaraoke.club/upload.php"
+  uploadScriptUrl: "https://londonkaraoke.club/upload.php",
+  photoFolder: "uploads/photos/",
+  videoFolder: "uploads/videos/"
 };
+
+const INITIAL_SONGS: Song[] = [
+    { id: '1', title: 'Bohemian Rhapsody', artist: 'Queen', genre: 'Rock', language: 'English' },
+    { id: '2', title: 'I Will Survive', artist: 'Gloria Gaynor', genre: 'Disco', language: 'English' },
+    { id: '3', title: 'Sweet Caroline', artist: 'Neil Diamond', genre: 'Pop', language: 'English' },
+    { id: '4', title: 'Mr. Brightside', artist: 'The Killers', genre: 'Indie Rock', language: 'English' },
+    { id: '5', title: 'Dancing Queen', artist: 'ABBA', genre: 'Pop', language: 'English' },
+    { id: '6', title: 'Don\'t Stop Believin\'', artist: 'Journey', genre: 'Rock', language: 'English' },
+    { id: '7', title: 'Wannabe', artist: 'Spice Girls', genre: 'Pop', language: 'English' },
+    { id: '8', title: 'Wonderwall', artist: 'Oasis', genre: 'Britpop', language: 'English' },
+    { id: '9', title: 'Shape of You', artist: 'Ed Sheeran', genre: 'Pop', language: 'English' },
+    { id: '10', title: 'Rolling in the Deep', artist: 'Adele', genre: 'Pop', language: 'English' },
+];
+
+const INITIAL_BOOKINGS: Booking[] = [
+    { id: '1', customerName: 'Alice Smith', email: 'alice@example.com', phone: '07700900123', date: '2023-12-24', time: '20:00', guests: 10, room: 'Room 1 (The Stage)', status: 'confirmed' },
+    { id: '2', customerName: 'Bob Jones', email: 'bob@example.com', phone: '07700900456', date: '2023-12-25', time: '18:00', guests: 6, room: 'Room 3 (Neon Den)', status: 'pending' },
+];
 
 const INITIAL_FOOD_MENU: MenuCategory[] = [
   {
@@ -355,19 +406,6 @@ const INITIAL_FOOD_MENU: MenuCategory[] = [
     items: [
       { name: 'Vanilla Cheesecake (GF)', description: 'With wild berries compote & fresh fruit', price: '8.5' },
       { name: 'Truffon Chocolate (GF)', description: 'Raspberry purée, exotic fruit, pistachio crumble', price: '8.5' },
-    ],
-  },
-  {
-    category: 'Small Plates',
-    items: [
-      { name: 'Octopus Roll', description: 'Guacamole, brioche bread, spicy mayonnaise', price: '25' },
-      { name: 'Mediterranean Platter (V)', description: 'Grilled pita, feta, olives, hummus, red pepper & aubergine relish', price: '11', note: 'Vegan option available' },
-      { name: 'Tomato, Basil & Mozzarella Bruschetta (V)', description: 'Toasted bread, fresh tomatoes, mozzarella, basil pesto, olive oil', price: '11' },
-      { name: 'Calamari', description: 'Lightly buttered salt and pepper squid, served with tartar sauce', price: '14' },
-      { name: 'Black Angus Beef Carpaccio (GF)', description: 'Black Angus beef, wild rocket, pomegranate seeds, gherkins, carrots, truffle mayo', price: '18' },
-      { name: 'Tempura Prawn Tacos', description: 'Guacamole, cherry tomato, pickled red onions, lime, avocado, tempura prawn', price: '15' },
-      { name: 'Baked Prawns', description: 'King prawns, tomato sauce, garlic, chilli, parsley, olive oil, homemade bread', price: '18' },
-      { name: 'Baked Camembert (V)', description: 'Camembert cheese, walnut, honey, rosemary, truffle, homemade bread', price: '16' },
     ],
   },
 ];
@@ -451,65 +489,106 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Use lazy initialization for state to prevent overwriting saved data with defaults on mount/reload
+  // DATA_VERSION ensures that if we update the code structure, old local storage doesn't break the app
+  const DATA_VERSION = '1.3'; 
+  const checkVersion = () => {
+      const storedVersion = localStorage.getItem('lkc_data_version');
+      if (storedVersion !== DATA_VERSION) {
+          console.log("Data version mismatch. Clearing legacy data.");
+          localStorage.clear();
+          localStorage.setItem('lkc_data_version', DATA_VERSION);
+          return true; // Version changed
+      }
+      return false; // Version same
+  };
+
+  const isReset = checkVersion();
+
   const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => {
+      if (isReset) return INITIAL_FOOD_MENU;
       const saved = localStorage.getItem('lkc_foodMenu');
       return saved ? JSON.parse(saved) : INITIAL_FOOD_MENU;
   });
   
   const [drinksData, setDrinksData] = useState<any>(() => {
+      if (isReset) return INITIAL_DRINKS_DATA;
       const saved = localStorage.getItem('lkc_drinksData');
       return saved ? JSON.parse(saved) : INITIAL_DRINKS_DATA;
   });
 
   const [headerData, setHeaderData] = useState<HeaderData>(() => {
+      if (isReset) return INITIAL_HEADER_DATA;
       const saved = localStorage.getItem('lkc_headerData');
       return saved ? JSON.parse(saved) : INITIAL_HEADER_DATA;
   });
 
   const [heroData, setHeroData] = useState<HeroData>(() => {
+      if (isReset) return INITIAL_HERO_DATA;
       const saved = localStorage.getItem('lkc_heroData');
       return saved ? JSON.parse(saved) : INITIAL_HERO_DATA;
   });
 
   const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => {
+      if (isReset) return INITIAL_HIGHLIGHTS_DATA;
       const saved = localStorage.getItem('lkc_highlightsData');
       return saved ? JSON.parse(saved) : INITIAL_HIGHLIGHTS_DATA;
   });
 
   const [featuresData, setFeaturesData] = useState<FeaturesData>(() => {
+      if (isReset) return INITIAL_FEATURES_DATA;
       const saved = localStorage.getItem('lkc_featuresData');
       return saved ? JSON.parse(saved) : INITIAL_FEATURES_DATA;
   });
 
   const [vibeData, setVibeData] = useState<VibeData>(() => {
+      if (isReset) return INITIAL_VIBE_DATA;
       const saved = localStorage.getItem('lkc_vibeData');
       return saved ? JSON.parse(saved) : INITIAL_VIBE_DATA;
   });
 
   const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => {
+      if (isReset) return INITIAL_TESTIMONIALS_DATA;
       const saved = localStorage.getItem('lkc_testimonialsData');
       return saved ? JSON.parse(saved) : INITIAL_TESTIMONIALS_DATA;
   });
 
   const [batteryData, setBatteryData] = useState<BatteryData>(() => {
+      if (isReset) return INITIAL_BATTERY_DATA;
       const saved = localStorage.getItem('lkc_batteryData');
       return saved ? JSON.parse(saved) : INITIAL_BATTERY_DATA;
   });
 
   const [footerData, setFooterData] = useState<FooterData>(() => {
+      if (isReset) return INITIAL_FOOTER_DATA;
       const saved = localStorage.getItem('lkc_footerData');
       return saved ? JSON.parse(saved) : INITIAL_FOOTER_DATA;
   });
 
   const [galleryData, setGalleryData] = useState<GalleryData>(() => {
+      if (isReset) return INITIAL_GALLERY_DATA;
       const saved = localStorage.getItem('lkc_galleryData');
       return saved ? JSON.parse(saved) : INITIAL_GALLERY_DATA;
   });
 
   const [dbConfig, setDbConfig] = useState<DatabaseConfig>(() => {
+      if (isReset) return INITIAL_DB_CONFIG;
       const saved = localStorage.getItem('lkc_dbConfig');
       return saved ? JSON.parse(saved) : INITIAL_DB_CONFIG;
   });
+
+  // --- CMS Data States ---
+  const [songs, setSongs] = useState<Song[]>(() => {
+      if (isReset) return INITIAL_SONGS;
+      const saved = localStorage.getItem('lkc_songs');
+      return saved ? JSON.parse(saved) : INITIAL_SONGS;
+  });
+
+  const [bookings, setBookings] = useState<Booking[]>(() => {
+      if (isReset) return INITIAL_BOOKINGS;
+      const saved = localStorage.getItem('lkc_bookings');
+      return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+  });
+
 
   // Save to LocalStorage whenever state changes
   useEffect(() => { localStorage.setItem('lkc_foodMenu', JSON.stringify(foodMenu)); }, [foodMenu]);
@@ -524,6 +603,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => { localStorage.setItem('lkc_footerData', JSON.stringify(footerData)); }, [footerData]);
   useEffect(() => { localStorage.setItem('lkc_galleryData', JSON.stringify(galleryData)); }, [galleryData]);
   useEffect(() => { localStorage.setItem('lkc_dbConfig', JSON.stringify(dbConfig)); }, [dbConfig]);
+  useEffect(() => { localStorage.setItem('lkc_songs', JSON.stringify(songs)); }, [songs]);
+  useEffect(() => { localStorage.setItem('lkc_bookings', JSON.stringify(bookings)); }, [bookings]);
 
   const updateFoodMenu = (newMenu: MenuCategory[]) => setFoodMenu(newMenu);
   const updateDrinksData = (newData: any) => setDrinksData(newData);
@@ -537,24 +618,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateFooterData = (newData: FooterData) => setFooterData(newData);
   const updateGalleryData = (newData: GalleryData) => setGalleryData(newData);
   const updateDbConfig = (newData: DatabaseConfig) => setDbConfig(newData);
+  
+  const updateSongs = (newSongs: Song[]) => setSongs(newSongs);
+  const updateBookings = (newBookings: Booking[]) => setBookings(newBookings);
 
   const resetToDefaults = () => {
     if (confirm("Are you sure you want to reset all content to default? This cannot be undone.")) {
         // Clear local storage first
-        localStorage.removeItem('lkc_foodMenu');
-        localStorage.removeItem('lkc_drinksData');
-        localStorage.removeItem('lkc_headerData');
-        localStorage.removeItem('lkc_heroData');
-        localStorage.removeItem('lkc_highlightsData');
-        localStorage.removeItem('lkc_featuresData');
-        localStorage.removeItem('lkc_vibeData');
-        localStorage.removeItem('lkc_testimonialsData');
-        localStorage.removeItem('lkc_batteryData');
-        localStorage.removeItem('lkc_footerData');
-        localStorage.removeItem('lkc_galleryData');
-        localStorage.removeItem('lkc_dbConfig');
+        const keysToRemove = [
+            'lkc_foodMenu', 'lkc_drinksData', 'lkc_headerData', 'lkc_heroData', 
+            'lkc_highlightsData', 'lkc_featuresData', 'lkc_vibeData', 'lkc_testimonialsData', 
+            'lkc_batteryData', 'lkc_footerData', 'lkc_galleryData', 'lkc_dbConfig',
+            'lkc_songs', 'lkc_bookings'
+        ];
+        keysToRemove.forEach(key => localStorage.removeItem(key));
 
-        // Then set state to defaults (which will eventually write back to LS via useEffects, but we want a clean slate)
+        // Then set state to defaults
         setFoodMenu(INITIAL_FOOD_MENU);
         setDrinksData(INITIAL_DRINKS_DATA);
         setHeaderData(INITIAL_HEADER_DATA);
@@ -567,6 +646,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setFooterData(INITIAL_FOOTER_DATA);
         setGalleryData(INITIAL_GALLERY_DATA);
         setDbConfig(INITIAL_DB_CONFIG);
+        setSongs(INITIAL_SONGS);
+        setBookings(INITIAL_BOOKINGS);
     }
   };
 
@@ -584,6 +665,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         footerData, updateFooterData,
         galleryData, updateGalleryData,
         dbConfig, updateDbConfig,
+        songs, updateSongs,
+        bookings, updateBookings,
         resetToDefaults 
     }}>
       {children}

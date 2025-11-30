@@ -1,0 +1,19 @@
+/*
+Theme Name: London Karaoke Club
+Theme URI: https://londonkaraoke.club
+Author: LKC
+Description: A vibrant, neon-themed karaoke club theme converted from React.
+Version: 1.0
+Text Domain: lkc-theme
+*/
+
+/* 
+   Tailwind is loaded via CDN for this version. 
+   In a production environment, you should build Tailwind CSS locally.
+*/
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow-x: hidden;
+}

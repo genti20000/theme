@@ -3,13 +3,16 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 
 interface HeaderProps {
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms') => void;
+  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs') => void;
 }
 
 // Compact Menu Icon for inside the button
 const MenuIcon = () => (
-  <svg className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+  <svg className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" viewBox="0 0 80 24" fill="currentColor">
+    <rect x="0" y="0" width="80" height="3" rx="1.5" className="origin-center" />
+    <rect x="10" y="7" width="60" height="3" rx="1.5" className="origin-center" />
+    <rect x="20" y="14" width="40" height="3" rx="1.5" className="origin-center" />
+    <rect x="30" y="21" width="20" height="3" rx="1.5" className="origin-center" />
   </svg>
 );
 
@@ -26,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   
   const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
 
-  const handleMobileNav = (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor') => {
+  const handleMobileNav = (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'songs') => {
     onNavigate(page);
     setIsMenuOpen(false);
   }
@@ -89,7 +92,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
               href={BOOKING_URL} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="relative bg-zinc-900 hover:bg-zinc-800 rounded-full px-5 py-2 md:px-8 md:py-3 border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] min-w-[90px] flex justify-center text-decoration-none"
+              className="relative bg-zinc-900 hover:bg-zinc-800 rounded-full px-4 py-1.5 md:px-8 md:py-3 border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] min-w-[80px] flex justify-center text-decoration-none"
             >
                 <span className="text-[10px] md:text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500 group-hover:text-white transition-colors uppercase tracking-widest whitespace-nowrap">
                     Book Now
@@ -117,17 +120,18 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <button onClick={() => onNavigate('menu')} className="text-sm font-bold text-gray-300 hover:text-white bg-transparent border-none p-0 tracking-widest transition-colors uppercase">Food Menu</button>
                 <button onClick={() => onNavigate('drinks')} className="text-sm font-bold text-gray-300 hover:text-white bg-transparent border-none p-0 tracking-widest transition-colors uppercase">Drinks Menu</button>
                 <button onClick={() => onNavigate('gallery')} className="text-sm font-bold text-gray-300 hover:text-white bg-transparent border-none p-0 tracking-widest transition-colors uppercase">Gallery</button>
+                <button onClick={() => onNavigate('songs')} className="text-sm font-bold text-gray-300 hover:text-white bg-transparent border-none p-0 tracking-widest transition-colors uppercase">Song Library</button>
                 <button onClick={handleScrollToFAQ} className="text-sm font-bold text-gray-300 hover:text-white bg-transparent border-none p-0 tracking-widest transition-colors uppercase">FAQs</button>
             </div>
 
             {/* Mobile Menu Button - Styled exactly like Book Now for symmetry */}
             <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                className="md:hidden relative bg-zinc-900 hover:bg-zinc-800 rounded-full px-5 py-2 border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] min-w-[90px] flex items-center justify-center"
+                className="md:hidden relative bg-zinc-900 hover:bg-zinc-800 rounded-full px-4 py-2 border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] min-w-[80px] flex items-center justify-center"
                 aria-label="Menu"
             >
                  <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-180' : ''}`}>
-                    {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+                    {isMenuOpen ? <CloseIcon /> : <div className="w-16 md:w-24"><MenuIcon /></div>}
                  </div>
             </button>
         </div>
@@ -144,13 +148,14 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
                     <button onClick={() => handleMobileNav('menu')} className="text-xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-1">FOOD MENU</button>
                     <button onClick={() => handleMobileNav('gallery')} className="text-xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-2">GALLERY</button>
-                    <button onClick={handleScrollToFAQ} className="text-xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-3">FAQs</button>
+                    <button onClick={() => handleMobileNav('songs')} className="text-xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-3">SONGS</button>
                 </div>
 
                 {/* Right Wing */}
                 <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
                     <button onClick={() => handleMobileNav('drinks')} className="text-xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-1">DRINKS MENU</button>
-                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors border-b-2 border-transparent hover:border-yellow-400 pb-1 animate-item-stagger-2">BOOK NOW</a>
+                    <button onClick={handleScrollToFAQ} className="text-xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-2">FAQs</button>
+                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors border-b-2 border-transparent hover:border-yellow-400 pb-1 animate-item-stagger-3">BOOK NOW</a>
                 </div>
             </div>
             
