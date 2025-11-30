@@ -48,22 +48,63 @@ const InputGroup: React.FC<{ label: string; value: string; onChange: (val: strin
   </div>
 );
 
-const ImageUploader: React.FC<{ onUpload: (base64: string) => void; label?: string }> = ({ onUpload, label = "Upload Image" }) => {
+const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string }> = ({ onUpload, label = "Upload Image" }) => {
+    const { dbConfig } = useData();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 4 * 1024 * 1024) {
-                alert("File too large (max 4MB)");
+            if (file.size > 8 * 1024 * 1024) {
+                alert("File too large (max 8MB)");
                 return;
             }
+
+            // Try server upload if URL is configured
+            if (dbConfig.uploadScriptUrl && dbConfig.uploadScriptUrl.trim() !== '') {
+                setUploading(true);
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const response = await fetch(dbConfig.uploadScriptUrl, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.url) {
+                            onUpload(result.url);
+                            setUploading(false);
+                            return; // Success, skip base64
+                        } else {
+                            console.error("Server upload failed:", result.error || "Unknown error");
+                            alert(`Server upload failed: ${result.error || "Check console"}`);
+                        }
+                    } else {
+                        throw new Error(`HTTP Error ${response.status}`);
+                    }
+                } catch (err) {
+                    console.error("Upload Error", err);
+                    if (confirm("Server upload failed. Fallback to Base64 (may slow down site)?")) {
+                        // Fallback proceeds below
+                    } else {
+                        setUploading(false);
+                        return;
+                    }
+                }
+                setUploading(false);
+            }
+
+            // Fallback to Base64
             try {
                 const base64 = await blobToBase64(file);
                 onUpload(base64);
             } catch (err) {
                 console.error(err);
-                alert("Failed to upload image");
+                alert("Failed to read file");
             }
         }
     };
@@ -72,9 +113,19 @@ const ImageUploader: React.FC<{ onUpload: (base64: string) => void; label?: stri
         <div>
             <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-xs py-2 px-3 rounded border border-zinc-600 transition-colors whitespace-nowrap"
+                disabled={uploading}
+                className="bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-xs py-2 px-3 rounded border border-zinc-600 transition-colors whitespace-nowrap flex items-center gap-2"
             >
-                {label} (Base64)
+                {uploading ? (
+                    <>
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Uploading...
+                    </>
+                ) : (
+                    <>
+                       {label} {dbConfig.uploadScriptUrl ? '(Server)' : '(Base64)'}
+                    </>
+                )}
             </button>
             <input 
                 type="file" 
@@ -145,9 +196,9 @@ const ImageField: React.FC<{ url: string; onUpdate: (url: string) => void }> = (
 
                 <div className="flex justify-between items-center mt-2">
                      <span className="text-[10px] text-gray-600">
-                        {mode === 'server' ? 'Type filename from your hosting /uploads folder' : 'Enter external link'}
+                        {mode === 'server' ? 'Direct link to hosting file' : 'External link or Base64'}
                      </span>
-                    <ImageUploader onUpload={onUpdate} label="Convert File" />
+                    <ImageUploader onUpload={onUpdate} label="Upload" />
                 </div>
             </div>
         </div>
@@ -299,6 +350,51 @@ echo "Connected successfully";
       const a = document.createElement('a');
       a.href = url;
       a.download = 'db_connect.php';
+      a.click();
+  };
+
+  const handleDownloadUploadScript = () => {
+      const phpContent = `<?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *'); // Caution: Adjust for production
+
+$upload_dir = 'uploads/';
+$base_url = 'https://londonkaraoke.club/uploads/'; // Change to your actual domain path
+
+if (!file_exists($upload_dir)) {
+    mkdir($upload_dir, 0777, true);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+        $file_tmp = $_FILES['file']['tmp_name'];
+        $file_name = basename($_FILES['file']['name']);
+        
+        // Sanitize filename
+        $file_name = preg_replace("/[^a-zA-Z0-9.]/", "_", $file_name);
+        // Ensure unique
+        $target_file = $upload_dir . uniqid() . '_' . $file_name;
+
+        if (move_uploaded_file($file_tmp, $target_file)) {
+            echo json_encode([
+                "success" => true,
+                "url" => $base_url . basename($target_file)
+            ]);
+        } else {
+            echo json_encode(["success" => false, "error" => "Failed to move uploaded file."]);
+        }
+    } else {
+        echo json_encode(["success" => false, "error" => "No file uploaded or upload error."]);
+    }
+} else {
+    echo json_encode(["success" => false, "error" => "Invalid request method."]);
+}
+?>`;
+      const blob = new Blob([phpContent], { type: 'text/x-php' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'upload.php';
       a.click();
   };
 
@@ -894,7 +990,7 @@ echo "Connected successfully";
 
         {activeTab === 'database' && (
              <div className="space-y-8">
-                 <SectionCard title="Database Configuration" description="Configure your database connection details to persist changes.">
+                 <SectionCard title="Database & File Uploads" description="Configure your database connection and server-side file handling.">
                      <div className="space-y-4">
                          <div className="grid md:grid-cols-2 gap-6">
                              <InputGroup label="Database Host" value={dbConfig.host} onChange={(v) => updateDbConfig({...dbConfig, host: v})} />
@@ -903,6 +999,16 @@ echo "Connected successfully";
                          <div className="grid md:grid-cols-2 gap-6">
                              <InputGroup label="Username" value={dbConfig.user} onChange={(v) => updateDbConfig({...dbConfig, user: v})} />
                              <InputGroup label="Password" value={dbConfig.pass} onChange={(v) => updateDbConfig({...dbConfig, pass: v})} type="password" />
+                         </div>
+                         
+                         <div className="border-t border-zinc-800 pt-6 mt-2">
+                             <h4 className="text-sm font-bold text-white mb-4">File Upload Configuration</h4>
+                             <InputGroup 
+                                label="Upload Handler URL" 
+                                value={dbConfig.uploadScriptUrl || ''} 
+                                onChange={(v) => updateDbConfig({...dbConfig, uploadScriptUrl: v})} 
+                             />
+                             <p className="text-xs text-gray-500 -mt-2">Enter the full URL to your upload.php (e.g., https://londonkaraoke.club/upload.php). Leave empty to use Base64.</p>
                          </div>
                          
                          <div className="flex items-center gap-4 mt-6">
@@ -916,27 +1022,29 @@ echo "Connected successfully";
                                 }`}
                              >
                                  {dbStatus === 'connecting' && <span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>}
-                                 {dbStatus === 'idle' && 'Test Connection'}
+                                 {dbStatus === 'idle' && 'Test DB Connection'}
                                  {dbStatus === 'connecting' && 'Testing...'}
                                  {dbStatus === 'connected' && 'Connection Successful'}
                                  {dbStatus === 'error' && 'Connection Failed'}
                              </button>
-                             {dbStatus === 'connected' && <span className="text-green-400 text-sm">Database active. Settings saved.</span>}
-                             {dbStatus === 'error' && <span className="text-red-400 text-sm">Check your credentials and try again.</span>}
                          </div>
 
                          {/* Database Download Buttons */}
                          <div className="border-t border-zinc-800 pt-6 mt-6">
-                             <h4 className="text-sm font-bold text-white mb-2">Setup Downloads</h4>
-                             <p className="text-xs text-gray-500 mb-4">Download the necessary files to setup your database on your server.</p>
-                             <div className="flex gap-4">
+                             <h4 className="text-sm font-bold text-white mb-2">Server Setup Files</h4>
+                             <p className="text-xs text-gray-500 mb-4">Download these files and upload them to your server's root directory (public_html).</p>
+                             <div className="flex flex-wrap gap-4">
                                  <button onClick={handleDownloadSQL} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm flex items-center gap-2">
                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                     Download .sql Setup
+                                     Database Setup (.sql)
                                  </button>
                                  <button onClick={handleDownloadPHP} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm flex items-center gap-2">
                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                     Download .php Connection
+                                     DB Connection (.php)
+                                 </button>
+                                 <button onClick={handleDownloadUploadScript} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm flex items-center gap-2">
+                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                     Upload Handler (.php)
                                  </button>
                              </div>
                          </div>

@@ -142,6 +142,7 @@ export interface DatabaseConfig {
   user: string;
   pass: string;
   name: string;
+  uploadScriptUrl: string;
 }
 
 interface DataContextType {
@@ -189,7 +190,9 @@ const INITIAL_HERO_DATA: HeroData = {
         "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920&auto=format&fit=crop", // Dynamic Crowd
         "https://images.unsplash.com/photo-1525268323886-2818bc24d2bd?q=80&w=1920&auto=format&fit=crop", // Happy Friends Singing
         "https://images.unsplash.com/photo-1572569766952-b6736780c354?q=80&w=1920&auto=format&fit=crop", // Festive Toast
-        "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1920&auto=format&fit=crop"  // Concert Silhouette
+        "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1920&auto=format&fit=crop",  // Concert Silhouette
+        "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=1920&auto=format&fit=crop", // New Party 1
+        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1920&auto=format&fit=crop"  // New Party 2
     ],
     badgeText: "Winter Wonderland Karaoke",
     headingText: "Unleash Your Inner Star",
@@ -302,7 +305,8 @@ const INITIAL_DB_CONFIG: DatabaseConfig = {
   host: "localhost",
   user: "root",
   pass: "",
-  name: "london_karaoke_db"
+  name: "london_karaoke_db",
+  uploadScriptUrl: "https://londonkaraoke.club/upload.php"
 };
 
 const INITIAL_FOOD_MENU: MenuCategory[] = [
