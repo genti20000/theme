@@ -123,10 +123,18 @@ export interface GalleryItem {
   caption: string;
 }
 
+export interface VideoItem {
+  id: string;
+  url: string;
+  thumbnail: string;
+  title: string;
+}
+
 export interface GalleryData {
   heading: string;
   subtext: string;
   images: GalleryItem[];
+  videos?: VideoItem[];
 }
 
 export interface DatabaseConfig {
@@ -173,21 +181,17 @@ const INITIAL_HEADER_DATA: HeaderData = {
 const INITIAL_HERO_DATA: HeroData = {
     backgroundImageUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
     slides: [
-        "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
-        "https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop", // Father Xmas / Festive Singing
-        "https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1920&auto=format&fit=crop", // Karaoke Vibe
-        "https://images.unsplash.com/photo-1514525253440-b393452e8d26?q=80&w=1920&auto=format&fit=crop", // Neon Club / Party Vibe
-        "https://images.unsplash.com/photo-1576692828388-75e921867175?q=80&w=1920&auto=format&fit=crop", // Festive Sparklers Celebration
-        "https://images.unsplash.com/photo-1516450360452-631d408d8495?q=80&w=1920", // Vibrant neon night out
-        "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?q=80&w=1920", // Festive bokeh celebration
-        "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?q=80&w=1920", // Christmas Party Crowd
-        "https://images.unsplash.com/photo-1572013822606-25805c87707e?q=80&w=1920", // Festive Drinks
-        "https://images.unsplash.com/photo-1516919549054-e08258825f80?q=80&w=1920", // Concert/crowd
-        "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1920", // Music festival vibe
-        "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=1920", // Energetic party crowd
-        "https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=1920" // Confetti party
+        "https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop", // Father Xmas Singing
+        "https://images.unsplash.com/photo-1516450360452-631d408d8495?q=80&w=1920&auto=format&fit=crop", // Neon Party Night
+        "https://images.unsplash.com/photo-1514525253440-b393452e8d26?q=80&w=1920&auto=format&fit=crop", // Vibrant Club Lights
+        "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?q=80&w=1920&auto=format&fit=crop", // Christmas Decorations Party
+        "https://images.unsplash.com/photo-1576692828388-75e921867175?q=80&w=1920&auto=format&fit=crop", // Sparklers and Celebration
+        "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920&auto=format&fit=crop", // Dynamic Crowd
+        "https://images.unsplash.com/photo-1525268323886-2818bc24d2bd?q=80&w=1920&auto=format&fit=crop", // Happy Friends Singing
+        "https://images.unsplash.com/photo-1572569766952-b6736780c354?q=80&w=1920&auto=format&fit=crop", // Festive Toast
+        "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1920&auto=format&fit=crop"  // Concert Silhouette
     ],
-    badgeText: "London's Premier Karaoke Club",
+    badgeText: "Winter Wonderland Karaoke",
     headingText: "Unleash Your Inner Star",
     subText: "Private luxury suites, premium cocktails, and over 80,000 songs. The stage is yours.",
     buttonText: "Book Your Room"
@@ -277,6 +281,20 @@ const INITIAL_GALLERY_DATA: GalleryData = {
     { id: '5', url: "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1000", caption: "Live the Moment" },
     { id: '6', url: "https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=1000", caption: "Party Time" },
     { id: '7', url: "https://images.unsplash.com/photo-1576692828388-75e921867175?q=80&w=1000", caption: "Sparklers" }
+  ],
+  videos: [
+    { 
+        id: '1', 
+        url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', 
+        thumbnail: 'https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=800', 
+        title: 'Saturday Night Vibes' 
+    },
+    { 
+        id: '2', 
+        url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', 
+        thumbnail: 'https://images.unsplash.com/photo-1516450360452-631d408d8495?q=80&w=800', 
+        title: 'Private Room Experience' 
+    }
   ]
 };
 

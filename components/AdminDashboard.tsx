@@ -216,6 +216,93 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       }, 1500);
   }
 
+  const handleDownloadSQL = () => {
+    const sqlContent = `
+-- Database Setup for London Karaoke Club
+CREATE DATABASE IF NOT EXISTS \`${dbConfig.name}\`;
+USE \`${dbConfig.name}\`;
+
+-- Hero Section
+CREATE TABLE IF NOT EXISTS hero_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    badge_text VARCHAR(255),
+    heading_text VARCHAR(255),
+    sub_text TEXT,
+    button_text VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS hero_slides (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_url TEXT,
+    display_order INT
+);
+
+-- Food Menu
+CREATE TABLE IF NOT EXISTS food_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    description TEXT,
+    display_order INT
+);
+
+CREATE TABLE IF NOT EXISTS food_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category_id INT,
+    name VARCHAR(255),
+    description TEXT,
+    price VARCHAR(50),
+    note VARCHAR(255),
+    FOREIGN KEY (category_id) REFERENCES food_categories(id) ON DELETE CASCADE
+);
+
+-- Gallery
+CREATE TABLE IF NOT EXISTS gallery_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    url TEXT,
+    caption VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Initial Data Dump based on current state
+INSERT INTO hero_settings (badge_text, heading_text, sub_text, button_text) VALUES 
+('${heroData.badgeText.replace(/'/g, "''")}', '${heroData.headingText.replace(/'/g, "''")}', '${heroData.subText.replace(/'/g, "''")}', '${heroData.buttonText.replace(/'/g, "''")}');
+
+-- (You can run this SQL in phpMyAdmin to create the structure)
+    `;
+    
+    const blob = new Blob([sqlContent], { type: 'text/sql' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lkc_setup.sql';
+    a.click();
+  };
+
+  const handleDownloadPHP = () => {
+      const phpContent = `<?php
+$host = "${dbConfig.host}";
+$username = "${dbConfig.user}";
+$password = "${dbConfig.pass}";
+$dbname = "${dbConfig.name}";
+
+// Create connection
+$conn = new mysqli($host, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+echo "Connected successfully";
+?>`;
+      const blob = new Blob([phpContent], { type: 'text/x-php' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'db_connect.php';
+      a.click();
+  };
+
+
   // --- Handlers ---
   const handleHeroChange = (field: string, value: any) => {
       updateHeroData({ ...heroData, [field]: value });
@@ -836,6 +923,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                              </button>
                              {dbStatus === 'connected' && <span className="text-green-400 text-sm">Database active. Settings saved.</span>}
                              {dbStatus === 'error' && <span className="text-red-400 text-sm">Check your credentials and try again.</span>}
+                         </div>
+
+                         {/* Database Download Buttons */}
+                         <div className="border-t border-zinc-800 pt-6 mt-6">
+                             <h4 className="text-sm font-bold text-white mb-2">Setup Downloads</h4>
+                             <p className="text-xs text-gray-500 mb-4">Download the necessary files to setup your database on your server.</p>
+                             <div className="flex gap-4">
+                                 <button onClick={handleDownloadSQL} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm flex items-center gap-2">
+                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                     Download .sql Setup
+                                 </button>
+                                 <button onClick={handleDownloadPHP} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm flex items-center gap-2">
+                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                     Download .php Connection
+                                 </button>
+                             </div>
                          </div>
                      </div>
                  </SectionCard>
