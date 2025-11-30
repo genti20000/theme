@@ -450,41 +450,66 @@ const INITIAL_DRINKS_DATA = {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(INITIAL_FOOD_MENU);
-  const [drinksData, setDrinksData] = useState<any>(INITIAL_DRINKS_DATA);
-  const [headerData, setHeaderData] = useState<HeaderData>(INITIAL_HEADER_DATA);
-  const [heroData, setHeroData] = useState<HeroData>(INITIAL_HERO_DATA);
-  const [highlightsData, setHighlightsData] = useState<HighlightsData>(INITIAL_HIGHLIGHTS_DATA);
-  const [featuresData, setFeaturesData] = useState<FeaturesData>(INITIAL_FEATURES_DATA);
-  const [vibeData, setVibeData] = useState<VibeData>(INITIAL_VIBE_DATA);
-  const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(INITIAL_TESTIMONIALS_DATA);
-  const [batteryData, setBatteryData] = useState<BatteryData>(INITIAL_BATTERY_DATA);
-  const [footerData, setFooterData] = useState<FooterData>(INITIAL_FOOTER_DATA);
-  const [galleryData, setGalleryData] = useState<GalleryData>(INITIAL_GALLERY_DATA);
-  const [dbConfig, setDbConfig] = useState<DatabaseConfig>(INITIAL_DB_CONFIG);
+  // Use lazy initialization for state to prevent overwriting saved data with defaults on mount/reload
+  const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => {
+      const saved = localStorage.getItem('lkc_foodMenu');
+      return saved ? JSON.parse(saved) : INITIAL_FOOD_MENU;
+  });
+  
+  const [drinksData, setDrinksData] = useState<any>(() => {
+      const saved = localStorage.getItem('lkc_drinksData');
+      return saved ? JSON.parse(saved) : INITIAL_DRINKS_DATA;
+  });
 
-  // Load from LocalStorage on mount
-  useEffect(() => {
-    const load = (key: string, setter: any) => {
-        const stored = localStorage.getItem(key);
-        if (stored) {
-            try { setter(JSON.parse(stored)); } catch (e) { console.error(`Failed to parse ${key}`); }
-        }
-    };
+  const [headerData, setHeaderData] = useState<HeaderData>(() => {
+      const saved = localStorage.getItem('lkc_headerData');
+      return saved ? JSON.parse(saved) : INITIAL_HEADER_DATA;
+  });
 
-    load('lkc_foodMenu', setFoodMenu);
-    load('lkc_drinksData', setDrinksData);
-    load('lkc_headerData', setHeaderData);
-    load('lkc_heroData', setHeroData);
-    load('lkc_highlightsData', setHighlightsData);
-    load('lkc_featuresData', setFeaturesData);
-    load('lkc_vibeData', setVibeData);
-    load('lkc_testimonialsData', setTestimonialsData);
-    load('lkc_batteryData', setBatteryData);
-    load('lkc_footerData', setFooterData);
-    load('lkc_galleryData', setGalleryData);
-    load('lkc_dbConfig', setDbConfig);
-  }, []);
+  const [heroData, setHeroData] = useState<HeroData>(() => {
+      const saved = localStorage.getItem('lkc_heroData');
+      return saved ? JSON.parse(saved) : INITIAL_HERO_DATA;
+  });
+
+  const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => {
+      const saved = localStorage.getItem('lkc_highlightsData');
+      return saved ? JSON.parse(saved) : INITIAL_HIGHLIGHTS_DATA;
+  });
+
+  const [featuresData, setFeaturesData] = useState<FeaturesData>(() => {
+      const saved = localStorage.getItem('lkc_featuresData');
+      return saved ? JSON.parse(saved) : INITIAL_FEATURES_DATA;
+  });
+
+  const [vibeData, setVibeData] = useState<VibeData>(() => {
+      const saved = localStorage.getItem('lkc_vibeData');
+      return saved ? JSON.parse(saved) : INITIAL_VIBE_DATA;
+  });
+
+  const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => {
+      const saved = localStorage.getItem('lkc_testimonialsData');
+      return saved ? JSON.parse(saved) : INITIAL_TESTIMONIALS_DATA;
+  });
+
+  const [batteryData, setBatteryData] = useState<BatteryData>(() => {
+      const saved = localStorage.getItem('lkc_batteryData');
+      return saved ? JSON.parse(saved) : INITIAL_BATTERY_DATA;
+  });
+
+  const [footerData, setFooterData] = useState<FooterData>(() => {
+      const saved = localStorage.getItem('lkc_footerData');
+      return saved ? JSON.parse(saved) : INITIAL_FOOTER_DATA;
+  });
+
+  const [galleryData, setGalleryData] = useState<GalleryData>(() => {
+      const saved = localStorage.getItem('lkc_galleryData');
+      return saved ? JSON.parse(saved) : INITIAL_GALLERY_DATA;
+  });
+
+  const [dbConfig, setDbConfig] = useState<DatabaseConfig>(() => {
+      const saved = localStorage.getItem('lkc_dbConfig');
+      return saved ? JSON.parse(saved) : INITIAL_DB_CONFIG;
+  });
 
   // Save to LocalStorage whenever state changes
   useEffect(() => { localStorage.setItem('lkc_foodMenu', JSON.stringify(foodMenu)); }, [foodMenu]);
@@ -515,19 +540,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const resetToDefaults = () => {
     if (confirm("Are you sure you want to reset all content to default? This cannot be undone.")) {
-        setFoodMenu(INITIAL_FOOD_MENU);
-        setDrinksData(INITIAL_DRINKS_DATA);
-        setHeaderData(INITIAL_HEADER_DATA);
-        setHeroData(INITIAL_HERO_DATA);
-        setHighlightsData(INITIAL_HIGHLIGHTS_DATA);
-        setFeaturesData(INITIAL_FEATURES_DATA);
-        setVibeData(INITIAL_VIBE_DATA);
-        setTestimonialsData(INITIAL_TESTIMONIALS_DATA);
-        setBatteryData(INITIAL_BATTERY_DATA);
-        setFooterData(INITIAL_FOOTER_DATA);
-        setGalleryData(INITIAL_GALLERY_DATA);
-        setDbConfig(INITIAL_DB_CONFIG);
-        
+        // Clear local storage first
         localStorage.removeItem('lkc_foodMenu');
         localStorage.removeItem('lkc_drinksData');
         localStorage.removeItem('lkc_headerData');
@@ -540,6 +553,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('lkc_footerData');
         localStorage.removeItem('lkc_galleryData');
         localStorage.removeItem('lkc_dbConfig');
+
+        // Then set state to defaults (which will eventually write back to LS via useEffects, but we want a clean slate)
+        setFoodMenu(INITIAL_FOOD_MENU);
+        setDrinksData(INITIAL_DRINKS_DATA);
+        setHeaderData(INITIAL_HEADER_DATA);
+        setHeroData(INITIAL_HERO_DATA);
+        setHighlightsData(INITIAL_HIGHLIGHTS_DATA);
+        setFeaturesData(INITIAL_FEATURES_DATA);
+        setVibeData(INITIAL_VIBE_DATA);
+        setTestimonialsData(INITIAL_TESTIMONIALS_DATA);
+        setBatteryData(INITIAL_BATTERY_DATA);
+        setFooterData(INITIAL_FOOTER_DATA);
+        setGalleryData(INITIAL_GALLERY_DATA);
+        setDbConfig(INITIAL_DB_CONFIG);
     }
   };
 

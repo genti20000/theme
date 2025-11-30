@@ -267,6 +267,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       }, 1500);
   }
 
+  const handleFlushCache = () => {
+      if (confirm("Are you sure you want to flush the local cache? This will remove all saved data and reload the admin panel.")) {
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith('lkc_')) {
+                  keysToRemove.push(key);
+              }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          window.location.reload();
+      }
+  };
+
   const handleDownloadSQL = () => {
     const sqlContent = `
 -- Database Setup for London Karaoke Club
@@ -576,6 +590,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              </button>
              
              <div className="h-6 w-px bg-zinc-700 mx-2"></div>
+
+             <button onClick={handleFlushCache} className="text-xs text-orange-400 hover:text-orange-300 underline mr-4" title="Clear local storage and reload">
+                Flush Cache
+            </button>
 
              <button onClick={resetToDefaults} className="text-xs text-red-400 hover:text-red-300 underline">
                 Reset Data
