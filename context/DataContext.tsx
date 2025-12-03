@@ -319,496 +319,320 @@ const INITIAL_GALLERY_DATA: GalleryData = {
     { 
         id: '1', 
         url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', 
-        thumbnail: 'https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=800', 
-        title: 'Saturday Night Vibes' 
-    },
-    { 
-        id: '2', 
-        url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', 
-        thumbnail: 'https://images.unsplash.com/photo-1516450360452-631d408d8495?q=80&w=800', 
-        title: 'Private Room Experience' 
+        thumbnail: 'https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000', 
+        title: 'Karaoke Fun' 
     }
   ]
 };
 
 const INITIAL_DB_CONFIG: DatabaseConfig = {
-  host: "localhost",
-  user: "root",
-  pass: "",
-  name: "london_karaoke_db",
-  uploadScriptUrl: "https://londonkaraoke.club/upload.php",
-  photoFolder: "uploads/photos/",
-  videoFolder: "uploads/videos/",
-  supabaseUrl: "https://mustagmgjfhlynxfisoc.supabase.co",
-  supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY",
-  storageBucket: "public"
+  host: 'localhost',
+  user: 'root',
+  pass: 'YnkknF_kipvY7$v',
+  name: 'london_karaoke_db',
+  uploadScriptUrl: '',
+  photoFolder: 'uploads/photos/',
+  videoFolder: 'uploads/videos/',
+  supabaseUrl: 'https://mustagmgjfhlynxfisoc.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY',
+  storageBucket: 'public'
+};
+
+const INITIAL_FOOD_MENU: MenuCategory[] = [
+  {
+    category: "Small Plates & Sharers",
+    description: "Perfect for sharing while you decide on your next song.",
+    items: [
+      { name: "Karaoke Fried Chicken", description: "Crispy buttermilk chicken strips with sriracha mayo.", price: "8.50" },
+      { name: "Halloumi Fries", description: "Served with sweet chili jam and pomegranate seeds.", price: "7.50", note: "V" },
+      { name: "Loaded Nachos", description: "Tortilla chips, melted cheese, guacamole, salsa, sour cream, and jalapeños.", price: "12.00", note: "V, GF" },
+      { name: "Sticky BBQ Wings", description: "Chicken wings tossed in a rich smoky BBQ glaze.", price: "8.50" },
+      { name: "Tempura Prawns", description: "Light and crispy prawns with a soy and ginger dip.", price: "9.50" }
+    ]
+  },
+  {
+    category: "Pizzas (12\")",
+    description: "Stone-baked goodness.",
+    items: [
+      { name: "Classic Margherita", description: "Tomato sauce, mozzarella, and fresh basil.", price: "11.00", note: "V" },
+      { name: "Pepperoni Passion", description: "Double pepperoni and extra mozzarella.", price: "13.50" },
+      { name: "Veggie Supreme", description: "Mushrooms, peppers, red onions, and sweetcorn.", price: "12.50", note: "V" },
+      { name: "Spicy Meat Feast", description: "Pepperoni, spicy beef, chicken, and chorizo.", price: "14.50" }
+    ]
+  }
+];
+
+const INITIAL_DRINKS_DATA = {
+    headerImageUrl: "https://picsum.photos/seed/barvibes/1600/800",
+    packagesData: {
+        title: "Drinks Packages",
+        subtitle: "Pre-order for the best value and have them waiting in your room.",
+        items: [
+            { name: "Bronze Package", price: "£150", description: "2 Bottles of Prosecco, 10 Beers or Ciders, 2 Sharing Platters" },
+            { name: "Silver Package", price: "£250", description: "1 Bottle of House Spirit (Vodka/Gin/Rum), Mixers, 10 Beers, 2 Sharing Platters" },
+            { name: "Gold Package", price: "£400", description: "1 Bottle of Premium Spirit (Grey Goose/Hendricks), Mixers, 2 Bottles of Champagne, 3 Sharing Platters" },
+            { name: "Diamond Package", price: "£600", description: "Magnum of Grey Goose, Unlimited Mixers, Magnum of Moët Champagne, extensive food platter selection" }
+        ],
+        notes: ["* Service charge included in package prices", "* Pre-booking required 24hrs in advance"]
+    },
+    cocktailsData: [
+        {
+            category: "Signatures",
+            items: [
+                { name: "Mic Drop", price: "12.50", description: "Vodka, passion fruit, vanilla, shot of prosecco on the side." },
+                { name: "Purple Rain", price: "11.50", description: "Gin, cherry brandy, blue curacao, lemon, soda." },
+                { name: "Bohemian Rhapsody", price: "12.00", description: "Rum, pineapple, coconut cream, dark rum float." },
+                { name: "Sweet Caroline", price: "11.50", description: "Pink gin, strawberries, lime, elderflower tonic." }
+            ]
+        },
+        {
+            category: "Classics",
+            items: [
+                { name: "Espresso Martini", price: "12.00", description: "Vodka, coffee liqueur, fresh espresso." },
+                { name: "Mojito", price: "11.00", description: "White rum, lime, mint, sugar, soda. (Also available in Strawberry/Passion Fruit)" },
+                { name: "Old Fashioned", price: "12.50", description: "Bourbon, sugar, bitters, orange twist." },
+                { name: "Margarita", price: "11.50", description: "Tequila, lime, triple sec, salt rim." }
+            ]
+        }
+    ],
+    bottleServiceData: [
+        { category: "Vodka", items: [{ name: "Absolut Blue", price: "£140" }, { name: "Ciroc (Flavours available)", price: "£170" }, { name: "Grey Goose", price: "£180" }, { name: "Belvedere", price: "£185" }] },
+        { category: "Gin", items: [{ name: "Beefeater", price: "£140" }, { name: "Bombay Sapphire", price: "£150" }, { name: "Hendrick's", price: "£160" }, { name: "Tanqueray 10", price: "£175" }] },
+        { category: "Whisky", items: [{ name: "Jack Daniel's", price: "£140" }, { name: "Jameson", price: "£140" }, { name: "Johnnie Walker Black", price: "£160" }, { name: "Woodford Reserve", price: "£170" }] },
+        { category: "Tequila", items: [{ name: "Olmeca Altman", price: "£140" }, { name: "Patron Silver", price: "£180" }, { name: "Don Julio Blanco", price: "£190" }, { name: "Casamigos Reposado", price: "£220" }] }
+    ],
+    winesData: [
+        {
+            category: "Wine & Bubbles",
+            items: [
+                { name: "House White/Red/Rose", price: { "175ml": "7.50", "250ml": "9.50", "Btl": "28.00" }, description: "Pinot Grigio / Merlot / Pinot Blush" },
+                { name: "Prosecco DOC", price: { "Glass": "8.50", "Btl": "38.00" }, description: "Extra Dry, Italy" },
+                { name: "Moët & Chandon Brut", price: { "Btl": "95.00" }, description: "Champagne, France" },
+                { name: "Veuve Clicquot Yellow Label", price: { "Btl": "110.00" }, description: "Champagne, France" },
+                { name: "Laurent-Perrier Rosé", price: { "Btl": "160.00" }, description: "Champagne, France" }
+            ]
+        }
+    ],
+    byTheGlassData: [
+        {
+            category: "Beers & Ciders",
+            items: [
+                { name: "Asahi Super Dry", price: "6.00" },
+                { name: "Peroni Nastro Azzurro", price: "6.00" },
+                { name: "Camden Hells Lager", price: "6.50" },
+                { name: "Brewdog Punk IPA", price: "6.50" },
+                { name: "Old Mout Cider (Berries)", price: "6.50" }
+            ]
+        }
+    ],
+    shotsData: {
+        title: "Shots",
+        items: [
+            { name: "Tequila Rose", single: "5.00", double: "9.00" },
+            { name: "Jägermeister", single: "5.00", double: "9.00" },
+            { name: "Sambuca (White/Black)", single: "5.00", double: "9.00" },
+            { name: "Baby Guinness", single: "5.50", double: "10.00" }
+        ],
+        shooters: {
+            title: "Shooter Boards",
+            prices: "6 Shots for £25 | 12 Shots for £45",
+            items: [
+                { name: "Jammy Dodger", description: "Chambord, cream, sugar rim" },
+                { name: "Skittle Bomb", description: "Cointreau with Red Bull" }
+            ]
+        }
+    }
 };
 
 const INITIAL_SONGS: Song[] = [
     { id: '1', title: 'Bohemian Rhapsody', artist: 'Queen', genre: 'Rock', language: 'English' },
-    { id: '2', title: 'I Will Survive', artist: 'Gloria Gaynor', genre: 'Disco', language: 'English' },
-    { id: '3', title: 'Sweet Caroline', artist: 'Neil Diamond', genre: 'Pop', language: 'English' },
-    { id: '4', title: 'Mr. Brightside', artist: 'The Killers', genre: 'Indie Rock', language: 'English' },
-    { id: '5', title: 'Dancing Queen', artist: 'ABBA', genre: 'Pop', language: 'English' },
+    { id: '2', title: 'Mr. Brightside', artist: 'The Killers', genre: 'Rock', language: 'English' },
+    { id: '3', title: 'Dancing Queen', artist: 'ABBA', genre: 'Pop', language: 'English' },
+    { id: '4', title: 'Sweet Caroline', artist: 'Neil Diamond', genre: 'Pop', language: 'English' },
+    { id: '5', title: 'I Will Survive', artist: 'Gloria Gaynor', genre: 'Disco', language: 'English' },
     { id: '6', title: 'Don\'t Stop Believin\'', artist: 'Journey', genre: 'Rock', language: 'English' },
     { id: '7', title: 'Wannabe', artist: 'Spice Girls', genre: 'Pop', language: 'English' },
-    { id: '8', title: 'Wonderwall', artist: 'Oasis', genre: 'Britpop', language: 'English' },
-    { id: '9', title: 'Shape of You', artist: 'Ed Sheeran', genre: 'Pop', language: 'English' },
-    { id: '10', title: 'Rolling in the Deep', artist: 'Adele', genre: 'Pop', language: 'English' },
+    { id: '8', title: 'Wonderwall', artist: 'Oasis', genre: 'Rock', language: 'English' },
+    { id: '9', title: 'Livin\' on a Prayer', artist: 'Bon Jovi', genre: 'Rock', language: 'English' },
+    { id: '10', title: 'Angels', artist: 'Robbie Williams', genre: 'Pop', language: 'English' },
+    { id: '11', title: 'Rolling in the Deep', artist: 'Adele', genre: 'Pop', language: 'English' },
+    { id: '12', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', genre: 'Funk', language: 'English' },
+    { id: '13', title: 'Valerie', artist: 'Amy Winehouse', genre: 'Soul', language: 'English' },
+    { id: '14', title: 'Shallow', artist: 'Lady Gaga & Bradley Cooper', genre: 'Pop', language: 'English' },
+    { id: '15', title: 'Total Eclipse of the Heart', artist: 'Bonnie Tyler', genre: 'Pop', language: 'English' }
 ];
 
 const INITIAL_BOOKINGS: Booking[] = [
-    { id: '1', customerName: 'Alice Smith', email: 'alice@example.com', phone: '07700900123', date: '2023-12-24', time: '20:00', guests: 10, room: 'Room 1 (The Stage)', status: 'confirmed' },
-    { id: '2', customerName: 'Bob Jones', email: 'bob@example.com', phone: '07700900456', date: '2023-12-25', time: '18:00', guests: 6, room: 'Room 3 (Neon Den)', status: 'pending' },
+    { id: '101', customerName: 'John Smith', email: 'john@example.com', phone: '07700900123', date: '2024-12-20', time: '20:00', guests: 6, room: 'Disco Room', status: 'confirmed' },
+    { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const INITIAL_FOOD_MENU: MenuCategory[] = [
-  {
-    category: 'Small Plates',
-    items: [
-      { name: 'Octopus Roll', description: 'Guacamole, brioche bread, spicy mayonnaise', price: '25' },
-      { name: 'Mediterranean Platter (V)', description: 'Grilled pita, feta, olives, hummus, red pepper & aubergine relish', price: '11', note: 'Vegan option available' },
-      { name: 'Tomato, Basil & Mozzarella Bruschetta (V)', description: 'Toasted bread, fresh tomatoes, mozzarella, basil pesto, olive oil', price: '11' },
-      { name: 'Calamari', description: 'Lightly buttered salt and pepper squid, served with tartar sauce', price: '14' },
-      { name: 'Black Angus Beef Carpaccio (GF)', description: 'Black Angus beef, wild rocket, pomegranate seeds, gherkins, carrots, truffle mayo', price: '18' },
-      { name: 'Tempura Prawn Tacos', description: 'Guacamole, cherry tomato, pickled red onions, lime, avocado, tempura prawn', price: '15' },
-      { name: 'Baked Prawns', description: 'King prawns, tomato sauce, garlic, chilli, parsley, olive oil, homemade bread', price: '18' },
-      { name: 'Baked Camembert (V)', description: 'Camembert cheese, walnut, honey, rosemary, truffle, homemade bread', price: '16' },
-    ],
-  },
-  {
-    category: 'Pinsa',
-    description: '(A crisp yet soft bread from Rome - a taste and textural sensation)',
-    items: [
-      { name: 'Al Funghi (V)', description: 'Truffle paste, mix mushrooms, soft cheese, olives powder', price: '15' },
-      { name: 'Al Pesto (V)', description: 'Basil pesto, soft cheese, cherry tomato\'s, olive', price: '15' },
-      { name: 'Burrata Pinsa', description: 'Burrata, basil pesto, mozzarella, tomato sauce, crudo, prosciutto', price: '17' },
-    ],
-  },
-  {
-    category: 'Mains & Sharing',
-    items: [
-      { name: 'Mini Burgers (Sharing for 4)', description: 'Fresh tomatoes, red onion, lettuce, light house sauce, on a whole wheat bun', price: '16' },
-      { name: 'Steak Sandwich & French Fries', description: 'Steak, basil pesto, mozzarella, pepper sauce, red onion, tomato, lettuce, mayo', price: '22' },
-      { name: 'Chicken Sandwich', description: 'Cesar dressing, mozzarella, crispy chicken, wild rocket, fresh tomatoes, onion', price: '20' },
-    ],
-  },
-  {
-    category: 'Sides',
-    items: [
-      { name: 'Padron Peppers with Smashed Feta (V, GF)', description: 'Blistered padron peppers, served with creamy smashed feta', price: '6' },
-      { name: 'Corn Ribs (V, GF)', description: 'Crispy sweetcorn, tossed with parmesan chives, garlic & smoker paprika', price: '6' },
-      { name: 'Homemade Focaccia Bread (V)', description: 'With olives, cherry tomatoes, rosemary', price: '6' },
-      { name: 'Parmesan and Truffle Fries (V, GF)', description: '', price: '6.5' },
-      { name: 'French Fries (VG)', description: '', price: '6' },
-    ],
-  },
-  {
-    category: 'Desserts',
-    items: [
-      { name: 'Vanilla Cheesecake (GF)', description: 'With wild berries compote & fresh fruit', price: '8.5' },
-      { name: 'Truffon Chocolate (GF)', description: 'Raspberry purée, exotic fruit, pistachio crumble', price: '8.5' },
-    ],
-  },
-];
+const DATA_VERSION = '1.7'; // Bump this to reset local storage on updates
 
-const INITIAL_DRINKS_DATA = {
-  headerImageUrl: 'https://picsum.photos/seed/barvibes/1600/800',
-  packagesData: {
-    title: 'PACKAGES',
-    subtitle: 'Advanced Bookings Only',
-    items: [
-      { name: 'Birthday Package', price: '£50', description: '1 x Bottle of Prosecco, 10 x Porn Star Shots' },
-      { name: 'Cocktail Party Package', price: '£120', description: '1 x *Martini Tree, 2 x Bottles of Prosecco' },
-      { name: 'Wine Party Package', price: '£120', description: '6 x House wine (btl)' },
-      { name: 'Party Starter Package', price: '£120', description: '2 x Btl House Wine, 1 Btl Prosecco, 10 x btl Beers*' },
-      { name: 'Deluxe Party Package', price: '£275', description: '2x btl house wine, 2x Prosecco (btl), 1 X House Spirit (btl), 2 mixer jugs' },
-      { name: 'Ultimate Party Package', price: '£475', description: '1 X *Martini Tree, 2 Prosecco (btl), 1 X Premium Spirit (btl), 2 mixer jugs, 10+ Guests only.' },
-    ],
-    notes: [
-      '*Choose from Espresso Martini or Porn Star Martini. After 10 pm Beer tokens will be issued',
-      '12.5% discretionary service charge will be added to your bill'
-    ]
-  },
-  cocktailsData: [
-      { category: 'Cocktails', items: [ { name: 'Smoke that Peach', price: '14.5', description: 'A refreshing mixture of Scotch whisky, peach and lemon, served tall over crushed ice' }, { name: 'Soho Ice Tea', price: '14.5', description: 'Hendricks gin, fresh cucumber, elderflower cordial, lemon juice, shaken and served in a chilled martini glass' }, { name: 'Negroni Illegal', price: '14.5', description: 'Mescal, Martini Rosso, Campari, served on a rocks glass with ice and orange zest' }, { name: 'Hugo Spritz', price: '14.5', description: 'St Germain elderflower liqueur, mint, topped up with Prosecco' }, { name: 'Rum Puncher', price: '14.5', description: 'Bacardi Oro & Carta Blanca rum, almond, orange liqueur shaken with pineapple and orange juice, served tall over ice' }, { name: 'Aperol Spritz', price: '13.5', description: 'Aperol aperitivo, Prosecco, soda water' }, { name: 'Lychee Colada', price: '14.5', description: 'Bacardi, lychee liqueur, fresh lime juice, pineapple juice, coconut liqueur, shaken and served in a chilled martini glass' } ] },
-      { category: 'Mocktails', items: [ { name: 'Passion Fruit and Apple', price: '7', description: 'Fresh Passionfruit and apple juice shaken with sugar and fresh lemon juice served tall over ice' }, { name: 'Virgin Mojito', price: '7', description: 'Apple juice, fresh mint, lime, soda, brown sugar' }, { name: 'Berry Nice', price: '7', description: 'Cranberry juice, strawberry purée, sugar syrup' }, { name: 'Elderflower Pressé', price: '7', description: 'Elderflower cordial, lime juice, soda' }, { name: 'Peroni Nastro Azzurro 0.0 (0%)', price: '6.5' } ] }
-  ],
-  bottleServiceData: [
-    { category: 'Vodka', items: [ { name: 'Grey Goose Magnum', price: '£600' }, { name: 'Belvedere Magnum', price: '£600' }, { name: 'Cîroc Magnum', price: '£600' }, { name: 'Grey Goose', price: '£250' }, { name: 'Belvedere', price: '£250' }, { name: 'Cîroc', price: '£250' }, { name: 'Cîroc Flavoured', price: '£250' }, { name: 'Crystal Head', price: '£350' } ] },
-    { category: 'Champagne', items: [ { name: 'Dom Pérignon', price: '£450' }, { name: 'Cristal', price: '£600' }, { name: 'Ace of Spades', price: '£700' }, { name: 'Moët', price: '£175' }, { name: 'Laurent Perrier Rose', price: '£225' } ] },
-    { category: 'Gin', items: [ { name: 'Hendrick\'s', price: '£250' }, { name: 'Tanqueray 10', price: '£250' } ] },
-    { category: 'Cognac', items: [ { name: 'Hennessy', price: '£300' }, { name: 'Courvoisier', price: '£275' }, { name: 'Courvoisier XO', price: '£700' }, { name: 'Hennessy XO', price: '£750' } ] },
-    { category: 'Rum', items: [ { name: 'Ron Zacapa 23', price: '£450' }, { name: 'Ron Zacapa XO', price: '£700' } ] },
-    { category: 'Tequila', items: [ { name: 'Patron Silver', price: '£250' }, { name: 'Patron Reposado', price: '£275' }, { name: 'Patron Anejo', price: '£300' }, { name: 'Don Julio 1942', price: '£750' } ] },
-    { category: 'Whisky', items: [ { name: 'Jack Daniel\'s Single Barrel', price: '£350' }, { name: 'Chivas Regal 15', price: '£400' }, { name: 'Woodford Reserve', price: '£300' }, { name: 'JW Blue Label', price: '£700' } ] },
-    { category: 'House Spirits', note: 'House spirits with 2 jugs of mixers', items: [ { name: 'Beefeater Gin', price: '£185' }, { name: 'Jack Daniels', price: '£185' }, { name: 'Absolut Vodka', price: '£185' }, { name: 'Olmeca Tequila', price: '£185' }, { name: 'Havana 3', price: '£185' }, { name: 'Tequila Rose', price: '£185' }, { name: 'Jägermeister', price: '£185' }, { name: 'Havana 7', price: '£250' } ] }
-  ],
-  winesData: [
-    { category: 'White Wine', items: [ { name: 'Eclat de Joie Blanc', price: { '175ml': '7.5', bottle: '26' }, description: 'From the south of France, a Grenache Blanc and Vermentino blend is a total sunshine shipper! Super light, clean, and crisp...' }, { name: 'Pinot Grigio, Castelnuovo', price: { '175ml': '8.5', bottle: '30' }, description: 'Pale straw in colour with light golden hues, this Pinot Grigio from Sartori has a clean, fruity and floral bouquet.' }, { name: 'Sauvignon Blanc Cotes de Gascogne, Bellevigne', price: { bottle: '35' }, description: 'Crisp and lively palate featuring zesty lemon, green apple, and subtle pineapple.' } ] },
-    { category: 'Rosé Wine', items: [ { name: 'Pinot Grigio Blush, Castelnuovo', price: { '175ml': '8', bottle: '29' }, description: 'The harmonious citrus and floral notes combined superbly with the fresh, mouth-filling palate and mineral notes.' } ] },
-    { category: 'Red Wine', items: [ { name: 'Eclat de Joie Rouge', price: { '175ml': '7.5', bottle: '26' }, description: 'Blend of Syrah and Grenache grapes - Think plump ripe plums and blackberries, soft and easy' }, { name: 'Malbec, Levalet', price: { '175ml': '8', bottle: '28' }, description: 'From the South of France, ranging from the Mediterranean coast to Provence.' }, { name: 'Syrah, Sans Chagrin', price: { bottle: '35' }, description: 'Syrah made with minimal intervention in the Languedoc. From organically farmed vines rooted in limestone soils.' } ] },
-    { category: 'Champagne & Sparkling Wine', items: [ { name: 'Prosecco Extra Dry', price: { Glass: '9.5', Bottle: '35' } }, { name: 'Prosecco Rosé', price: { Bottle: '45' } }, { name: 'Taittinger NV Brut Reserve', price: { Bottle: '125' } }, { name: 'Moet & Chandon NV', price: { Bottle: '175' } }, { name: 'Laurent Perrier Cuvée Rose Brut NV', price: { Bottle: '225' } }, { name: 'Dom Pérignon', price: { Bottle: '450' } }, { name: 'Cristal', price: { Bottle: '600' } }, { name: 'Ace of Spades', price: { Bottle: '700' } } ] }
-  ],
-  byTheGlassData: [
-    { category: 'Beers & Ciders', items: [ { name: 'Asahi Super Dry (5.2%)', price: '6.9' }, { name: 'Corona Extra (4.5%)', price: '6.9' }, { name: 'Peroni Nastro Azzurro (5.1%)', price: '6.9' }, { name: 'Old Mout (4%)', description: '(assorted flavours)', price: '7.5' } ] },
-    { category: 'House Spirits', items: [ { name: 'House spirits (50ml)', price: '12.5' }, { name: 'House spirits (25ml)', price: '7' }, { name: 'Mixer', price: '2' }, { name: 'Red Bull mixer', price: '3' } ] }
-  ],
-  shotsData: {
-    title: 'Shots',
-    singleDouble: true,
-    items: [
-      { name: 'Jagerbomb', single: '9', double: '12' },
-      { name: 'Skittlebomb', single: '9', double: '12' },
-      { name: 'Slippery Nipple', single: '7', double: '12' },
-      { name: 'Baby Guinness', single: '7', double: '12' },
-      { name: 'B52', single: '7', double: '12' },
-      { name: 'Brain Hemorrhage', single: '7', double: '12' },
-      { name: 'Tequila Rose', single: '7', double: '12' },
-      { name: 'Patrón Reposado', single: '10', double: '14.9' },
-      { name: 'Patron Silver', single: '10', double: '14.5' },
-      { name: 'Cazcabel Honey', single: '9', double: '12' },
-      { name: 'Cazcabel Coffee', single: '9', double: '12' }
-    ],
-    shooters: {
-      title: '6 Shooters',
-      prices: 'Single £25 Double £32',
-      items: [
-        { name: 'Kamikaze', description: 'Absolut, Cointreau, lime juice' },
-        { name: 'Raspberry Gimlet', description: 'Absolut, Chambord, lime juice' },
-        { name: 'Red Snapper', description: 'Jack Daniels, Amaretto, cranberry juice' },
-        { name: 'Melon Ball', description: 'Absolut, Midori, pineapple juice' },
-        { name: 'Kool Aid', description: 'Absolut, Amaretto, Midori, cranberry juice' }
-      ]
-    }
-  }
-};
-
-
-// --- Context Implementation ---
+// --- Context ---
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Use lazy initialization for state to prevent overwriting saved data with defaults on mount/reload
-  // DATA_VERSION ensures that if we update the code structure, old local storage doesn't break the app
-  const DATA_VERSION = '1.4'; // Increment version to force update of Hero data
-  const checkVersion = () => {
-      const storedVersion = localStorage.getItem('lkc_data_version');
-      if (storedVersion !== DATA_VERSION) {
-          console.log("Data version mismatch. Clearing legacy data.");
-          localStorage.clear();
-          localStorage.setItem('lkc_data_version', DATA_VERSION);
-          return true; // Version changed
-      }
-      return false; // Version same
+  // --- State Initialization Helper ---
+  const init = <T,>(key: string, defaultVal: T): T => {
+    // Check version
+    const storedVersion = localStorage.getItem('lkc_data_version');
+    if (storedVersion !== DATA_VERSION) {
+        // If version mismatch, return default (and let the useEffect update storage later)
+        // We only clear if we haven't already done so in this session to avoid loop, 
+        // but simple "return default" works because the state setter will overwrite LS later.
+        return defaultVal;
+    }
+
+    const saved = localStorage.getItem(`lkc_${key}`);
+    return saved ? JSON.parse(saved) : defaultVal;
   };
 
-  const isReset = checkVersion();
+  // --- State ---
+  const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', INITIAL_FOOD_MENU));
+  const [drinksData, setDrinksData] = useState<any>(() => init('drinksData', INITIAL_DRINKS_DATA));
+  const [headerData, setHeaderData] = useState<HeaderData>(() => init('headerData', INITIAL_HEADER_DATA));
+  const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', INITIAL_HERO_DATA));
+  const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', INITIAL_HIGHLIGHTS_DATA));
+  const [featuresData, setFeaturesData] = useState<FeaturesData>(() => init('featuresData', INITIAL_FEATURES_DATA));
+  const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', INITIAL_VIBE_DATA));
+  const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', INITIAL_TESTIMONIALS_DATA));
+  const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_BATTERY_DATA));
+  const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', INITIAL_FOOTER_DATA));
+  const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY_DATA));
+  const [dbConfig, setDbConfig] = useState<DatabaseConfig>(() => init('dbConfig', INITIAL_DB_CONFIG));
+  const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
+  const [bookings, setBookings] = useState<Booking[]>(() => init('bookings', INITIAL_BOOKINGS));
 
-  const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => {
-      if (isReset) return INITIAL_FOOD_MENU;
-      const saved = localStorage.getItem('lkc_foodMenu');
-      return saved ? JSON.parse(saved) : INITIAL_FOOD_MENU;
-  });
-  
-  const [drinksData, setDrinksData] = useState<any>(() => {
-      if (isReset) return INITIAL_DRINKS_DATA;
-      const saved = localStorage.getItem('lkc_drinksData');
-      return saved ? JSON.parse(saved) : INITIAL_DRINKS_DATA;
-  });
-
-  const [headerData, setHeaderData] = useState<HeaderData>(() => {
-      if (isReset) return INITIAL_HEADER_DATA;
-      const saved = localStorage.getItem('lkc_headerData');
-      return saved ? JSON.parse(saved) : INITIAL_HEADER_DATA;
-  });
-
-  const [heroData, setHeroData] = useState<HeroData>(() => {
-      if (isReset) return INITIAL_HERO_DATA;
-      const saved = localStorage.getItem('lkc_heroData');
-      return saved ? JSON.parse(saved) : INITIAL_HERO_DATA;
-  });
-
-  const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => {
-      if (isReset) return INITIAL_HIGHLIGHTS_DATA;
-      const saved = localStorage.getItem('lkc_highlightsData');
-      return saved ? JSON.parse(saved) : INITIAL_HIGHLIGHTS_DATA;
-  });
-
-  const [featuresData, setFeaturesData] = useState<FeaturesData>(() => {
-      if (isReset) return INITIAL_FEATURES_DATA;
-      const saved = localStorage.getItem('lkc_featuresData');
-      return saved ? JSON.parse(saved) : INITIAL_FEATURES_DATA;
-  });
-
-  const [vibeData, setVibeData] = useState<VibeData>(() => {
-      if (isReset) return INITIAL_VIBE_DATA;
-      const saved = localStorage.getItem('lkc_vibeData');
-      return saved ? JSON.parse(saved) : INITIAL_VIBE_DATA;
-  });
-
-  const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => {
-      if (isReset) return INITIAL_TESTIMONIALS_DATA;
-      const saved = localStorage.getItem('lkc_testimonialsData');
-      return saved ? JSON.parse(saved) : INITIAL_TESTIMONIALS_DATA;
-  });
-
-  const [batteryData, setBatteryData] = useState<BatteryData>(() => {
-      if (isReset) return INITIAL_BATTERY_DATA;
-      const saved = localStorage.getItem('lkc_batteryData');
-      return saved ? JSON.parse(saved) : INITIAL_BATTERY_DATA;
-  });
-
-  const [footerData, setFooterData] = useState<FooterData>(() => {
-      if (isReset) return INITIAL_FOOTER_DATA;
-      const saved = localStorage.getItem('lkc_footerData');
-      return saved ? JSON.parse(saved) : INITIAL_FOOTER_DATA;
-  });
-
-  const [galleryData, setGalleryData] = useState<GalleryData>(() => {
-      if (isReset) return INITIAL_GALLERY_DATA;
-      const saved = localStorage.getItem('lkc_galleryData');
-      return saved ? JSON.parse(saved) : INITIAL_GALLERY_DATA;
-  });
-
-  const [dbConfig, setDbConfig] = useState<DatabaseConfig>(() => {
-      if (isReset) return INITIAL_DB_CONFIG;
-      const saved = localStorage.getItem('lkc_dbConfig');
-      return saved ? JSON.parse(saved) : INITIAL_DB_CONFIG;
-  });
-
-  // --- CMS Data States ---
-  const [songs, setSongs] = useState<Song[]>(() => {
-      if (isReset) return INITIAL_SONGS;
-      const saved = localStorage.getItem('lkc_songs');
-      return saved ? JSON.parse(saved) : INITIAL_SONGS;
-  });
-
-  const [bookings, setBookings] = useState<Booking[]>(() => {
-      if (isReset) return INITIAL_BOOKINGS;
-      const saved = localStorage.getItem('lkc_bookings');
-      return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
-  });
-
-  // --- Supabase Integration ---
+  // --- Persistence & Supabase Sync ---
   const [supabase, setSupabase] = useState<any>(null);
 
   useEffect(() => {
+      // Update Version
+      localStorage.setItem('lkc_data_version', DATA_VERSION);
+      
+      // Init Supabase if config exists
       if (dbConfig.supabaseUrl && dbConfig.supabaseKey) {
           try {
               const client = createClient(dbConfig.supabaseUrl, dbConfig.supabaseKey);
               setSupabase(client);
-              console.log("Supabase client initialized.");
-              
-              // Initial fetch from Supabase
-              const fetchData = async () => {
-                  if (!client) return;
-                  
-                  // Fetch Songs
-                  const { data: songsData } = await client.from('songs').select('*');
-                  if (songsData && songsData.length > 0) setSongs(songsData);
-
-                  // Fetch Bookings
-                  const { data: bookingsData } = await client.from('bookings').select('*');
-                  if (bookingsData && bookingsData.length > 0) setBookings(bookingsData);
-
-                  // Fetch App Settings (Hero, Menus, etc.) stored as JSON
-                  const { data: settingsData } = await client.from('app_settings').select('*');
-                  if (settingsData) {
-                      settingsData.forEach((row: any) => {
-                          if (row.key === 'hero_data') setHeroData(row.value);
-                          if (row.key === 'header_data') setHeaderData(row.value);
-                          if (row.key === 'food_menu') setFoodMenu(row.value);
-                          if (row.key === 'drinks_data') setDrinksData(row.value);
-                          if (row.key === 'highlights_data') setHighlightsData(row.value);
-                          if (row.key === 'features_data') setFeaturesData(row.value);
-                          if (row.key === 'vibe_data') setVibeData(row.value);
-                          if (row.key === 'testimonials_data') setTestimonialsData(row.value);
-                          if (row.key === 'battery_data') setBatteryData(row.value);
-                          if (row.key === 'footer_data') setFooterData(row.value);
-                          if (row.key === 'gallery_data') setGalleryData(row.value);
-                      });
-                  }
-              };
-              fetchData();
-
           } catch (e) {
-              console.error("Failed to initialize Supabase:", e);
+              console.error("Failed to init Supabase client", e);
           }
       }
   }, [dbConfig.supabaseUrl, dbConfig.supabaseKey]);
 
-  // Helper to persist to Supabase
-  const persistToSupabase = async (key: string, value: any) => {
-      if (supabase) {
-          await supabase.from('app_settings').upsert({ key, value });
+  // Generic Saver
+  const persist = (key: string, data: any) => {
+      localStorage.setItem(`lkc_${key}`, JSON.stringify(data));
+      // Sync to Supabase if available (fire and forget)
+      if (supabase && key !== 'dbConfig') { // Don't sync config to itself securely
+          supabase.from('app_settings').upsert({ key, value: data }).then(({ error }: any) => {
+              if (error) console.warn(`Supabase sync error for ${key}:`, error.message);
+          });
       }
   };
-  
-  // Helper to upload to Supabase Storage
-  const uploadToSupabase = async (file: Blob | File, path: string, bucket: string = 'public'): Promise<string | null> => {
-      if (!supabase) return null;
+
+  useEffect(() => { persist('foodMenu', foodMenu); }, [foodMenu]);
+  useEffect(() => { persist('drinksData', drinksData); }, [drinksData]);
+  useEffect(() => { persist('headerData', headerData); }, [headerData]);
+  useEffect(() => { persist('heroData', heroData); }, [heroData]);
+  useEffect(() => { persist('highlightsData', highlightsData); }, [highlightsData]);
+  useEffect(() => { persist('featuresData', featuresData); }, [featuresData]);
+  useEffect(() => { persist('vibeData', vibeData); }, [vibeData]);
+  useEffect(() => { persist('testimonialsData', testimonialsData); }, [testimonialsData]);
+  useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
+  useEffect(() => { persist('footerData', footerData); }, [footerData]);
+  useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
+  useEffect(() => { persist('dbConfig', dbConfig); }, [dbConfig]);
+  useEffect(() => { persist('songs', songs); }, [songs]);
+  useEffect(() => { persist('bookings', bookings); }, [bookings]);
+
+  // --- Reset ---
+  const resetToDefaults = () => {
+      if (confirm("Reset all data to defaults? This cannot be undone.")) {
+          localStorage.clear();
+          window.location.reload();
+      }
+  };
+
+  // --- Supabase Helpers ---
+  const uploadToSupabase = async (file: Blob | File, path: string, bucket: string = dbConfig.storageBucket || 'public'): Promise<string | null> => {
+      if (!supabase) {
+          console.warn("Supabase not configured");
+          return null;
+      }
       try {
           const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
-              cacheControl: '3600',
               upsert: true
           });
+          if (error) throw error;
           
-          if (error) {
-              console.error("Supabase Storage Upload Error:", error);
-              return null;
-          }
-          
-          if (data) {
-              const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
-              return publicUrlData.publicUrl;
-          }
+          const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
+          return publicUrlData.publicUrl;
       } catch (e) {
-          console.error("Supabase Upload Exception:", e);
+          console.error("Upload failed", e);
+          return null;
       }
-      return null;
   };
 
-  // Helper to delete from Supabase Storage
-  const deleteSupabaseFile = async (path: string, bucket: string = 'public'): Promise<boolean> => {
-      if (!supabase) return false;
-      try {
-          const { error } = await supabase.storage.from(bucket).remove([path]);
-          if (error) {
-              console.error("Supabase Delete Error:", error);
-              return false;
-          }
-          return true;
-      } catch (e) {
-          console.error("Supabase Delete Exception:", e);
-          return false;
-      }
-  }
-
-  // Helper to list files from Supabase Storage
-  const fetchSupabaseFiles = async (bucket: string = 'public', folder: string = ''): Promise<{ name: string; url: string }[]> => {
+  const fetchSupabaseFiles = async (bucket: string = dbConfig.storageBucket || 'public', folder: string = ''): Promise<{name: string, url: string}[]> => {
       if (!supabase) return [];
       try {
           const { data, error } = await supabase.storage.from(bucket).list(folder, {
               limit: 100,
               offset: 0,
-              sortBy: { column: 'created_at', order: 'desc' },
+              sortBy: { column: 'name', order: 'desc' },
           });
-
-          if (error) {
-              console.error("Supabase List Error:", error);
-              return [];
-          }
-
-          if (data) {
-              return data.map((file: any) => {
-                  const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(`${folder ? folder + '/' : ''}${file.name}`);
-                  return {
-                      name: file.name,
-                      url: publicUrlData.publicUrl
-                  };
-              }).filter((f: any) => f.name !== '.emptyFolderPlaceholder'); // filtering
-          }
+          if (error) throw error;
+          
+          return data.map((file: any) => {
+              const path = folder ? `${folder}/${file.name}` : file.name;
+              const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
+              return {
+                  name: file.name,
+                  url: publicUrlData.publicUrl
+              };
+          });
       } catch (e) {
-          console.error("Supabase List Exception:", e);
-      }
-      return [];
-  };
-
-
-  // Save to LocalStorage whenever state changes
-  useEffect(() => { localStorage.setItem('lkc_foodMenu', JSON.stringify(foodMenu)); }, [foodMenu]);
-  useEffect(() => { localStorage.setItem('lkc_drinksData', JSON.stringify(drinksData)); }, [drinksData]);
-  useEffect(() => { localStorage.setItem('lkc_headerData', JSON.stringify(headerData)); }, [headerData]);
-  useEffect(() => { localStorage.setItem('lkc_heroData', JSON.stringify(heroData)); }, [heroData]);
-  useEffect(() => { localStorage.setItem('lkc_highlightsData', JSON.stringify(highlightsData)); }, [highlightsData]);
-  useEffect(() => { localStorage.setItem('lkc_featuresData', JSON.stringify(featuresData)); }, [featuresData]);
-  useEffect(() => { localStorage.setItem('lkc_vibeData', JSON.stringify(vibeData)); }, [vibeData]);
-  useEffect(() => { localStorage.setItem('lkc_testimonialsData', JSON.stringify(testimonialsData)); }, [testimonialsData]);
-  useEffect(() => { localStorage.setItem('lkc_batteryData', JSON.stringify(batteryData)); }, [batteryData]);
-  useEffect(() => { localStorage.setItem('lkc_footerData', JSON.stringify(footerData)); }, [footerData]);
-  useEffect(() => { localStorage.setItem('lkc_galleryData', JSON.stringify(galleryData)); }, [galleryData]);
-  useEffect(() => { localStorage.setItem('lkc_dbConfig', JSON.stringify(dbConfig)); }, [dbConfig]);
-  useEffect(() => { localStorage.setItem('lkc_songs', JSON.stringify(songs)); }, [songs]);
-  useEffect(() => { localStorage.setItem('lkc_bookings', JSON.stringify(bookings)); }, [bookings]);
-
-  // Updated Setters with Supabase persistence
-  const updateFoodMenu = (newMenu: MenuCategory[]) => { setFoodMenu(newMenu); persistToSupabase('food_menu', newMenu); };
-  const updateDrinksData = (newData: any) => { setDrinksData(newData); persistToSupabase('drinks_data', newData); };
-  const updateHeaderData = (newData: HeaderData) => { setHeaderData(newData); persistToSupabase('header_data', newData); };
-  const updateHeroData = (newData: HeroData) => { setHeroData(newData); persistToSupabase('hero_data', newData); };
-  const updateHighlightsData = (newData: HighlightsData) => { setHighlightsData(newData); persistToSupabase('highlights_data', newData); };
-  const updateFeaturesData = (newData: FeaturesData) => { setFeaturesData(newData); persistToSupabase('features_data', newData); };
-  const updateVibeData = (newData: VibeData) => { setVibeData(newData); persistToSupabase('vibe_data', newData); };
-  const updateTestimonialsData = (newData: TestimonialsData) => { setTestimonialsData(newData); persistToSupabase('testimonials_data', newData); };
-  const updateBatteryData = (newData: BatteryData) => { setBatteryData(newData); persistToSupabase('battery_data', newData); };
-  const updateFooterData = (newData: FooterData) => { setFooterData(newData); persistToSupabase('footer_data', newData); };
-  const updateGalleryData = (newData: GalleryData) => { setGalleryData(newData); persistToSupabase('gallery_data', newData); };
-  
-  const updateDbConfig = (newData: DatabaseConfig) => setDbConfig(newData); // Config is local only
-  
-  const updateSongs = (newSongs: Song[]) => { 
-      setSongs(newSongs);
-      // For arrays like songs, we might typically upsert individual rows, but for this simple hybrid mode, 
-      // we could store the whole array in app_settings OR allow full SQL table sync.
-      // Here we assume the user creates the 'songs' table. If so, we should upsert rows.
-      if (supabase) {
-          // This is complex for a simple update hook without tracking diffs. 
-          // For simplicity in this demo, we'll assume songs are managed via Admin Dashboard explicitly.
+          console.error("List files failed", e);
+          return [];
       }
   };
-  const updateBookings = (newBookings: Booking[]) => setBookings(newBookings);
 
-  const resetToDefaults = () => {
-    if (confirm("Are you sure you want to reset all content to default? This cannot be undone.")) {
-        // Clear local storage first
-        const keysToRemove = [
-            'lkc_foodMenu', 'lkc_drinksData', 'lkc_headerData', 'lkc_heroData', 
-            'lkc_highlightsData', 'lkc_featuresData', 'lkc_vibeData', 'lkc_testimonialsData', 
-            'lkc_batteryData', 'lkc_footerData', 'lkc_galleryData', 'lkc_dbConfig',
-            'lkc_songs', 'lkc_bookings'
-        ];
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-
-        // Then set state to defaults
-        setFoodMenu(INITIAL_FOOD_MENU);
-        setDrinksData(INITIAL_DRINKS_DATA);
-        setHeaderData(INITIAL_HEADER_DATA);
-        setHeroData(INITIAL_HERO_DATA);
-        setHighlightsData(INITIAL_HIGHLIGHTS_DATA);
-        setFeaturesData(INITIAL_FEATURES_DATA);
-        setVibeData(INITIAL_VIBE_DATA);
-        setTestimonialsData(INITIAL_TESTIMONIALS_DATA);
-        setBatteryData(INITIAL_BATTERY_DATA);
-        setFooterData(INITIAL_FOOTER_DATA);
-        setGalleryData(INITIAL_GALLERY_DATA);
-        setDbConfig(INITIAL_DB_CONFIG);
-        setSongs(INITIAL_SONGS);
-        setBookings(INITIAL_BOOKINGS);
-    }
+  const deleteSupabaseFile = async (path: string, bucket: string = dbConfig.storageBucket || 'public'): Promise<boolean> => {
+      if (!supabase) return false;
+      try {
+          const { error } = await supabase.storage.from(bucket).remove([path]);
+          if (error) throw error;
+          return true;
+      } catch (e) {
+          console.error("Delete failed", e);
+          return false;
+      }
   };
 
   return (
-    <DataContext.Provider value={{ 
-        foodMenu, updateFoodMenu, 
-        drinksData, updateDrinksData, 
-        headerData, updateHeaderData,
-        heroData, updateHeroData,
-        highlightsData, updateHighlightsData,
-        featuresData, updateFeaturesData,
-        vibeData, updateVibeData,
-        testimonialsData, updateTestimonialsData,
-        batteryData, updateBatteryData,
-        footerData, updateFooterData,
-        galleryData, updateGalleryData,
-        dbConfig, updateDbConfig,
-        songs, updateSongs,
-        bookings, updateBookings,
-        resetToDefaults,
-        uploadToSupabase,
-        fetchSupabaseFiles,
-        deleteSupabaseFile
+    <DataContext.Provider value={{
+      foodMenu, updateFoodMenu: setFoodMenu,
+      drinksData, updateDrinksData: setDrinksData,
+      headerData, updateHeaderData: setHeaderData,
+      heroData, updateHeroData: setHeroData,
+      highlightsData, updateHighlightsData: setHighlightsData,
+      featuresData, updateFeaturesData: setFeaturesData,
+      vibeData, updateVibeData: setVibeData,
+      testimonialsData, updateTestimonialsData: setTestimonialsData,
+      batteryData, updateBatteryData: setBatteryData,
+      footerData, updateFooterData: setFooterData,
+      galleryData, updateGalleryData: setGalleryData,
+      dbConfig, updateDbConfig: setDbConfig,
+      songs, updateSongs: setSongs,
+      bookings, updateBookings: setBookings,
+      resetToDefaults,
+      uploadToSupabase,
+      fetchSupabaseFiles,
+      deleteSupabaseFile
     }}>
       {children}
     </DataContext.Provider>
