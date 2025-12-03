@@ -208,6 +208,7 @@ interface DataContextType {
   
   // Supabase specific
   uploadToSupabase: (file: Blob | File, path: string, bucket?: string) => Promise<string | null>;
+  fetchSupabaseFiles: (bucket?: string, folder?: string) => Promise<{name: string, url: string}[]>;
 }
 
 // --- Initial Data ---
@@ -667,6 +668,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return null;
   };
 
+  // Helper to list files from Supabase Storage
+  const fetchSupabaseFiles = async (bucket: string = 'public', folder: string = ''): Promise<{ name: string; url: string }[]> => {
+      if (!supabase) return [];
+      try {
+          const { data, error } = await supabase.storage.from(bucket).list(folder, {
+              limit: 100,
+              offset: 0,
+              sortBy: { column: 'created_at', order: 'desc' },
+          });
+
+          if (error) {
+              console.error("Supabase List Error:", error);
+              return [];
+          }
+
+          if (data) {
+              return data.map((file: any) => {
+                  const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(`${folder ? folder + '/' : ''}${file.name}`);
+                  return {
+                      name: file.name,
+                      url: publicUrlData.publicUrl
+                  };
+              }).filter((f: any) => f.name !== '.emptyFolderPlaceholder'); // filtering
+          }
+      } catch (e) {
+          console.error("Supabase List Exception:", e);
+      }
+      return [];
+  };
+
 
   // Save to LocalStorage whenever state changes
   useEffect(() => { localStorage.setItem('lkc_foodMenu', JSON.stringify(foodMenu)); }, [foodMenu]);
@@ -757,7 +788,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         songs, updateSongs,
         bookings, updateBookings,
         resetToDefaults,
-        uploadToSupabase
+        uploadToSupabase,
+        fetchSupabaseFiles
     }}>
       {children}
     </DataContext.Provider>

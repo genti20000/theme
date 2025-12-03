@@ -1,6 +1,7 @@
 
 
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { useData } from '../context/DataContext';
 
@@ -27,7 +28,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 
 
 const ImageEditor: React.FC = () => {
-  const { galleryData, updateGalleryData, uploadToSupabase } = useData();
+  const { galleryData, updateGalleryData, uploadToSupabase, fetchSupabaseFiles } = useData();
   const [mode, setMode] = useState<'editor' | 'illustrator' | 'video' | 'pro'>('editor');
   const [prompt, setPrompt] = useState<string>('');
   const [imageSize, setImageSize] = useState<'1K' | '2K' | '4K'>('1K');
@@ -44,6 +45,8 @@ const ImageEditor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const [galleryTab, setGalleryTab] = useState<'site' | 'storage'>('site');
+  const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -384,6 +387,20 @@ const ImageEditor: React.FC = () => {
     setSelectedSample(null);
   };
 
+  useEffect(() => {
+      if (showGalleryModal && galleryTab === 'storage') {
+          fetchSupabaseFiles('images', '').then(files => {
+              // Also fetch 'public' bucket if 'images' is empty, or merge them?
+              // For simplicity, sticking to 'images' or 'public' based on upload logic
+              if (files.length === 0) {
+                  fetchSupabaseFiles('public', '').then(pubFiles => setStorageFiles(pubFiles));
+              } else {
+                  setStorageFiles(files);
+              }
+          });
+      }
+  }, [showGalleryModal, galleryTab]);
+
   return (
     <section className="relative py-16 md:py-24" style={{backgroundImage: "url('https://picsum.photos/seed/darkclub/1600/900')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed'}}>
         <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-sm"></div>
@@ -511,6 +528,7 @@ const ImageEditor: React.FC = () => {
                 </div>
             )}
 
+            {/* Other Modes ... (Kept existing) */}
             {mode === 'illustrator' && (
                 <div className="max-w-4xl mx-auto flex flex-col items-center">
                     <div className="w-full bg-black/70 backdrop-blur-md border border-zinc-700 p-8 rounded-2xl flex flex-col items-center gap-6">
@@ -717,22 +735,60 @@ const ImageEditor: React.FC = () => {
             <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
                 <div className="bg-zinc-900 w-full max-w-4xl h-[80vh] rounded-2xl border border-zinc-800 flex flex-col overflow-hidden">
                     <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-                        <h3 className="text-xl font-bold text-white">Select from Gallery</h3>
+                        <div className="flex gap-4 items-center">
+                            <h3 className="text-xl font-bold text-white">Select Image</h3>
+                            <div className="flex bg-zinc-800 rounded-lg p-1">
+                                <button 
+                                    onClick={() => setGalleryTab('site')} 
+                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${galleryTab === 'site' ? 'bg-zinc-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    Gallery (Curated)
+                                </button>
+                                <button 
+                                    onClick={() => setGalleryTab('storage')} 
+                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${galleryTab === 'storage' ? 'bg-zinc-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    All Uploads (Storage)
+                                </button>
+                            </div>
+                        </div>
                         <button onClick={() => setShowGalleryModal(false)} className="text-gray-400 hover:text-white">Close</button>
                     </div>
+                    
                     <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {galleryData.images.map((img) => (
-                            <button 
-                                key={img.id} 
-                                onClick={() => handleSelectSample(img.url)}
-                                className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
-                            >
-                                <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span className="text-white text-xs font-bold">Select</span>
-                                </div>
-                            </button>
-                        ))}
+                        {galleryTab === 'site' ? (
+                            galleryData.images.map((img) => (
+                                <button 
+                                    key={img.id} 
+                                    onClick={() => handleSelectSample(img.url)}
+                                    className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
+                                >
+                                    <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span className="text-white text-xs font-bold">Select</span>
+                                    </div>
+                                </button>
+                            ))
+                        ) : (
+                            storageFiles.map((file, idx) => (
+                                <button 
+                                    key={idx} 
+                                    onClick={() => handleSelectSample(file.url)}
+                                    className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
+                                >
+                                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                                        <span className="text-white text-xs font-bold mb-1">Select</span>
+                                        <span className="text-gray-300 text-[10px] truncate w-full text-center">{file.name}</span>
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                        {galleryTab === 'storage' && storageFiles.length === 0 && (
+                            <div className="col-span-full text-center py-10 text-gray-500">
+                                <p>No files found in storage bucket.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
