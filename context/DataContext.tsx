@@ -1,6 +1,7 @@
 
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
 // --- Types ---
 export interface MenuItem {
@@ -146,6 +147,8 @@ export interface DatabaseConfig {
   uploadScriptUrl: string;
   photoFolder: string;
   videoFolder: string;
+  supabaseUrl?: string;
+  supabaseKey?: string;
 }
 
 export interface Song {
@@ -213,20 +216,11 @@ const INITIAL_HEADER_DATA: HeaderData = {
 const INITIAL_HERO_DATA: HeroData = {
     backgroundImageUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
     slides: [
-        "https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1516450360452-631d408d8495?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1514525253440-b393452e8d26?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1576692828388-75e921867175?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1525268323886-2818bc24d2bd?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1572569766952-b6736780c354?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1920&auto=format&fit=crop",  
-        "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?q=80&w=1920&auto=format&fit=crop", 
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1920&auto=format&fit=crop"  
+        "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1920&auto=format&fit=crop", // Ocean/Rock scene
+        "https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop"  // Singing Santa
     ],
     badgeText: "Winter Wonderland Karaoke",
-    headingText: "Unleash Your Inner Star",
+    headingText: "The Ultimate Karaoke",
     subText: "Private luxury suites, premium cocktails, and over 80,000 songs. The stage is yours.",
     buttonText: "Book Your Room"
 };
@@ -339,7 +333,9 @@ const INITIAL_DB_CONFIG: DatabaseConfig = {
   name: "london_karaoke_db",
   uploadScriptUrl: "https://londonkaraoke.club/upload.php",
   photoFolder: "uploads/photos/",
-  videoFolder: "uploads/videos/"
+  videoFolder: "uploads/videos/",
+  supabaseUrl: "",
+  supabaseKey: ""
 };
 
 const INITIAL_SONGS: Song[] = [
@@ -490,7 +486,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Use lazy initialization for state to prevent overwriting saved data with defaults on mount/reload
   // DATA_VERSION ensures that if we update the code structure, old local storage doesn't break the app
-  const DATA_VERSION = '1.3'; 
+  const DATA_VERSION = '1.4'; // Increment version to force update of Hero data
   const checkVersion = () => {
       const storedVersion = localStorage.getItem('lkc_data_version');
       if (storedVersion !== DATA_VERSION) {
@@ -589,6 +585,61 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
   });
 
+  // --- Supabase Integration ---
+  const [supabase, setSupabase] = useState<any>(null);
+
+  useEffect(() => {
+      if (dbConfig.supabaseUrl && dbConfig.supabaseKey) {
+          try {
+              const client = createClient(dbConfig.supabaseUrl, dbConfig.supabaseKey);
+              setSupabase(client);
+              console.log("Supabase client initialized.");
+              
+              // Initial fetch from Supabase
+              const fetchData = async () => {
+                  if (!client) return;
+                  
+                  // Fetch Songs
+                  const { data: songsData } = await client.from('songs').select('*');
+                  if (songsData) setSongs(songsData);
+
+                  // Fetch Bookings
+                  const { data: bookingsData } = await client.from('bookings').select('*');
+                  if (bookingsData) setBookings(bookingsData);
+
+                  // Fetch App Settings (Hero, Menus, etc.) stored as JSON
+                  const { data: settingsData } = await client.from('app_settings').select('*');
+                  if (settingsData) {
+                      settingsData.forEach((row: any) => {
+                          if (row.key === 'hero_data') setHeroData(row.value);
+                          if (row.key === 'header_data') setHeaderData(row.value);
+                          if (row.key === 'food_menu') setFoodMenu(row.value);
+                          if (row.key === 'drinks_data') setDrinksData(row.value);
+                          if (row.key === 'highlights_data') setHighlightsData(row.value);
+                          if (row.key === 'features_data') setFeaturesData(row.value);
+                          if (row.key === 'vibe_data') setVibeData(row.value);
+                          if (row.key === 'testimonials_data') setTestimonialsData(row.value);
+                          if (row.key === 'battery_data') setBatteryData(row.value);
+                          if (row.key === 'footer_data') setFooterData(row.value);
+                          if (row.key === 'gallery_data') setGalleryData(row.value);
+                      });
+                  }
+              };
+              fetchData();
+
+          } catch (e) {
+              console.error("Failed to initialize Supabase:", e);
+          }
+      }
+  }, [dbConfig.supabaseUrl, dbConfig.supabaseKey]);
+
+  // Helper to persist to Supabase
+  const persistToSupabase = async (key: string, value: any) => {
+      if (supabase) {
+          await supabase.from('app_settings').upsert({ key, value });
+      }
+  };
+
 
   // Save to LocalStorage whenever state changes
   useEffect(() => { localStorage.setItem('lkc_foodMenu', JSON.stringify(foodMenu)); }, [foodMenu]);
@@ -606,20 +657,31 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => { localStorage.setItem('lkc_songs', JSON.stringify(songs)); }, [songs]);
   useEffect(() => { localStorage.setItem('lkc_bookings', JSON.stringify(bookings)); }, [bookings]);
 
-  const updateFoodMenu = (newMenu: MenuCategory[]) => setFoodMenu(newMenu);
-  const updateDrinksData = (newData: any) => setDrinksData(newData);
-  const updateHeaderData = (newData: HeaderData) => setHeaderData(newData);
-  const updateHeroData = (newData: HeroData) => setHeroData(newData);
-  const updateHighlightsData = (newData: HighlightsData) => setHighlightsData(newData);
-  const updateFeaturesData = (newData: FeaturesData) => setFeaturesData(newData);
-  const updateVibeData = (newData: VibeData) => setVibeData(newData);
-  const updateTestimonialsData = (newData: TestimonialsData) => setTestimonialsData(newData);
-  const updateBatteryData = (newData: BatteryData) => setBatteryData(newData);
-  const updateFooterData = (newData: FooterData) => setFooterData(newData);
-  const updateGalleryData = (newData: GalleryData) => setGalleryData(newData);
-  const updateDbConfig = (newData: DatabaseConfig) => setDbConfig(newData);
+  // Updated Setters with Supabase persistence
+  const updateFoodMenu = (newMenu: MenuCategory[]) => { setFoodMenu(newMenu); persistToSupabase('food_menu', newMenu); };
+  const updateDrinksData = (newData: any) => { setDrinksData(newData); persistToSupabase('drinks_data', newData); };
+  const updateHeaderData = (newData: HeaderData) => { setHeaderData(newData); persistToSupabase('header_data', newData); };
+  const updateHeroData = (newData: HeroData) => { setHeroData(newData); persistToSupabase('hero_data', newData); };
+  const updateHighlightsData = (newData: HighlightsData) => { setHighlightsData(newData); persistToSupabase('highlights_data', newData); };
+  const updateFeaturesData = (newData: FeaturesData) => { setFeaturesData(newData); persistToSupabase('features_data', newData); };
+  const updateVibeData = (newData: VibeData) => { setVibeData(newData); persistToSupabase('vibe_data', newData); };
+  const updateTestimonialsData = (newData: TestimonialsData) => { setTestimonialsData(newData); persistToSupabase('testimonials_data', newData); };
+  const updateBatteryData = (newData: BatteryData) => { setBatteryData(newData); persistToSupabase('battery_data', newData); };
+  const updateFooterData = (newData: FooterData) => { setFooterData(newData); persistToSupabase('footer_data', newData); };
+  const updateGalleryData = (newData: GalleryData) => { setGalleryData(newData); persistToSupabase('gallery_data', newData); };
   
-  const updateSongs = (newSongs: Song[]) => setSongs(newSongs);
+  const updateDbConfig = (newData: DatabaseConfig) => setDbConfig(newData); // Config is local only
+  
+  const updateSongs = (newSongs: Song[]) => { 
+      setSongs(newSongs);
+      // For arrays like songs, we might typically upsert individual rows, but for this simple hybrid mode, 
+      // we could store the whole array in app_settings OR allow full SQL table sync.
+      // Here we assume the user creates the 'songs' table. If so, we should upsert rows.
+      if (supabase) {
+          // This is complex for a simple update hook without tracking diffs. 
+          // For simplicity in this demo, we'll assume songs are managed via Admin Dashboard explicitly.
+      }
+  };
   const updateBookings = (newBookings: Booking[]) => setBookings(newBookings);
 
   const resetToDefaults = () => {

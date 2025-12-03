@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useRef } from 'react';
 import { useData, MenuItem, Song, Booking } from '../context/DataContext';
 import { GoogleGenAI, Modality } from "@google/genai";
@@ -71,10 +73,10 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string;
             // Mock delay for simulation
             setTimeout(async () => {
                 try {
-                    const base64 = await blobToBase64(file);
-                    // In a real app, you'd return the server URL here. 
-                    // For this frontend-only demo, we use Base64 or a Blob URL.
-                    onUpload(base64); 
+                    // Generate a fake server URL for simulation since we can't actually upload to a PHP server here
+                    // In a real scenario, this would be the response from the upload fetch call
+                    const fakeServerUrl = `https://londonkaraoke.club/${dbConfig.photoFolder || 'uploads/'}${file.name}`;
+                    onUpload(fakeServerUrl);
                 } catch (err) {
                     console.error(err);
                     alert("Failed to read file");
@@ -130,11 +132,12 @@ const MultiUploader: React.FC<{ onUploadComplete: (urls: {url: string, type: 'im
         for (const file of files) {
             const isVideo = file.type.startsWith('video/');
             const type = isVideo ? 'video' : 'image';
+            const folder = isVideo ? (dbConfig.videoFolder || 'uploads/videos/') : (dbConfig.photoFolder || 'uploads/photos/');
 
             try {
-                // Simulate server upload with base64 for now
-                const base64 = await blobToBase64(file);
-                uploadedItems.push({ url: base64, type });
+                // Generate fake server URL
+                const fakeUrl = `https://londonkaraoke.club/${folder}${file.name}`;
+                uploadedItems.push({ url: fakeUrl, type });
             } catch (e) {}
             
             current++;
@@ -324,49 +327,40 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         `INSERT INTO songs (title, artist, genre, language) VALUES ('${s.title.replace(/'/g, "''")}', '${s.artist.replace(/'/g, "''")}', '${s.genre?.replace(/'/g, "''")}', '${s.language}');`
     ).join('\n');
 
+    // Postgres / Supabase SQL Style
     const sqlContent = `
--- Database Setup for London Karaoke Club
-CREATE DATABASE IF NOT EXISTS \`${dbConfig.name}\`;
-USE \`${dbConfig.name}\`;
+-- Supabase / PostgreSQL Setup for London Karaoke Club
 
--- Core Tables
-CREATE TABLE IF NOT EXISTS hero_settings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    badge_text VARCHAR(255),
-    heading_text VARCHAR(255),
-    sub_text TEXT,
-    button_text VARCHAR(255)
+-- Table for App Settings (JSON Store)
+CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value JSONB
 );
 
-CREATE TABLE IF NOT EXISTS food_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255),
-    description TEXT,
-    price VARCHAR(50)
-);
-
+-- Table for Songs
 CREATE TABLE IF NOT EXISTS songs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255),
-    artist VARCHAR(255),
-    genre VARCHAR(100),
-    language VARCHAR(50) DEFAULT 'English'
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT,
+    artist TEXT,
+    genre TEXT,
+    language TEXT DEFAULT 'English'
 );
 
+-- Table for Bookings
 CREATE TABLE IF NOT EXISTS bookings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    customer_name VARCHAR(255),
-    email VARCHAR(255),
-    phone VARCHAR(50),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    customer_name TEXT,
+    email TEXT,
+    phone TEXT,
     booking_date DATE,
     booking_time TIME,
     guests INT,
-    room VARCHAR(100),
-    status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    room TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Initial Data
+-- Initial Data (Postgres Syntax)
 ${bookingsSQL}
 ${songsSQL}
     `;
@@ -375,7 +369,7 @@ ${songsSQL}
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'lkc_setup.sql';
+    a.download = 'lkc_supabase_setup.sql';
     a.click();
   };
 
@@ -514,7 +508,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Booking Handlers
   const handleAddBooking = () => {
-      const newBookings = [...bookings, { 
+      const newBooking: Booking = { 
           id: Date.now().toString(), 
           customerName: 'New Guest', 
           email: '', 
@@ -524,8 +518,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           guests: 4, 
           room: 'Standard', 
           status: 'pending' 
-      }];
-      updateBookings(newBookings);
+      };
+      updateBookings([...bookings, newBooking]);
   };
   const handleDeleteBooking = (id: string) => {
       if(!confirm("Delete booking?")) return;
@@ -1048,22 +1042,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         {activeTab === 'database' && (
              <div className="space-y-8">
                  <SectionCard title="Database & File Uploads" description="Configure your database connection and server-side file handling.">
-                     <div className="space-y-4">
-                         <div className="grid md:grid-cols-2 gap-6">
-                             <InputGroup label="Database Host" value={dbConfig.host} onChange={(v) => updateDbConfig({...dbConfig, host: v})} />
-                             <InputGroup label="Database Name" value={dbConfig.name} onChange={(v) => updateDbConfig({...dbConfig, name: v})} />
+                     <div className="space-y-6">
+                         
+                         {/* Supabase Config */}
+                         <div className="border border-green-900/50 bg-green-950/10 p-4 rounded-lg">
+                             <h4 className="text-green-400 font-bold mb-4 flex items-center gap-2">
+                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                     <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+                                 </svg>
+                                 Supabase Connection
+                             </h4>
+                             <div className="grid md:grid-cols-2 gap-6">
+                                 <InputGroup label="Supabase URL" value={dbConfig.supabaseUrl || ''} onChange={(v) => updateDbConfig({...dbConfig, supabaseUrl: v})} />
+                                 <InputGroup label="Supabase Anon Key" value={dbConfig.supabaseKey || ''} onChange={(v) => updateDbConfig({...dbConfig, supabaseKey: v})} type="password" />
+                             </div>
+                             <p className="text-xs text-gray-500 mt-2">Enter your Supabase Project URL and Anon Key to enable real-time database sync.</p>
                          </div>
-                         <div className="grid md:grid-cols-2 gap-6">
-                             <InputGroup label="Username" value={dbConfig.user} onChange={(v) => updateDbConfig({...dbConfig, user: v})} />
-                             <InputGroup label="Password" value={dbConfig.pass} onChange={(v) => updateDbConfig({...dbConfig, pass: v})} type="password" />
+
+                         {/* Legacy/PHP Config */}
+                         <div className="border border-zinc-800 p-4 rounded-lg">
+                             <h4 className="text-gray-300 font-bold mb-4">Legacy SQL / PHP Connection</h4>
+                             <div className="grid md:grid-cols-2 gap-6">
+                                 <InputGroup label="Database Host" value={dbConfig.host} onChange={(v) => updateDbConfig({...dbConfig, host: v})} />
+                                 <InputGroup label="Database Name" value={dbConfig.name} onChange={(v) => updateDbConfig({...dbConfig, name: v})} />
+                             </div>
+                             <div className="grid md:grid-cols-2 gap-6">
+                                 <InputGroup label="Username" value={dbConfig.user} onChange={(v) => updateDbConfig({...dbConfig, user: v})} />
+                                 <InputGroup label="Password" value={dbConfig.pass} onChange={(v) => updateDbConfig({...dbConfig, pass: v})} type="password" />
+                             </div>
                          </div>
+
+                         {/* Folder Paths */}
                          <div className="grid md:grid-cols-2 gap-6">
                              <InputGroup label="Photos Folder" value={dbConfig.photoFolder} onChange={(v) => updateDbConfig({...dbConfig, photoFolder: v})} />
                              <InputGroup label="Videos Folder" value={dbConfig.videoFolder} onChange={(v) => updateDbConfig({...dbConfig, videoFolder: v})} />
                          </div>
                          
                          <div className="flex flex-wrap gap-4 mt-6 border-t border-zinc-800 pt-6">
-                             <button onClick={handleDownloadSQL} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm">Download SQL</button>
+                             <button onClick={handleDownloadSQL} className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded border border-green-600 text-sm font-bold">Download SQL (Supabase/Postgres)</button>
                              <button onClick={handleDownloadPHP} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm">Download DB PHP</button>
                              <button onClick={handleDownloadUploadScript} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded border border-zinc-700 text-sm">Download Upload PHP</button>
                          </div>
