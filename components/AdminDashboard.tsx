@@ -48,7 +48,7 @@ const InputGroup: React.FC<{ label: string; value: string; onChange: (val: strin
 );
 
 const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string; multiple?: boolean; onBulkUpload?: (files: File[]) => void }> = ({ onUpload, label = "Upload Image", multiple = false, onBulkUpload }) => {
-    const { dbConfig } = useData();
+    const { dbConfig, uploadToSupabase } = useData();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
 
@@ -64,9 +64,30 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string;
         const file = files[0];
         if (file) {
             setUploading(true);
+            
+            // 1. Try Supabase Upload first
+            if (dbConfig.supabaseUrl && dbConfig.supabaseKey) {
+                try {
+                    const bucket = dbConfig.storageBucket || 'public';
+                    // Sanitize filename
+                    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const path = `uploads/${Date.now()}_${cleanName}`;
+                    
+                    const url = await uploadToSupabase(file, path, bucket);
+                    if (url) {
+                        onUpload(url);
+                        setUploading(false);
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Supabase upload failed, falling back", e);
+                }
+            }
+
+            // 2. Fallback to Simulation / Server Path
             setTimeout(async () => {
                 try {
-                    // Simulation of server path for this environment
+                    // Simulation of server path for this environment if no Supabase
                     const fakeServerUrl = `https://londonkaraoke.club/${dbConfig.photoFolder || 'uploads/'}${file.name}`;
                     // In a real app, you would POST to dbConfig.uploadScriptUrl here
                     onUpload(fakeServerUrl);
@@ -93,7 +114,7 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string;
                     </>
                 ) : (
                     <>
-                       {label} {dbConfig.uploadScriptUrl ? '(Server)' : '(Base64)'}
+                       {label} {dbConfig.supabaseUrl ? '(Supabase)' : (dbConfig.uploadScriptUrl ? '(Server)' : '')}
                     </>
                 )}
             </button>
@@ -131,7 +152,8 @@ const MultiUploader: React.FC<{ onUploadComplete: (urls: {url: string, type: 'im
                 let finalUrl = '';
                 if (useSupabase) {
                     const bucket = dbConfig.storageBucket || 'public'; 
-                    const path = `uploads/${Date.now()}_${file.name}`;
+                    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const path = `uploads/${Date.now()}_${cleanName}`;
                     const url = await uploadToSupabase(file, path, bucket);
                     if (url) finalUrl = url;
                 } else {
