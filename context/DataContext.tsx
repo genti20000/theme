@@ -205,6 +205,9 @@ interface DataContextType {
   updateBookings: (newBookings: Booking[]) => void;
 
   resetToDefaults: () => void;
+  
+  // Supabase specific
+  uploadToSupabase: (file: Blob | File, path: string, bucket?: string) => Promise<string | null>;
 }
 
 // --- Initial Data ---
@@ -334,8 +337,8 @@ const INITIAL_DB_CONFIG: DatabaseConfig = {
   uploadScriptUrl: "https://londonkaraoke.club/upload.php",
   photoFolder: "uploads/photos/",
   videoFolder: "uploads/videos/",
-  supabaseUrl: "",
-  supabaseKey: ""
+  supabaseUrl: "https://mustagmgjfhlynxfisoc.supabase.co",
+  supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY"
 };
 
 const INITIAL_SONGS: Song[] = [
@@ -601,11 +604,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   
                   // Fetch Songs
                   const { data: songsData } = await client.from('songs').select('*');
-                  if (songsData) setSongs(songsData);
+                  if (songsData && songsData.length > 0) setSongs(songsData);
 
                   // Fetch Bookings
                   const { data: bookingsData } = await client.from('bookings').select('*');
-                  if (bookingsData) setBookings(bookingsData);
+                  if (bookingsData && bookingsData.length > 0) setBookings(bookingsData);
 
                   // Fetch App Settings (Hero, Menus, etc.) stored as JSON
                   const { data: settingsData } = await client.from('app_settings').select('*');
@@ -638,6 +641,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (supabase) {
           await supabase.from('app_settings').upsert({ key, value });
       }
+  };
+  
+  // Helper to upload to Supabase Storage
+  const uploadToSupabase = async (file: Blob | File, path: string, bucket: string = 'public'): Promise<string | null> => {
+      if (!supabase) return null;
+      try {
+          const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+              cacheControl: '3600',
+              upsert: true
+          });
+          
+          if (error) {
+              console.error("Supabase Storage Upload Error:", error);
+              return null;
+          }
+          
+          if (data) {
+              const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
+              return publicUrlData.publicUrl;
+          }
+      } catch (e) {
+          console.error("Supabase Upload Exception:", e);
+      }
+      return null;
   };
 
 
@@ -729,7 +756,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dbConfig, updateDbConfig,
         songs, updateSongs,
         bookings, updateBookings,
-        resetToDefaults 
+        resetToDefaults,
+        uploadToSupabase
     }}>
       {children}
     </DataContext.Provider>

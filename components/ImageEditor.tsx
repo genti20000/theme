@@ -1,6 +1,8 @@
 
+
 import React, { useState, useRef } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
+import { useData } from '../context/DataContext';
 
 const sampleImages = [
   { name: 'Microphone', url: 'https://picsum.photos/seed/karaokemic/512/512' },
@@ -25,6 +27,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 
 
 const ImageEditor: React.FC = () => {
+  const { galleryData, updateGalleryData, uploadToSupabase } = useData();
   const [mode, setMode] = useState<'editor' | 'illustrator' | 'video' | 'pro'>('editor');
   const [prompt, setPrompt] = useState<string>('');
   const [imageSize, setImageSize] = useState<'1K' | '2K' | '4K'>('1K');
@@ -40,6 +43,7 @@ const ImageEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +72,7 @@ const ImageEditor: React.FC = () => {
         setGeneratedImage(null);
         setIsLoading(true);
         setSelectedSample(imageUrl);
+        setShowGalleryModal(false);
         
         const response = await fetch(imageUrl);
         const blob = await response.blob();
@@ -76,10 +81,49 @@ const ImageEditor: React.FC = () => {
         setOriginalImage({ base64, mimeType: blob.type, url: imageUrl });
     } catch (e) {
         console.error(e);
-        setError('Failed to load sample image.');
+        setError('Failed to load image.');
     } finally {
         setIsLoading(false);
     }
+  };
+
+  const handleSaveToGallery = async () => {
+      if (!generatedImage && !generatedVideo) return;
+      
+      setIsLoading(true);
+      try {
+          let url = generatedImage || generatedVideo || '';
+          
+          // Try upload to Supabase if generatedImage is base64
+          if (generatedImage && generatedImage.startsWith('data:')) {
+              try {
+                  const response = await fetch(generatedImage);
+                  const blob = await response.blob();
+                  const filename = `gen_${Date.now()}.png`;
+                  const uploadedUrl = await uploadToSupabase(blob, `generated/${filename}`, 'images'); // Assuming 'images' bucket
+                  if (uploadedUrl) {
+                      url = uploadedUrl;
+                  }
+              } catch (e) {
+                  console.error("Failed to upload to Supabase, saving as Base64", e);
+              }
+          }
+
+          if (generatedImage) {
+              const newImages = [...galleryData.images, { id: Date.now().toString(), url: url, caption: 'AI Generated' }];
+              updateGalleryData({ ...galleryData, images: newImages });
+          } else if (generatedVideo) {
+              const newVideos = [...(galleryData.videos || []), { id: Date.now().toString(), url: url, thumbnail: '', title: 'AI Video' }];
+              updateGalleryData({ ...galleryData, videos: newVideos });
+          }
+          
+          alert('Saved to Gallery!');
+      } catch (e) {
+          console.error(e);
+          setError('Failed to save to gallery.');
+      } finally {
+          setIsLoading(false);
+      }
   };
 
   const handleGenerateEdit = async () => {
@@ -395,9 +439,15 @@ const ImageEditor: React.FC = () => {
                         </button>
                         ))}
                     </div>
-                    <button onClick={() => fileInputRef.current?.click()} className="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors">
-                        Or Upload Your Own
-                    </button>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <button onClick={() => fileInputRef.current?.click()} className="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors">
+                            Upload File
+                        </button>
+                        <button onClick={() => setShowGalleryModal(true)} className="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors">
+                            From Gallery
+                        </button>
+                    </div>
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
                     </div>
 
@@ -447,11 +497,13 @@ const ImageEditor: React.FC = () => {
                             {!isLoading && !generatedImage && <p className="text-gray-500">Your edit will appear here</p>}
                         </div>
                         {generatedImage && !isLoading && (
-                            <div className="mt-4 text-center">
+                            <div className="mt-4 text-center w-full space-y-2">
                                 <button onClick={handleDownload} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
                                     Download Image
                                 </button>
-                                <p className="text-xs text-gray-400 mt-2">Tag #LondonKaraokeClub</p>
+                                <button onClick={handleSaveToGallery} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Save to Gallery
+                                </button>
                             </div>
                         )}
                     </div>
@@ -487,9 +539,12 @@ const ImageEditor: React.FC = () => {
                         {!isLoading && !generatedImage && <p className="text-gray-500">Your illustration will appear here</p>}
                     </div>
                     {generatedImage && !isLoading && (
-                        <div className="mt-4 text-center">
+                        <div className="mt-4 text-center flex gap-4 justify-center">
                             <button onClick={handleDownload} className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
-                                Download Illustration
+                                Download
+                            </button>
+                            <button onClick={handleSaveToGallery} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                Save to Gallery
                             </button>
                         </div>
                     )}
@@ -549,9 +604,12 @@ const ImageEditor: React.FC = () => {
                             {!isLoading && !generatedImage && <p className="text-gray-500">Your pro image will appear here</p>}
                         </div>
                         {generatedImage && !isLoading && (
-                            <div className="mt-4 text-center w-full">
+                            <div className="mt-4 text-center w-full space-y-2">
                                 <button onClick={handleDownload} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
                                     Download {imageSize} Image
+                                </button>
+                                <button onClick={handleSaveToGallery} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Save to Gallery
                                 </button>
                             </div>
                         )}
@@ -568,20 +626,27 @@ const ImageEditor: React.FC = () => {
                         <div className="grid md:grid-cols-2 gap-8">
                             <div>
                                 <label className="block text-sm font-semibold mb-2 text-gray-200">1. Upload Image (Optional)</label>
-                                <button onClick={() => fileInputRef.current?.click()} className="w-full h-32 border-2 border-dashed border-zinc-600 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-pink-500 hover:text-pink-500 transition-colors bg-zinc-800/50">
-                                    {originalImage ? (
-                                        <img src={originalImage.url} className="h-full w-full object-contain rounded-lg" />
-                                    ) : (
-                                        <>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <span>Click to Upload</span>
-                                        </>
-                                    )}
-                                </button>
-                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
-                                {originalImage && <button onClick={() => setOriginalImage(null)} className="text-xs text-red-400 mt-2 underline text-center w-full">Remove Image</button>}
+                                <div className="flex gap-2 mb-2">
+                                    <button onClick={() => fileInputRef.current?.click()} className="flex-1 h-32 border-2 border-dashed border-zinc-600 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-pink-500 hover:text-pink-500 transition-colors bg-zinc-800/50">
+                                        {originalImage ? (
+                                            <img src={originalImage.url} className="h-full w-full object-contain rounded-lg" />
+                                        ) : (
+                                            <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <span>Upload</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setShowGalleryModal(true)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-sm font-semibold py-2 rounded transition-colors">
+                                        From Gallery
+                                    </button>
+                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
+                                    {originalImage && <button onClick={() => setOriginalImage(null)} className="text-xs text-red-400 mt-2 underline text-center w-full">Remove Image</button>}
+                                </div>
                             </div>
 
                             <div>
@@ -633,17 +698,45 @@ const ImageEditor: React.FC = () => {
                             {!isLoading && !generatedVideo && <p className="text-gray-500">Your generated video will appear here</p>}
                         </div>
                         {generatedVideo && !isLoading && (
-                            <div className="mt-4 text-center">
-                                <button onClick={handleDownload} className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                            <div className="mt-4 text-center w-full space-y-2">
+                                <button onClick={handleDownload} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
                                     Download Video
                                 </button>
-                                <p className="text-xs text-gray-400 mt-2">Share your creation with #LKCVideoMagic</p>
+                                <button onClick={handleSaveToGallery} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Save to Gallery
+                                </button>
                             </div>
                         )}
                     </div>
                 </div>
             )}
         </div>
+
+        {/* Gallery Select Modal */}
+        {showGalleryModal && (
+            <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+                <div className="bg-zinc-900 w-full max-w-4xl h-[80vh] rounded-2xl border border-zinc-800 flex flex-col overflow-hidden">
+                    <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-white">Select from Gallery</h3>
+                        <button onClick={() => setShowGalleryModal(false)} className="text-gray-400 hover:text-white">Close</button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {galleryData.images.map((img) => (
+                            <button 
+                                key={img.id} 
+                                onClick={() => handleSelectSample(img.url)}
+                                className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
+                            >
+                                <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">Select</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )}
     </section>
   );
 };
