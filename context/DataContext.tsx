@@ -467,7 +467,7 @@ const INITIAL_BOOKINGS: Booking[] = [
     { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const DATA_VERSION = '1.7'; // Bump this to reset local storage on updates
+const DATA_VERSION = '1.8'; // Bump this to reset local storage on updates
 
 // --- Context ---
 
@@ -480,8 +480,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const storedVersion = localStorage.getItem('lkc_data_version');
     if (storedVersion !== DATA_VERSION) {
         // If version mismatch, return default (and let the useEffect update storage later)
-        // We only clear if we haven't already done so in this session to avoid loop, 
-        // but simple "return default" works because the state setter will overwrite LS later.
         return defaultVal;
     }
 

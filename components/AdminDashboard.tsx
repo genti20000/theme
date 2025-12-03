@@ -352,6 +352,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       }
   };
 
+  const handleTestSupabase = async () => {
+      try {
+          const result = await fetchSupabaseFiles(dbConfig.storageBucket || 'public', '');
+          alert(`Connection Successful! Found ${result.length} files in bucket '${dbConfig.storageBucket || 'public'}'.`);
+      } catch (e) {
+          console.error(e);
+          alert("Connection Failed. Check console for details.");
+      }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === 'admin123') {
@@ -815,6 +825,7 @@ if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
                         <InputGroup label="Project URL" value={dbConfig.supabaseUrl || ''} onChange={(v) => updateDbConfig({...dbConfig, supabaseUrl: v})} />
                         <InputGroup label="Anon Key" value={dbConfig.supabaseKey || ''} onChange={(v) => updateDbConfig({...dbConfig, supabaseKey: v})} type="password" />
                         <InputGroup label="Storage Bucket Name" value={dbConfig.storageBucket || 'public'} onChange={(v) => updateDbConfig({...dbConfig, storageBucket: v})} />
+                        <button onClick={handleTestSupabase} className="mt-4 bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-sm w-full">Test Connection</button>
                     </div>
                 </div>
                 
