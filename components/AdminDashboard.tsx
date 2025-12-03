@@ -1,8 +1,6 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
-import { useData, MenuItem, Song, Booking } from '../context/DataContext';
-import { GoogleGenAI, Modality } from "@google/genai";
+import { useData, MenuItem, Song, Booking, GalleryItem, VideoItem } from '../context/DataContext';
 
 interface AdminDashboardProps {}
 
@@ -16,11 +14,11 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-type AdminTab = 'header' | 'hero' | 'highlights' | 'features' | 'vibe' | 'testimonials' | 'food' | 'drinks' | 'gallery' | 'battery' | 'footer' | 'database' | 'songs' | 'bookings' | 'files';
+type AdminTab = 'header' | 'hero' | 'songs' | 'bookings' | 'files' | 'highlights' | 'features' | 'vibe' | 'gallery' | 'testimonials' | 'food' | 'drinks' | 'battery' | 'footer' | 'database';
 
 // Reusable Components
 const SectionCard: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({ title, description, children }) => (
-  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg">
+  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg mb-8">
     <div className="mb-6 border-b border-zinc-800 pb-4">
       <h3 className="text-xl font-bold text-white">{title}</h3>
       <p className="text-sm text-gray-400 mt-1">{description}</p>
@@ -68,7 +66,9 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string;
             setUploading(true);
             setTimeout(async () => {
                 try {
+                    // Simulation of server path for this environment
                     const fakeServerUrl = `https://londonkaraoke.club/${dbConfig.photoFolder || 'uploads/'}${file.name}`;
+                    // In a real app, you would POST to dbConfig.uploadScriptUrl here
                     onUpload(fakeServerUrl);
                 } catch (err) {
                     console.error(err);
@@ -130,7 +130,7 @@ const MultiUploader: React.FC<{ onUploadComplete: (urls: {url: string, type: 'im
             try {
                 let finalUrl = '';
                 if (useSupabase) {
-                    const bucket = 'images'; // Default to 'images' bucket
+                    const bucket = dbConfig.storageBucket || 'public'; 
                     const path = `uploads/${Date.now()}_${file.name}`;
                     const url = await uploadToSupabase(file, path, bucket);
                     if (url) finalUrl = url;
@@ -290,16 +290,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   } = useData();
   const [activeTab, setActiveTab] = useState<AdminTab>('header');
 
-  // AI Generation State for Hero
-  const [generatedBackgrounds, setGeneratedBackgrounds] = useState<string[]>([]);
-  const [isGeneratingBackgrounds, setIsGeneratingBackgrounds] = useState(false);
-  
   // Save State
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   
-  // DB Connection Test State
-  const [dbStatus, setDbStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
-
   // Song Bulk Import
   const [bulkSongsText, setBulkSongsText] = useState('');
 
@@ -316,7 +309,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const loadFiles = async () => {
       setIsLoadingFiles(true);
       try {
-          const files = await fetchSupabaseFiles('images', ''); // Fetch from 'images' bucket by default
+          const bucket = dbConfig.storageBucket || 'public';
+          const files = await fetchSupabaseFiles(bucket, ''); 
           setFileList(files);
       } catch (e) {
           console.error("Failed to load files", e);
@@ -327,7 +321,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
   const handleDeleteFile = async (name: string) => {
       if (!confirm(`Delete ${name} permanently?`)) return;
-      const success = await deleteSupabaseFile(name, 'images');
+      const bucket = dbConfig.storageBucket || 'public';
+      const success = await deleteSupabaseFile(name, bucket);
       if (success) {
           loadFiles(); // Refresh list
       } else {
@@ -367,15 +362,72 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       }
   };
 
-  // ... (Downloads SQL/PHP - Same as before) ...
-  const handleDownloadSQL = () => { /* ... existing ... */ };
-  const handleDownloadPHP = () => { /* ... existing ... */ };
-  const handleDownloadUploadScript = () => { /* ... existing ... */ };
+  // Download Handlers
+  const handleDownloadSQL = () => {
+      let sql = `CREATE DATABASE IF NOT EXISTS \`${dbConfig.name}\`;\nUSE \`${dbConfig.name}\`;\n\n`;
+      sql += `CREATE TABLE IF NOT EXISTS songs (id VARCHAR(255) PRIMARY KEY, title VARCHAR(255), artist VARCHAR(255), genre VARCHAR(100), language VARCHAR(50));\n`;
+      sql += `CREATE TABLE IF NOT EXISTS bookings (id VARCHAR(255) PRIMARY KEY, customer_name VARCHAR(255), email VARCHAR(255), phone VARCHAR(50), date DATE, time VARCHAR(10), guests INT, room VARCHAR(100), status VARCHAR(50));\n`;
+      sql += `CREATE TABLE IF NOT EXISTS app_settings (key VARCHAR(255) PRIMARY KEY, value JSON);\n\n`;
+      
+      // Dump Songs
+      songs.forEach(s => {
+          sql += `INSERT INTO songs VALUES ('${s.id}', '${s.title.replace(/'/g, "''")}', '${s.artist.replace(/'/g, "''")}', '${s.genre || ''}', '${s.language || ''}');\n`;
+      });
+      // Dump Bookings
+      bookings.forEach(b => {
+          sql += `INSERT INTO bookings VALUES ('${b.id}', '${b.customerName.replace(/'/g, "''")}', '${b.email}', '${b.phone}', '${b.date}', '${b.time}', ${b.guests}, '${b.room}', '${b.status}');\n`;
+      });
+
+      const blob = new Blob([sql], { type: 'text/sql' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lkc_setup.sql';
+      a.click();
+  };
+
+  const handleDownloadUploadScript = () => {
+      const php = `<?php
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
+
+if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
+    $uploadDir = '${dbConfig.photoFolder || 'uploads/'}';
+    // Check if it's video
+    if (strpos($_FILES['file']['type'], 'video') !== false) {
+        $uploadDir = '${dbConfig.videoFolder || 'uploads/videos/'}';
+    }
+    
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    $filename = basename($_FILES['file']['name']);
+    $targetFile = $uploadDir . $filename;
+
+    if (move_uploaded_file($_FILES['file']['tmp_name'], $targetFile)) {
+        echo json_encode(['url' => 'https://' . $_SERVER['HTTP_HOST'] . '/' . $targetFile]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to move uploaded file.']);
+    }
+} else {
+    http_response_code(400);
+    echo json_encode(['error' => 'No file uploaded or upload error.']);
+}
+?>`;
+      const blob = new Blob([php], { type: 'text/x-php' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'upload.php';
+      a.click();
+  };
 
   // --- Handlers ---
   const handleHeroChange = (field: string, value: any) => { updateHeroData({ ...heroData, [field]: value }); };
   const handleHighlightsChange = (field: string, value: any) => { updateHighlightsData({ ...highlightsData, [field]: value }); };
-  // ... (Other handlers same as before) ...
+  
   const handleUpdateSong = (id: string, field: keyof Song, value: string) => {
       updateSongs(songs.map(s => s.id === id ? { ...s, [field]: value } : s));
   };
@@ -395,15 +447,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleAddBooking = () => { updateBookings([...bookings, { id: Date.now().toString(), customerName: 'New Guest', email: '', phone: '', date: new Date().toISOString().split('T')[0], time: '20:00', guests: 4, room: 'Standard', status: 'pending' }]); };
   const handleDeleteBooking = (id: string) => { if(confirm("Delete?")) updateBookings(bookings.filter(b => b.id !== id)); };
   const handleUpdateBooking = (id: string, field: keyof Booking, value: any) => { updateBookings(bookings.map(b => b.id === id ? { ...b, [field]: value } : b)); };
-  const handleGenerateBackgrounds = async () => { /* ... existing ... */ };
+  
   const handleAddSlide = () => { handleHeroChange('slides', [...(heroData.slides || []), 'https://picsum.photos/seed/newslide/1600/900']); };
   const handleRemoveSlide = (index: number) => { const newSlides = [...(heroData.slides || [])]; newSlides.splice(index, 1); handleHeroChange('slides', newSlides); };
   const handleUpdateSlide = (index: number, value: string) => { const newSlides = [...(heroData.slides || [])]; newSlides[index] = value; handleHeroChange('slides', newSlides); }
   const handleAddGalleryImage = () => { updateGalleryData({ ...galleryData, images: [...galleryData.images, { id: Date.now().toString(), url: 'https://picsum.photos/seed/new/800/800', caption: 'New Image' }] }); }
   const handleDeleteGalleryImage = (index: number) => { if(confirm("Remove?")) { const newImgs = [...galleryData.images]; newImgs.splice(index, 1); updateGalleryData({ ...galleryData, images: newImgs }); } }
+  const handleUpdateVideo = (index: number, field: string, value: string) => { const newVids = [...(galleryData.videos || [])]; if(newVids[index]) { newVids[index] = { ...newVids[index], [field]: value }; updateGalleryData({ ...galleryData, videos: newVids }); } }
   const handleAddGalleryVideo = () => { updateGalleryData({ ...galleryData, videos: [...(galleryData.videos || []), { id: Date.now().toString(), url: '', thumbnail: '', title: 'New Video' }] }); }
   const handleDeleteGalleryVideo = (index: number) => { if(confirm("Remove?")) { const newVids = [...(galleryData.videos || [])]; newVids.splice(index, 1); updateGalleryData({ ...galleryData, videos: newVids }); } }
-  const handleUpdateVideo = (index: number, field: string, value: string) => { const newVids = [...(galleryData.videos || [])]; newVids[index] = { ...newVids[index], [field]: value }; updateGalleryData({ ...galleryData, videos: newVids }); }
+
+  
   const handleBulkUploadComplete = (items: {url: string, type: 'image' | 'video'}[]) => {
       const newImages = [...galleryData.images];
       const newVideos = [...(galleryData.videos || [])];
@@ -415,7 +469,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       alert(`Uploaded ${items.length} items successfully.`);
   };
   const handleFileUploadComplete = () => {
-      loadFiles(); // Reload file list after upload
+      loadFiles(); 
   }
   
   if (!isAuthenticated) return (
@@ -457,7 +511,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       <div className="container mx-auto px-6 py-8 max-w-5xl">
         {activeTab === 'files' && (
             <div className="space-y-8">
-                <SectionCard title="File Manager (Supabase)" description="Manage images and videos stored in your Supabase 'images' bucket.">
+                <SectionCard title="File Manager (Supabase)" description="Manage images and videos stored in your Supabase storage bucket.">
                     <div className="mb-8">
                         <label className="block text-sm font-semibold text-gray-300 mb-2">Upload Files to Storage</label>
                         <MultiUploader onUploadComplete={handleFileUploadComplete} useSupabase={true} />
@@ -505,13 +559,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             </div>
         )}
 
-        {/* Existing Tabs */}
+        {/* Header Settings */}
         {activeTab === 'header' && <SectionCard title="Header Settings" description=""><ImageField url={headerData.logoUrl} onUpdate={(v) => updateHeaderData({...headerData, logoUrl: v})} /></SectionCard>}
+        
+        {/* Hero Settings */}
         {activeTab === 'hero' && (
             <SectionCard title="Homepage Hero" description="">
                  <InputGroup label="Badge Text" value={heroData.badgeText} onChange={(v) => handleHeroChange('badgeText', v)} />
                  <InputGroup label="Main Heading" value={heroData.headingText} onChange={(v) => handleHeroChange('headingText', v)} />
                  <InputGroup label="Subtext" value={heroData.subText} onChange={(v) => handleHeroChange('subText', v)} type="textarea" />
+                 <InputGroup label="Button Text" value={heroData.buttonText} onChange={(v) => handleHeroChange('buttonText', v)} />
                  <div className="border-t border-zinc-800 pt-6 mt-4">
                     <label className="block text-sm font-semibold text-gray-300 mb-4">Slideshow</label>
                     <div className="space-y-2 mb-4">
@@ -523,37 +580,226 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                  </div>
             </SectionCard>
         )}
+
+        {/* Song Library */}
         {activeTab === 'songs' && (
-            <SectionCard title="Song Library" description="">
-                <div className="mb-4"><button onClick={handleAddSong} className="bg-green-600 px-3 py-1 rounded text-sm text-white">+ Add Song</button></div>
+            <SectionCard title="Song Library" description="Manage the song database. Use bulk import for large lists.">
+                <div className="mb-6 border-b border-zinc-800 pb-6">
+                    <h4 className="text-sm font-bold text-white mb-2">Bulk Import</h4>
+                    <p className="text-xs text-gray-500 mb-2">Format: Title, Artist, Genre (optional). One song per line.</p>
+                    <textarea 
+                        value={bulkSongsText}
+                        onChange={(e) => setBulkSongsText(e.target.value)}
+                        placeholder={`e.g.\nBohemian Rhapsody, Queen, Rock\nWonderwall, Oasis`}
+                        className="w-full h-32 bg-zinc-950 border border-zinc-700 rounded p-2 text-xs text-gray-300 mb-2"
+                    />
+                    <button onClick={handleBulkImportSongs} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded text-xs font-bold">Import Songs</button>
+                </div>
+
+                <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-sm font-bold text-white">Song List ({songs.length})</h4>
+                    <button onClick={handleAddSong} className="bg-green-600 px-3 py-1 rounded text-xs text-white hover:bg-green-500">+ Add Song</button>
+                </div>
                 <div className="max-h-96 overflow-y-auto border border-zinc-800 rounded bg-zinc-950">
-                    <table className="w-full text-sm text-left text-gray-400">
-                        <thead className="bg-zinc-900 text-gray-200"><tr><th className="px-4 py-2">Title</th><th className="px-4 py-2">Artist</th><th className="px-4 py-2">Genre</th><th className="px-4 py-2">X</th></tr></thead>
-                        <tbody>{songs.slice(0, 50).map(s => (<tr key={s.id} className="border-b border-zinc-800"><td className="px-4 py-1">{s.title}</td><td className="px-4 py-1">{s.artist}</td><td className="px-4 py-1">{s.genre}</td><td className="px-4 py-1"><button onClick={() => handleDeleteSong(s.id)} className="text-red-500">X</button></td></tr>))}</tbody>
+                    <table className="w-full text-xs text-left text-gray-400">
+                        <thead className="bg-zinc-900 text-gray-200 sticky top-0"><tr><th className="px-4 py-2">Title</th><th className="px-4 py-2">Artist</th><th className="px-4 py-2">Genre</th><th className="px-4 py-2 w-10"></th></tr></thead>
+                        <tbody>{songs.map(s => (<tr key={s.id} className="border-b border-zinc-800 hover:bg-zinc-900"><td className="px-4 py-2"><input value={s.title} onChange={(e) => handleUpdateSong(s.id, 'title', e.target.value)} className="bg-transparent w-full outline-none"/></td><td className="px-4 py-2"><input value={s.artist} onChange={(e) => handleUpdateSong(s.id, 'artist', e.target.value)} className="bg-transparent w-full outline-none"/></td><td className="px-4 py-2"><input value={s.genre || ''} onChange={(e) => handleUpdateSong(s.id, 'genre', e.target.value)} className="bg-transparent w-full outline-none"/></td><td className="px-4 py-2 text-center"><button onClick={() => handleDeleteSong(s.id)} className="text-red-500 hover:text-red-400 font-bold">X</button></td></tr>))}</tbody>
                     </table>
                 </div>
             </SectionCard>
         )}
-        {activeTab === 'gallery' && (
-             <SectionCard title="Gallery" description="">
-                 <div className="my-6"><label className="block text-sm font-semibold text-gray-300 mb-2">Bulk Upload to Gallery</label><MultiUploader onUploadComplete={handleBulkUploadComplete} /></div>
-                 <div className="grid grid-cols-2 gap-4">{galleryData.images.map((img, idx) => (<div key={idx} className="bg-zinc-950 p-2 rounded flex gap-2"><div className="w-16 h-16"><ImageField url={img.url} onUpdate={(v) => {const n=[...galleryData.images];n[idx].url=v;updateGalleryData({...galleryData, images:n})}}/></div><button onClick={() => handleDeleteGalleryImage(idx)} className="text-red-500 text-xs">Remove</button></div>))}</div>
-                 <button onClick={handleAddGalleryImage} className="mt-4 text-sm bg-yellow-400 text-black px-3 py-1 rounded font-bold">+ Add Image</button>
+
+        {/* Bookings */}
+        {activeTab === 'bookings' && (
+            <SectionCard title="Bookings" description="Manage reservations. (Note: Primarily use Square for real bookings, this is for manual tracking)">
+                <div className="flex justify-end mb-4">
+                    <button onClick={handleAddBooking} className="bg-green-600 px-3 py-1 rounded text-xs text-white hover:bg-green-500">+ New Booking</button>
+                </div>
+                <div className="overflow-x-auto border border-zinc-800 rounded bg-zinc-950">
+                    <table className="w-full text-xs text-left text-gray-400">
+                        <thead className="bg-zinc-900 text-gray-200">
+                            <tr><th className="p-3">Name</th><th className="p-3">Date</th><th className="p-3">Time</th><th className="p-3">Guests</th><th className="p-3">Room</th><th className="p-3">Status</th><th className="p-3"></th></tr>
+                        </thead>
+                        <tbody>
+                            {bookings.map(b => (
+                                <tr key={b.id} className="border-b border-zinc-800 hover:bg-zinc-900">
+                                    <td className="p-3"><input value={b.customerName} onChange={(e) => handleUpdateBooking(b.id, 'customerName', e.target.value)} className="bg-transparent w-full outline-none" /></td>
+                                    <td className="p-3"><input type="date" value={b.date} onChange={(e) => handleUpdateBooking(b.id, 'date', e.target.value)} className="bg-transparent w-full outline-none" /></td>
+                                    <td className="p-3"><input type="time" value={b.time} onChange={(e) => handleUpdateBooking(b.id, 'time', e.target.value)} className="bg-transparent w-full outline-none" /></td>
+                                    <td className="p-3"><input type="number" value={b.guests} onChange={(e) => handleUpdateBooking(b.id, 'guests', parseInt(e.target.value))} className="bg-transparent w-12 outline-none" /></td>
+                                    <td className="p-3"><input value={b.room} onChange={(e) => handleUpdateBooking(b.id, 'room', e.target.value)} className="bg-transparent w-full outline-none" /></td>
+                                    <td className="p-3">
+                                        <select value={b.status} onChange={(e) => handleUpdateBooking(b.id, 'status', e.target.value)} className="bg-zinc-800 rounded p-1">
+                                            <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </td>
+                                    <td className="p-3 text-center"><button onClick={() => handleDeleteBooking(b.id)} className="text-red-500 font-bold">X</button></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </SectionCard>
         )}
-        
-        {/* Basic placeholders for other tabs to ensure they render blank rather than crash if selected */}
-        {['highlights', 'features', 'vibe', 'testimonials', 'food', 'drinks', 'battery', 'footer', 'bookings', 'database'].includes(activeTab) && activeTab !== 'database' && activeTab !== 'bookings' && (
-            <div className="text-gray-500">Settings for {activeTab} available in full view.</div>
+
+        {/* Highlights */}
+        {activeTab === 'highlights' && (
+            <SectionCard title="Highlights Section" description="">
+                <InputGroup label="Heading" value={highlightsData.heading} onChange={(v) => handleHighlightsChange('heading', v)} />
+                <InputGroup label="Subtext" value={highlightsData.subtext} onChange={(v) => handleHighlightsChange('subtext', v)} type="textarea" />
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Main Image</label><ImageField url={highlightsData.mainImageUrl} onUpdate={(v) => handleHighlightsChange('mainImageUrl', v)} /></div>
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Side Image (Circle)</label><ImageField url={highlightsData.sideImageUrl} onUpdate={(v) => handleHighlightsChange('sideImageUrl', v)} /></div>
+            </SectionCard>
         )}
+
+        {/* Features */}
+        {activeTab === 'features' && (
+            <SectionCard title="Features Section" description="Manage the 'Experience' and 'Occasions' text.">
+                <InputGroup label="Experience Heading" value={featuresData.experience.heading} onChange={(v) => updateFeaturesData({...featuresData, experience: {...featuresData.experience, heading: v}})} />
+                <InputGroup label="Experience Text" value={featuresData.experience.text} onChange={(v) => updateFeaturesData({...featuresData, experience: {...featuresData.experience, text: v}})} type="textarea" />
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Experience Image</label><ImageField url={featuresData.experience.image} onUpdate={(v) => updateFeaturesData({...featuresData, experience: {...featuresData.experience, image: v}})} /></div>
+            </SectionCard>
+        )}
+
+        {/* Vibe */}
+        {activeTab === 'vibe' && (
+            <SectionCard title="The Vibe (Fitness/Atmosphere)" description="">
+                <InputGroup label="Top Heading" value={vibeData.heading} onChange={(v) => updateVibeData({...vibeData, heading: v})} />
+                <InputGroup label="Top Text" value={vibeData.text} onChange={(v) => updateVibeData({...vibeData, text: v})} type="textarea" />
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Big Bottom Image</label><ImageField url={vibeData.bigImage} onUpdate={(v) => updateVibeData({...vibeData, bigImage: v})} /></div>
+            </SectionCard>
+        )}
+
+        {/* Gallery */}
+        {activeTab === 'gallery' && (
+            <SectionCard title="Gallery Management" description="Add or remove images and videos from the gallery page.">
+                <InputGroup label="Gallery Page Heading" value={galleryData.heading} onChange={(v) => updateGalleryData({ ...galleryData, heading: v })} />
+                <InputGroup label="Gallery Page Subtext" value={galleryData.subtext} onChange={(v) => updateGalleryData({ ...galleryData, subtext: v })} type="textarea" />
+                
+                <div className="mt-8 border-t border-zinc-800 pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <label className="block text-lg font-bold text-white">Images</label>
+                        <div className="flex gap-2">
+                            <MultiUploader onUploadComplete={handleBulkUploadComplete} useSupabase={true} />
+                            <button onClick={handleAddGalleryImage} className="bg-green-600 px-3 py-1 rounded text-sm text-white hover:bg-green-500">+ Add Image</button>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {galleryData.images.map((img, i) => (
+                            <div key={img.id} className="bg-zinc-950 p-2 rounded border border-zinc-800 relative group">
+                                <div className="aspect-square bg-black mb-2 overflow-hidden rounded">
+                                    <img src={img.url} className="w-full h-full object-cover" />
+                                </div>
+                                <input value={img.caption} onChange={(e) => {const newImgs = [...galleryData.images]; newImgs[i].caption = e.target.value; updateGalleryData({...galleryData, images: newImgs})}} className="w-full bg-transparent text-xs border-b border-zinc-700 outline-none pb-1" placeholder="Caption" />
+                                <button onClick={() => handleDeleteGalleryImage(i)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">X</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mt-12 border-t border-zinc-800 pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <label className="block text-lg font-bold text-white">Videos</label>
+                        <button onClick={handleAddGalleryVideo} className="bg-green-600 px-3 py-1 rounded text-sm text-white hover:bg-green-500">+ Add Video</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(galleryData.videos || []).map((vid, i) => (
+                            <div key={vid.id} className="bg-zinc-950 p-3 rounded border border-zinc-800 relative group">
+                                <div className="mb-2"><label className="text-xs text-gray-500">Video URL</label><input value={vid.url} onChange={(e) => handleUpdateVideo(i, 'url', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-white" /></div>
+                                <div className="mb-2"><label className="text-xs text-gray-500">Thumbnail URL</label><input value={vid.thumbnail} onChange={(e) => handleUpdateVideo(i, 'thumbnail', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-white" /></div>
+                                <div className="mb-2"><label className="text-xs text-gray-500">Title</label><input value={vid.title} onChange={(e) => handleUpdateVideo(i, 'title', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-white" /></div>
+                                <button onClick={() => handleDeleteGalleryVideo(i)} className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">X</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </SectionCard>
+        )}
+
+        {/* Testimonials */}
+        {activeTab === 'testimonials' && (
+            <SectionCard title="Testimonials" description="Update customer reviews.">
+                <InputGroup label="Heading" value={testimonialsData.heading} onChange={(v) => updateTestimonialsData({...testimonialsData, heading: v})} />
+                <InputGroup label="Subtext" value={testimonialsData.subtext} onChange={(v) => updateTestimonialsData({...testimonialsData, subtext: v})} />
+                <div className="mt-4 space-y-4">
+                    {testimonialsData.items.map((item, i) => (
+                        <div key={i} className="bg-zinc-950 p-4 rounded border border-zinc-800">
+                            <div className="mb-2 font-bold text-sm text-gray-400">Review {i+1}</div>
+                            <InputGroup label="Name" value={item.name} onChange={(v) => {const newItems = [...testimonialsData.items]; newItems[i].name = v; updateTestimonialsData({...testimonialsData, items: newItems})}} />
+                            <InputGroup label="Quote" value={item.quote} onChange={(v) => {const newItems = [...testimonialsData.items]; newItems[i].quote = v; updateTestimonialsData({...testimonialsData, items: newItems})}} type="textarea" />
+                        </div>
+                    ))}
+                </div>
+            </SectionCard>
+        )}
+
+        {/* Food Menu */}
+        {activeTab === 'food' && (
+            <SectionCard title="Food Menu (JSON)" description="Edit the food menu structure directly. Be careful with syntax.">
+                <textarea 
+                    className="w-full h-96 bg-zinc-950 font-mono text-xs text-green-400 p-4 rounded border border-zinc-700"
+                    value={JSON.stringify(foodMenu, null, 2)}
+                    onChange={(e) => { try { updateFoodMenu(JSON.parse(e.target.value)); } catch(e) {} }}
+                />
+            </SectionCard>
+        )}
+
+        {/* Drinks Menu */}
+        {activeTab === 'drinks' && (
+            <SectionCard title="Drinks Menu (JSON)" description="Edit the drinks menu structure directly.">
+                <textarea 
+                    className="w-full h-96 bg-zinc-950 font-mono text-xs text-green-400 p-4 rounded border border-zinc-700"
+                    value={JSON.stringify(drinksData, null, 2)}
+                    onChange={(e) => { try { updateDrinksData(JSON.parse(e.target.value)); } catch(e) {} }}
+                />
+            </SectionCard>
+        )}
+
+        {/* Battery */}
+        {activeTab === 'battery' && (
+            <SectionCard title="Stats Section" description="">
+                <InputGroup label="Stat Number (e.g. 80K+)" value={batteryData.statNumber} onChange={(v) => updateBatteryData({...batteryData, statNumber: v})} />
+                <InputGroup label="Subtext" value={batteryData.subText} onChange={(v) => updateBatteryData({...batteryData, subText: v})} />
+            </SectionCard>
+        )}
+
+        {/* Footer */}
+        {activeTab === 'footer' && (
+            <SectionCard title="Footer CTA" description="">
+                <InputGroup label="CTA Heading" value={footerData.ctaHeading} onChange={(v) => updateFooterData({...footerData, ctaHeading: v})} />
+                <InputGroup label="CTA Text" value={footerData.ctaText} onChange={(v) => updateFooterData({...footerData, ctaText: v})} />
+                <InputGroup label="Button Text" value={footerData.ctaButtonText} onChange={(v) => updateFooterData({...footerData, ctaButtonText: v})} />
+            </SectionCard>
+        )}
+
+        {/* Database */}
         {activeTab === 'database' && (
-             <SectionCard title="Database" description="">
-                 <div className="grid md:grid-cols-2 gap-6"><InputGroup label="Supabase URL" value={dbConfig.supabaseUrl||''} onChange={(v)=>updateDbConfig({...dbConfig, supabaseUrl:v})}/><InputGroup label="Anon Key" value={dbConfig.supabaseKey||''} onChange={(v)=>updateDbConfig({...dbConfig, supabaseKey:v})} type="password"/></div>
-             </SectionCard>
-        )}
-        {activeTab === 'bookings' && (
-            <SectionCard title="Bookings" description="">
-                <div className="space-y-2">{bookings.map(b => <div key={b.id} className="bg-zinc-950 p-3 rounded flex justify-between"><span>{b.customerName} - {b.date}</span><span className="uppercase text-xs bg-zinc-800 px-2 py-1 rounded">{b.status}</span></div>)}</div>
+            <SectionCard title="Database & Backend Config" description="Configure connection settings for your hosting environment.">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 className="font-bold text-yellow-400 mb-4">MySQL Settings (Optional)</h4>
+                        <InputGroup label="Database Host" value={dbConfig.host} onChange={(v) => updateDbConfig({...dbConfig, host: v})} />
+                        <InputGroup label="Database Name" value={dbConfig.name} onChange={(v) => updateDbConfig({...dbConfig, name: v})} />
+                        <InputGroup label="Database User" value={dbConfig.user} onChange={(v) => updateDbConfig({...dbConfig, user: v})} />
+                        <InputGroup label="Database Password" value={dbConfig.pass} onChange={(v) => updateDbConfig({...dbConfig, pass: v})} type="password" />
+                        
+                        <div className="mt-6">
+                            <label className="block text-sm font-semibold text-gray-300 mb-2">Upload Handler URL (PHP)</label>
+                            <input value={dbConfig.uploadScriptUrl} onChange={(v) => updateDbConfig({...dbConfig, uploadScriptUrl: v.target.value})} className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-white" placeholder="https://your-site.com/upload.php" />
+                        </div>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-green-400 mb-4">Supabase Settings</h4>
+                        <InputGroup label="Project URL" value={dbConfig.supabaseUrl || ''} onChange={(v) => updateDbConfig({...dbConfig, supabaseUrl: v})} />
+                        <InputGroup label="Anon Key" value={dbConfig.supabaseKey || ''} onChange={(v) => updateDbConfig({...dbConfig, supabaseKey: v})} type="password" />
+                        <InputGroup label="Storage Bucket Name" value={dbConfig.storageBucket || 'public'} onChange={(v) => updateDbConfig({...dbConfig, storageBucket: v})} />
+                    </div>
+                </div>
+                
+                <div className="mt-8 flex gap-4 border-t border-zinc-800 pt-6">
+                    <button onClick={handleDownloadSQL} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded text-sm">Download SQL Setup</button>
+                    <button onClick={handleDownloadUploadScript} className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded text-sm">Download Upload Handler (PHP)</button>
+                </div>
             </SectionCard>
         )}
 

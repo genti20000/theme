@@ -1,5 +1,4 @@
 
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -149,6 +148,7 @@ export interface DatabaseConfig {
   videoFolder: string;
   supabaseUrl?: string;
   supabaseKey?: string;
+  storageBucket?: string;
 }
 
 export interface Song {
@@ -340,7 +340,8 @@ const INITIAL_DB_CONFIG: DatabaseConfig = {
   photoFolder: "uploads/photos/",
   videoFolder: "uploads/videos/",
   supabaseUrl: "https://mustagmgjfhlynxfisoc.supabase.co",
-  supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY"
+  supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY",
+  storageBucket: "public"
 };
 
 const INITIAL_SONGS: Song[] = [
