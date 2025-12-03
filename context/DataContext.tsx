@@ -209,6 +209,7 @@ interface DataContextType {
   // Supabase specific
   uploadToSupabase: (file: Blob | File, path: string, bucket?: string) => Promise<string | null>;
   fetchSupabaseFiles: (bucket?: string, folder?: string) => Promise<{name: string, url: string}[]>;
+  deleteSupabaseFile: (path: string, bucket?: string) => Promise<boolean>;
 }
 
 // --- Initial Data ---
@@ -668,6 +669,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return null;
   };
 
+  // Helper to delete from Supabase Storage
+  const deleteSupabaseFile = async (path: string, bucket: string = 'public'): Promise<boolean> => {
+      if (!supabase) return false;
+      try {
+          const { error } = await supabase.storage.from(bucket).remove([path]);
+          if (error) {
+              console.error("Supabase Delete Error:", error);
+              return false;
+          }
+          return true;
+      } catch (e) {
+          console.error("Supabase Delete Exception:", e);
+          return false;
+      }
+  }
+
   // Helper to list files from Supabase Storage
   const fetchSupabaseFiles = async (bucket: string = 'public', folder: string = ''): Promise<{ name: string; url: string }[]> => {
       if (!supabase) return [];
@@ -789,7 +806,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         bookings, updateBookings,
         resetToDefaults,
         uploadToSupabase,
-        fetchSupabaseFiles
+        fetchSupabaseFiles,
+        deleteSupabaseFile
     }}>
       {children}
     </DataContext.Provider>
