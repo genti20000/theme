@@ -221,6 +221,7 @@ const INITIAL_HEADER_DATA: HeaderData = {
 const INITIAL_HERO_DATA: HeroData = {
     backgroundImageUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
     slides: [
+        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/Video%202.MP4", // Auto-play video
         "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1920&auto=format&fit=crop", // Ocean/Rock scene
         "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg"  // Singing Santa from Supabase
     ],
@@ -467,7 +468,7 @@ const INITIAL_BOOKINGS: Booking[] = [
     { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const DATA_VERSION = '2.0'; // Bump this to reset local storage on updates
+const DATA_VERSION = '2.1'; // Bump this to reset local storage on updates
 
 // --- Context ---
 
