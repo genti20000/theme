@@ -222,7 +222,7 @@ const INITIAL_HERO_DATA: HeroData = {
     backgroundImageUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
     slides: [
         "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1920&auto=format&fit=crop", // Ocean/Rock scene
-        "https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop"  // Singing Santa
+        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg"  // Singing Santa from Supabase
     ],
     badgeText: "Winter Wonderland Karaoke",
     headingText: "The Ultimate Karaoke",
@@ -335,7 +335,7 @@ const INITIAL_DB_CONFIG: DatabaseConfig = {
   videoFolder: 'uploads/videos/',
   supabaseUrl: 'https://mustagmgjfhlynxfisoc.supabase.co',
   supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY',
-  storageBucket: 'public'
+  storageBucket: 'iii'
 };
 
 const INITIAL_FOOD_MENU: MenuCategory[] = [
@@ -467,7 +467,7 @@ const INITIAL_BOOKINGS: Booking[] = [
     { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const DATA_VERSION = '1.8'; // Bump this to reset local storage on updates
+const DATA_VERSION = '2.0'; // Bump this to reset local storage on updates
 
 // --- Context ---
 
@@ -556,7 +556,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // --- Supabase Helpers ---
-  const uploadToSupabase = async (file: Blob | File, path: string, bucket: string = dbConfig.storageBucket || 'public'): Promise<string | null> => {
+  const uploadToSupabase = async (file: Blob | File, path: string, bucket: string = dbConfig.storageBucket || 'iii'): Promise<string | null> => {
       if (!supabase) {
           console.warn("Supabase not configured");
           return null;
@@ -575,7 +575,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
   };
 
-  const fetchSupabaseFiles = async (bucket: string = dbConfig.storageBucket || 'public', folder: string = ''): Promise<{name: string, url: string}[]> => {
+  const fetchSupabaseFiles = async (bucket: string = dbConfig.storageBucket || 'iii', folder: string = ''): Promise<{name: string, url: string}[]> => {
       if (!supabase) return [];
       try {
           const { data, error } = await supabase.storage.from(bucket).list(folder, {
@@ -599,7 +599,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
   };
 
-  const deleteSupabaseFile = async (path: string, bucket: string = dbConfig.storageBucket || 'public'): Promise<boolean> => {
+  const deleteSupabaseFile = async (path: string, bucket: string = dbConfig.storageBucket || 'iii'): Promise<boolean> => {
       if (!supabase) return false;
       try {
           const { error } = await supabase.storage.from(bucket).remove([path]);
