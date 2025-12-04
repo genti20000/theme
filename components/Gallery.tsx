@@ -56,7 +56,7 @@ const Gallery: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mediaItems.length]); // Add dependency to ensure closure has latest data if needed
+  }, [mediaItems.length]);
 
   const handleNext = () => {
     if (mediaItems.length === 0) return;
@@ -198,3 +198,78 @@ const Gallery: React.FC = () => {
 
                 {/* Thumbnails */}
                 <div className="max-w-5xl mx-auto mt-6">
+                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                        {mediaItems.map((item, index) => (
+                            <button 
+                                key={item.id} 
+                                onClick={() => goToSlide(index)}
+                                className={`relative flex-shrink-0 w-24 h-16 md:w-32 md:h-20 rounded-lg overflow-hidden transition-all duration-300 ${index === currentIndex ? 'ring-2 ring-yellow-400 scale-105' : 'opacity-60 hover:opacity-100'}`}
+                            >
+                                <img src={item.thumbnail} alt={item.caption} className="w-full h-full object-cover" />
+                                {item.type === 'video' && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                        <div className="bg-black/50 rounded-full p-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </>
+        ) : (
+            /* Grid View */
+            <div className="max-w-7xl mx-auto columns-1 md:columns-3 gap-6 space-y-6">
+                {mediaItems.map((item, index) => (
+                    <div key={item.id} className="break-inside-avoid bg-zinc-900 rounded-2xl overflow-hidden shadow-lg border border-zinc-800 hover:border-yellow-400 transition-all duration-300 group cursor-pointer" onClick={() => { setViewMode('carousel'); goToSlide(index); }}>
+                        <div className="relative">
+                            <img src={item.thumbnail} alt={item.caption} className="w-full h-auto object-cover" />
+                            {item.type === 'video' && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white drop-shadow-lg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                                <p className="text-white font-bold">{item.caption}</p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )}
+      </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && currentItem && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setIsLightboxOpen(false)}>
+            <div className="relative max-w-7xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                {currentItem.type === 'video' ? (
+                    <video controls autoPlay className="max-w-full max-h-[85vh] rounded-lg shadow-2xl">
+                        <source src={currentItem.url} type="video/mp4" />
+                    </video>
+                ) : (
+                    <img src={currentItem.url} alt={currentItem.caption} className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
+                )}
+                <p className="text-white text-xl mt-4 font-bold">{currentItem.caption}</p>
+                
+                <button 
+                    onClick={() => setIsLightboxOpen(false)}
+                    className="absolute -top-12 right-0 text-gray-400 hover:text-white transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Gallery;
