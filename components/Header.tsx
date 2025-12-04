@@ -6,13 +6,15 @@ interface HeaderProps {
   onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs') => void;
 }
 
-// Compact Menu Icon for inside the button
+// Stylized Musical Note Menu Icon (Three lines forming a note)
 const MenuIcon = () => (
-  <svg className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" viewBox="0 0 80 24" fill="currentColor">
-    <rect x="0" y="0" width="80" height="3" rx="1.5" className="origin-center" />
-    <rect x="10" y="7" width="60" height="3" rx="1.5" className="origin-center" />
-    <rect x="20" y="14" width="40" height="3" rx="1.5" className="origin-center" />
-    <rect x="30" y="21" width="20" height="3" rx="1.5" className="origin-center" />
+  <svg className="w-6 h-6 text-gray-300 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
+    <rect x="3" y="6" width="18" height="2" rx="1" />
+    <rect x="3" y="11" width="18" height="2" rx="1" />
+    <rect x="3" y="16" width="12" height="2" rx="1" />
+    <path d="M19 6V16C19 17.6569 17.6569 19 16 19C14.3431 19 13 17.6569 13 16C13 14.3431 14.3431 13 16 13C16.8284 13 17.58 13.3358 18.1213 13.8787L19 13V6H3" fill="none" />
+    <circle cx="16" cy="17" r="3" />
+    <rect x="18" y="5" width="2" height="12" />
   </svg>
 );
 
@@ -122,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 aria-label="Menu"
             >
                  <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-180' : ''}`}>
-                    {isMenuOpen ? <CloseIcon /> : <div className="w-12 md:w-16"><MenuIcon /></div>}
+                    {isMenuOpen ? <CloseIcon /> : <div className="w-8 h-8 flex items-center justify-center"><MenuIcon /></div>}
                  </div>
             </button>
         </div>

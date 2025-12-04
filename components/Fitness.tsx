@@ -16,8 +16,21 @@ const Fitness: React.FC = () => {
           </p>
         </div>
         <div className="relative aspect-[2.35/1] max-w-6xl mx-auto">
-            <img src={vibeData.image1} alt="Vibe Image 1" className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full object-cover rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl"/>
-            <img src={vibeData.image2} alt="Vibe Image 2" className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full object-cover rounded-full border-[10px] border-zinc-900 shadow-2xl"/>
+            {vibeData.videoUrl ? (
+                <video 
+                    src={vibeData.videoUrl} 
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline 
+                    className="w-full h-full object-cover rounded-3xl border-[4px] border-zinc-800 shadow-2xl"
+                />
+            ) : (
+                <>
+                    <img src={vibeData.image1} alt="Vibe Image 1" className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full object-cover rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl"/>
+                    <img src={vibeData.image2} alt="Vibe Image 2" className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full object-cover rounded-full border-[10px] border-zinc-900 shadow-2xl"/>
+                </>
+            )}
         </div>
       </div>
 

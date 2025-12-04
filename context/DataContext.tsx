@@ -88,6 +88,7 @@ export interface VibeData {
     text: string;
     image1: string;
     image2: string;
+    videoUrl?: string; // Added videoUrl
     bigImage: string;
     bottomHeading: string;
     bottomText: string;
@@ -276,6 +277,7 @@ const INITIAL_VIBE_DATA: VibeData = {
     text: "It's more than just singing. It's the electric atmosphere, the shared laughter, and the moment you and your friends nail that harmony. It's a vibe you won't find anywhere else.",
     image1: "https://picsum.photos/seed/karaokegroup/600/600",
     image2: "https://picsum.photos/seed/partylights/600/600",
+    videoUrl: "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/aloce.mp4",
     bigImage: "https://picsum.photos/seed/makingmemories/1400/900",
     bottomHeading: "Unforgettable Nights, Guaranteed.",
     bottomText: "We're in the business of making memories. From incredible highs to hilarious lows, the moments you create here will be the ones you talk about for years to come."
@@ -468,7 +470,7 @@ const INITIAL_BOOKINGS: Booking[] = [
     { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const DATA_VERSION = '2.1'; // Bump this to reset local storage on updates
+const DATA_VERSION = '2.5'; // Bump this to reset local storage on updates
 
 // --- Context ---
 
