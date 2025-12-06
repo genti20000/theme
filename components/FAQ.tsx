@@ -1,124 +1,102 @@
 
-import React, { useMemo } from 'react';
-
-interface FAQItemProps {
-    question: string;
-    answer: string;
-}
-
-const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => (
-    <details className="group bg-red-950/40 backdrop-blur-sm border border-red-900/50 rounded-lg p-6 mb-4 transition-all hover:border-green-500 open:border-green-500 shadow-[0_0_10px_rgba(0,0,0,0.5)] open:shadow-[0_0_15px_rgba(34,197,94,0.2)]">
-        <summary className="flex justify-between items-center font-bold text-lg text-white cursor-pointer list-none focus:outline-none">
-            <span className="group-hover:text-green-400 transition-colors">{question}</span>
-            <span className="transform group-open:rotate-180 transition-transform duration-300 text-red-500 group-open:text-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-            </span>
-        </summary>
-        <div className="mt-4 text-gray-200 text-sm leading-relaxed animate-fade-in-up border-t border-dashed border-red-900/50 pt-4">
-            {answer}
-        </div>
-    </details>
-);
+import React, { useState } from 'react';
 
 const FAQ: React.FC = () => {
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
+
     const faqData = [
         {
             question: "What are the opening hours?",
-            answer: "You can check this via our booking system online."
+            answer: "We are open daily from 2pm to 3am. Perfect for afternoon warm-ups or late-night encores."
         },
         {
             question: "Do I need to book in advance?",
-            answer: "Yes, pre-booking is mandatory. You can check availability and book through our online booking system available on our website."
+            answer: "Yes, pre-booking is essential to guarantee your private room. We do not accept walk-ins. You can check real-time availability and book instantly through our website."
         },
         {
             question: "What is the cost of booking a karaoke room?",
-            answer: "Prices vary depending on the group size and booking duration. The minimum booking is 2 hours. Check our booking system for real-time pricing and to book for up to 50 guests."
+            answer: "Prices vary based on group size, day of the week, and booking duration (minimum 2 hours). Please check our booking system for exact pricing for your group."
         },
         {
-            question: "Is food and drink included in the booking price?",
-            answer: "No, but we have a full menu available to purchase throughout your stay."
+            question: "Is food and drink included?",
+            answer: "The booking fee covers exclusive use of the room. Food and drinks are ordered separately from our delicious menu. We also offer pre-booked drinks packages for better value."
         },
         {
             question: "Can I bring my own food and drinks?",
-            answer: "Outside food and drinks are not permitted. We’ve got everything you need right here."
+            answer: "No outside food or drinks are permitted. Don't worry, our bar is fully stocked with cocktails, beers, wines, and soft drinks, plus a great food menu!"
         },
         {
-            question: "Is there an age limit to enter the club?",
-            answer: "Yes, we’re an 18+ venue. Adults only, baby."
+            question: "Is there an age limit?",
+            answer: "Yes, we are a strictly 18+ venue. Valid photo ID (Passport or Driving License) is required for entry."
         },
         {
             question: "Do you have a dress code?",
-            answer: "Come as you are or glam it up — costumes, masks, sequins... we love it all. Just be fabulous."
+            answer: "We love a bit of sparkle! The dress code is smart-casual, but feel free to glam up, wear costumes, or bring props. Just be fabulous."
         },
         {
-            question: "How many songs are available, and in which languages?",
-            answer: "We have over 65,000 songs in English and many other languages. There's something for everyone."
+            question: "How many songs do you have?",
+            answer: "Our library boasts over 80,000 songs in multiple languages, updated monthly. From rock anthems to pop classics, we've got your jam."
         },
         {
-            question: "Can I extend my booking time on the spot?",
-            answer: "Yes, subject to availability. Let us know early during your visit to avoid disappointment."
+            question: "Can I extend my booking on the night?",
+            answer: "If there is no booking immediately after yours, we are happy to extend your session! Just ask a member of our team early on."
         },
         {
-            question: "How can I contact the club for more information?",
-            answer: "You can message us anytime via WhatsApp. We’re here to help!"
+            question: "How do I contact you?",
+            answer: "The fastest way to reach us is via the WhatsApp button on this screen. Alternatively, you can email us for corporate or large event enquiries."
         }
     ];
 
-    // Generate static snowflakes
-    const snowflakes = useMemo(() => Array.from({ length: 30 }).map((_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        delay: Math.random() * 5,
-        duration: Math.random() * 5 + 5,
-        size: Math.random() * 10 + 8
-    })), []);
+    const toggleFAQ = (index: number) => {
+        setOpenIndex(openIndex === index ? null : index);
+    };
 
   return (
-    <section id="faq" className="bg-black py-16 border-t border-zinc-800 relative overflow-hidden">
-        {/* Festive Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-green-950/20 to-red-950/20 pointer-events-none"></div>
-
-        {/* Snowflakes */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {snowflakes.map((s) => (
-                <div 
-                    key={s.id}
-                    className="absolute text-white/30 animate-[fall_linear_infinite]"
-                    style={{
-                        left: `${s.left}%`,
-                        animationDuration: `${s.duration}s`,
-                        animationDelay: `${s.delay}s`,
-                        top: '-20px',
-                        fontSize: `${s.size}px`
-                    }}
-                >
-                    ❄
-                </div>
-            ))}
-            <style>{`
-                @keyframes fall {
-                    0% { transform: translateY(-20px); opacity: 0; }
-                    10% { opacity: 0.8; }
-                    100% { transform: translateY(100vh); opacity: 0; }
-                }
-            `}</style>
-        </div>
+    <section id="faq" className="bg-zinc-950 py-24 border-t border-zinc-900 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-900/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="container mx-auto px-6 max-w-3xl relative z-10">
-        <div className="text-center mb-10">
-            <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-white to-green-500 drop-shadow-md font-heading">
-                Christmas FAQ
+        <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 mb-6">
+                Common Questions
             </h2>
-            <p className="text-gray-400 mt-4 text-lg flex justify-center items-center gap-2">
-                <span className="text-red-500 text-2xl">🎄</span> Everything you need to know for the festive season <span className="text-green-500 text-2xl">🎄</span>
-            </p>
+            <p className="text-gray-400 text-lg">Everything you need to know before you sing your heart out.</p>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-4">
             {faqData.map((item, index) => (
-                <FAQItem key={index} question={item.question} answer={item.answer} />
+                <div 
+                    key={index} 
+                    className={`bg-zinc-900 border rounded-2xl overflow-hidden transition-all duration-300 ${
+                        openIndex === index 
+                        ? 'border-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.15)]' 
+                        : 'border-zinc-800 hover:border-zinc-700'
+                    }`}
+                >
+                    <button 
+                        onClick={() => toggleFAQ(index)}
+                        className="w-full flex justify-between items-center p-6 text-left focus:outline-none"
+                    >
+                        <span className={`text-lg font-bold transition-colors ${openIndex === index ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>
+                            {item.question}
+                        </span>
+                        <span className={`ml-4 flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${openIndex === index ? 'bg-pink-500 text-white rotate-180' : 'bg-zinc-800 text-gray-400'}`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    
+                    <div className={`grid transition-all duration-300 ease-in-out ${openIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                            <div className="px-6 pb-6 pt-0 text-gray-400 leading-relaxed border-t border-zinc-800/50 mt-2">
+                                {item.answer}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             ))}
         </div>
       </div>
