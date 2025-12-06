@@ -14,7 +14,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-type AdminTab = 'header' | 'hero' | 'songs' | 'bookings' | 'files' | 'highlights' | 'features' | 'vibe' | 'gallery' | 'testimonials' | 'food' | 'drinks' | 'battery' | 'footer' | 'database';
+type AdminTab = 'header' | 'hero' | 'events' | 'songs' | 'bookings' | 'files' | 'highlights' | 'features' | 'vibe' | 'gallery' | 'testimonials' | 'food' | 'drinks' | 'battery' | 'footer' | 'database';
 
 // Reusable Components
 const SectionCard: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({ title, description, children }) => (
@@ -303,6 +303,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     batteryData, updateBatteryData,
     footerData, updateFooterData,
     galleryData, updateGalleryData,
+    eventsData, updateEventsData,
     dbConfig, updateDbConfig,
     songs, updateSongs,
     bookings, updateBookings,
@@ -546,7 +547,7 @@ if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
           </div>
         </div>
         <div className="container mx-auto px-6 flex gap-6 text-sm font-semibold overflow-x-auto no-scrollbar">
-             {['header', 'hero', 'songs', 'bookings', 'files', 'highlights', 'features', 'vibe', 'gallery', 'testimonials', 'food', 'drinks', 'battery', 'footer', 'database'].map((tab) => (
+             {['header', 'hero', 'events', 'songs', 'bookings', 'files', 'highlights', 'features', 'vibe', 'gallery', 'testimonials', 'food', 'drinks', 'battery', 'footer', 'database'].map((tab) => (
                  <button key={tab} onClick={() => setActiveTab(tab as AdminTab)} className={`pb-3 border-b-2 transition-colors whitespace-nowrap capitalize ${activeTab === tab ? 'border-yellow-400 text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}>{tab}</button>
              ))}
         </div>
@@ -629,6 +630,49 @@ if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
                     </div>
                     <button onClick={handleAddSlide} className="w-full py-2 border-2 border-dashed border-zinc-700 text-gray-400 hover:text-yellow-400 rounded text-sm">+ Add Slide</button>
                  </div>
+            </SectionCard>
+        )}
+
+        {/* Events Page Settings */}
+        {activeTab === 'events' && (
+            <SectionCard title="Events Page" description="Manage the content for Birthday Parties, Hen Dos, and Corporate Events.">
+                <div className="mb-8">
+                    <h4 className="font-bold text-yellow-400 mb-4">Events Hero</h4>
+                    <InputGroup label="Title" value={eventsData.hero.title} onChange={(v) => updateEventsData({...eventsData, hero: {...eventsData.hero, title: v}})} />
+                    <InputGroup label="Subtitle" value={eventsData.hero.subtitle} onChange={(v) => updateEventsData({...eventsData, hero: {...eventsData.hero, subtitle: v}})} />
+                    <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Hero Image</label><ImageField url={eventsData.hero.image} onUpdate={(v) => updateEventsData({...eventsData, hero: {...eventsData.hero, image: v}})} /></div>
+                </div>
+                
+                <div className="space-y-8">
+                    {eventsData.sections.map((section, idx) => (
+                        <div key={section.id} className="bg-zinc-950 p-4 rounded border border-zinc-800">
+                            <h4 className="font-bold text-white mb-4 capitalize">{section.id} Section</h4>
+                            <InputGroup label="Title" value={section.title} onChange={(v) => {
+                                const newSections = [...eventsData.sections];
+                                newSections[idx] = { ...section, title: v };
+                                updateEventsData({ ...eventsData, sections: newSections });
+                            }} />
+                            <InputGroup label="Subtitle" value={section.subtitle} onChange={(v) => {
+                                const newSections = [...eventsData.sections];
+                                newSections[idx] = { ...section, subtitle: v };
+                                updateEventsData({ ...eventsData, sections: newSections });
+                            }} />
+                            <InputGroup label="Description" value={section.description} onChange={(v) => {
+                                const newSections = [...eventsData.sections];
+                                newSections[idx] = { ...section, description: v };
+                                updateEventsData({ ...eventsData, sections: newSections });
+                            }} type="textarea" />
+                            <div className="mb-4">
+                                <label className="block text-sm font-semibold text-gray-300 mb-2">Section Image</label>
+                                <ImageField url={section.imageUrl} onUpdate={(v) => {
+                                    const newSections = [...eventsData.sections];
+                                    newSections[idx] = { ...section, imageUrl: v };
+                                    updateEventsData({ ...eventsData, sections: newSections });
+                                }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </SectionCard>
         )}
 

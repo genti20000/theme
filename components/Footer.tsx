@@ -3,7 +3,7 @@ import React from 'react';
 import { useData } from '../context/DataContext';
 
 interface FooterProps {
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms') => void;
+  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'events') => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
@@ -42,9 +42,9 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div>
             <h5 className="font-bold text-white mb-4">Events</h5>
             <ul className="space-y-2">
-              <li><a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">Birthday Parties</a></li>
-              <li><a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">Hen & Stag Dos</a></li>
-              <li><a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">Corporate Events</a></li>
+              <li><button onClick={() => onNavigate('events')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left">Birthday Parties</button></li>
+              <li><button onClick={() => onNavigate('events')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left">Hen & Stag Dos</button></li>
+              <li><button onClick={() => onNavigate('events')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left">Corporate Events</button></li>
             </ul>
           </div>
           <div>

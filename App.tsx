@@ -17,9 +17,10 @@ import FAQ from './components/FAQ';
 import Terms from './components/Terms';
 import Gallery from './components/Gallery';
 import SongLibrary from './components/SongLibrary';
+import EventsPage from './components/EventsPage';
 import { DataProvider } from './context/DataContext';
 
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs';
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events';
 
 const PageBorder: React.FC = () => (
   <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
@@ -96,6 +97,7 @@ const App: React.FC = () => {
           {currentPage === 'drinks' && <DrinksMenu />}
           {currentPage === 'gallery' && <Gallery />}
           {currentPage === 'songs' && <SongLibrary />}
+          {currentPage === 'events' && <EventsPage />}
           {currentPage === 'admin' && <AdminDashboard />}
           {currentPage === 'terms' && <Terms />}
         </main>

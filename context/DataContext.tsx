@@ -139,6 +139,24 @@ export interface GalleryData {
   videos?: VideoItem[];
 }
 
+export interface EventSection {
+    id: string;
+    title: string;
+    subtitle: string;
+    description: string;
+    imageUrl: string;
+    features: string[];
+}
+
+export interface EventsData {
+    hero: {
+        title: string;
+        subtitle: string;
+        image: string;
+    };
+    sections: EventSection[];
+}
+
 export interface DatabaseConfig {
   host: string;
   user: string;
@@ -200,6 +218,8 @@ interface DataContextType {
   updateFooterData: (newData: FooterData) => void;
   galleryData: GalleryData;
   updateGalleryData: (newData: GalleryData) => void;
+  eventsData: EventsData;
+  updateEventsData: (newData: EventsData) => void;
   dbConfig: DatabaseConfig;
   updateDbConfig: (newData: DatabaseConfig) => void;
   
@@ -330,6 +350,40 @@ const INITIAL_GALLERY_DATA: GalleryData = {
         title: 'Karaoke Fun' 
     }
   ]
+};
+
+const INITIAL_EVENTS_DATA: EventsData = {
+    hero: {
+        title: "Celebrate With Us",
+        subtitle: "From wild Hen Dos to sophisticated Corporate Events, we make every occasion unforgettable.",
+        image: "https://picsum.photos/seed/eventshero/1600/900"
+    },
+    sections: [
+        {
+            id: 'birthdays',
+            title: "Birthday Parties",
+            subtitle: "Make Your Special Day Legendary",
+            description: "Turn another year older into the night of a lifetime. Whether it's your 18th, 30th, or 60th, our private rooms are the perfect playground for you and your friends. We offer bespoke birthday packages including decorations, cakes, and bubbly reception to kickstart the festivities.",
+            imageUrl: "https://picsum.photos/seed/birthdayparty/800/600",
+            features: ["Complimentary Birthday Shot", "Room Decoration Packages", "Personalized Playlists", "Cake Service Available"]
+        },
+        {
+            id: 'hens',
+            title: "Hen & Stag Dos",
+            subtitle: "The Ultimate Pre-Wedding Bash",
+            description: "Send them off in style with a night of pure, unadulterated fun. Our Hen & Stag packages are designed to loosen everyone up and get the group bonding over terrible renditions of classic ballads. Expect cheeky cocktail masterclasses, props, and a party atmosphere that doesn't stop until 3am.",
+            imageUrl: "https://picsum.photos/seed/henparty/800/600",
+            features: ["Prosecco Reception", "Cheeky Cocktail Menu", "Fancy Dress Friendly", "Party Games & Props"]
+        },
+        {
+            id: 'corporate',
+            title: "Corporate Events",
+            subtitle: "Team Building That Actually Rocks",
+            description: "Forget trust falls and awkward ice-breakers. Nothing brings a team together like belting out 'Bohemian Rhapsody' after a few drinks. Our venue is perfect for client entertainment, office Christmas parties, or just a team morale booster. We offer full venue hire for up to 150 guests.",
+            imageUrl: "https://picsum.photos/seed/corporateevent/800/600",
+            features: ["Full Venue Hire Available", "Catering & Buffet Options", "Branding Opportunities", "Invoice Payment Available"]
+        }
+    ]
 };
 
 const INITIAL_DB_CONFIG: DatabaseConfig = {
@@ -478,7 +532,7 @@ const INITIAL_BOOKINGS: Booking[] = [
     { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const DATA_VERSION = '2.9';
+const DATA_VERSION = '2.10';
 
 // --- Context ---
 
@@ -510,6 +564,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_BATTERY_DATA));
   const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', INITIAL_FOOTER_DATA));
   const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY_DATA));
+  const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', INITIAL_EVENTS_DATA));
   const [dbConfig, setDbConfig] = useState<DatabaseConfig>(() => init('dbConfig', INITIAL_DB_CONFIG));
   const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
   const [bookings, setBookings] = useState<Booking[]>(() => init('bookings', INITIAL_BOOKINGS));
@@ -554,6 +609,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
   useEffect(() => { persist('footerData', footerData); }, [footerData]);
   useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
+  useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
   useEffect(() => { persist('dbConfig', dbConfig); }, [dbConfig]);
   useEffect(() => { persist('songs', songs); }, [songs]);
   useEffect(() => { persist('bookings', bookings); }, [bookings]);
@@ -640,6 +696,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               { key: 'batteryData', value: batteryData },
               { key: 'footerData', value: footerData },
               { key: 'galleryData', value: galleryData },
+              { key: 'eventsData', value: eventsData },
               { key: 'songs', value: songs },
               { key: 'bookings', value: bookings }
           ];
@@ -666,6 +723,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       batteryData, updateBatteryData: setBatteryData,
       footerData, updateFooterData: setFooterData,
       galleryData, updateGalleryData: setGalleryData,
+      eventsData, updateEventsData: setEventsData,
       dbConfig, updateDbConfig: setDbConfig,
       songs, updateSongs: setSongs,
       bookings, updateBookings: setBookings,

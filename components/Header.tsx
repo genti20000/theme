@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 
 interface HeaderProps {
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs') => void;
+  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events') => void;
 }
 
 // Stylized Musical Note Menu Icon (Three lines forming a note)
@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   
   const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
 
-  const handleMobileNav = (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'songs') => {
+  const handleMobileNav = (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'songs' | 'events') => {
     onNavigate(page);
     setIsMenuOpen(false);
   }
@@ -147,8 +147,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 {/* Right Wing */}
                 <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
                     <button onClick={() => handleMobileNav('drinks')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-1">DRINKS MENU</button>
-                    <button onClick={handleScrollToFAQ} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-2">FAQs</button>
-                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl md:text-3xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors border-b-2 border-transparent hover:border-yellow-400 pb-1 animate-item-stagger-3">BOOK NOW</a>
+                    <button onClick={() => handleMobileNav('events')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-2">EVENTS</button>
+                    <button onClick={handleScrollToFAQ} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors border-b-2 border-transparent hover:border-pink-500 pb-1 animate-item-stagger-3">FAQs</button>
+                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl md:text-3xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors border-b-2 border-transparent hover:border-yellow-400 pb-1 animate-item-stagger-4">BOOK NOW</a>
                 </div>
             </div>
             
