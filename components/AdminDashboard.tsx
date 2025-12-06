@@ -308,7 +308,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     bookings, updateBookings,
     resetToDefaults,
     fetchSupabaseFiles,
-    deleteSupabaseFile
+    deleteSupabaseFile,
+    saveAllToSupabase
   } = useData();
   const [activeTab, setActiveTab] = useState<AdminTab>('header');
 
@@ -384,12 +385,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     }
   };
   
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaveStatus('saving');
-    setTimeout(() => {
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    }, 800);
+    await saveAllToSupabase();
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 2000);
   };
   
   const handleFlushCache = () => {

@@ -215,6 +215,7 @@ interface DataContextType {
   uploadToSupabase: (file: Blob | File, path: string, bucket?: string) => Promise<string | null>;
   fetchSupabaseFiles: (bucket?: string, folder?: string) => Promise<{name: string, url: string}[]>;
   deleteSupabaseFile: (path: string, bucket?: string) => Promise<boolean>;
+  saveAllToSupabase: () => Promise<void>;
 }
 
 // --- Initial Data ---
@@ -224,13 +225,13 @@ const INITIAL_HEADER_DATA: HeaderData = {
 };
 
 const INITIAL_HERO_DATA: HeroData = {
-    backgroundImageUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
+    backgroundImageUrl: "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg",
     slides: [
-        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/aloce.mp4", // Auto-play video
-        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg"  // Singing Santa from Supabase
+        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg", // Singing Santa first
+        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/aloce.mp4" // Video second
     ],
     badgeText: "Winter Wonderland Karaoke",
-    headingText: "The Ultimate Karaoke",
+    headingText: "Your Wonderland Awaits",
     subText: "Private luxury suites, premium cocktails, and over 80,000 songs. The stage is yours.",
     buttonText: "Book Your Room"
 };
@@ -477,7 +478,7 @@ const INITIAL_BOOKINGS: Booking[] = [
     { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const DATA_VERSION = '2.8'; // Bumped for new S3 config
+const DATA_VERSION = '2.9';
 
 // --- Context ---
 
@@ -621,6 +622,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
   };
 
+  const saveAllToSupabase = async () => {
+      if (!supabase) {
+          alert("Supabase not configured! Please check your settings in the Database tab.");
+          return;
+      }
+      try {
+          const updates = [
+              { key: 'foodMenu', value: foodMenu },
+              { key: 'drinksData', value: drinksData },
+              { key: 'headerData', value: headerData },
+              { key: 'heroData', value: heroData },
+              { key: 'highlightsData', value: highlightsData },
+              { key: 'featuresData', value: featuresData },
+              { key: 'vibeData', value: vibeData },
+              { key: 'testimonialsData', value: testimonialsData },
+              { key: 'batteryData', value: batteryData },
+              { key: 'footerData', value: footerData },
+              { key: 'galleryData', value: galleryData },
+              { key: 'songs', value: songs },
+              { key: 'bookings', value: bookings }
+          ];
+          
+          const { error } = await supabase.from('app_settings').upsert(updates);
+          if (error) throw error;
+          alert("All changes successfully saved to Supabase!");
+      } catch (e: any) {
+          console.error("Save all failed", e);
+          alert(`Failed to save changes: ${e.message || e}`);
+      }
+  };
+
   return (
     <DataContext.Provider value={{
       foodMenu, updateFoodMenu: setFoodMenu,
@@ -640,7 +672,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       resetToDefaults,
       uploadToSupabase,
       fetchSupabaseFiles,
-      deleteSupabaseFile
+      deleteSupabaseFile,
+      saveAllToSupabase
     }}>
       {children}
     </DataContext.Provider>
