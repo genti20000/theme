@@ -332,8 +332,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       setIsLoadingFiles(true);
       try {
           const bucket = dbConfig.storageBucket || 'public';
-          const files = await fetchSupabaseFiles(bucket, ''); 
-          setFileList(files);
+          // Fetch from root and uploads/ to show everything
+          const rootFiles = await fetchSupabaseFiles(bucket, ''); 
+          const uploadFiles = await fetchSupabaseFiles(bucket, 'uploads');
+          
+          // Combine and dedupe
+          const combined = [...rootFiles, ...uploadFiles];
+          const uniqueFiles = Array.from(new Map(combined.map(item => [item.name, item])).values());
+          
+          setFileList(uniqueFiles);
       } catch (e) {
           console.error("Failed to load files", e);
       } finally {
@@ -344,7 +351,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const handleDeleteFile = async (name: string) => {
       if (!confirm(`Delete ${name} permanently?`)) return;
       const bucket = dbConfig.storageBucket || 'public';
-      const success = await deleteSupabaseFile(name, bucket);
+      // Determine if file is in subfolder based on name or try both?
+      // deleteSupabaseFile takes a path.
+      let path = name;
+      // Heuristic: if it looks like just a filename, assume root, otherwise use path
+      
+      const success = await deleteSupabaseFile(path, bucket);
       if (success) {
           loadFiles(); // Refresh list
       } else {
@@ -552,7 +564,10 @@ if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
                     <div className="border-t border-zinc-800 pt-6">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="font-bold text-white">Storage Contents</h4>
-                            <button onClick={loadFiles} className="text-xs bg-zinc-800 hover:bg-zinc-700 px-3 py-1 rounded text-white">Refresh</button>
+                            <div className="flex gap-4 items-center">
+                                <span className="text-xs text-gray-500">If list is empty, check RLS Policies on Supabase!</span>
+                                <button onClick={loadFiles} className="text-xs bg-zinc-800 hover:bg-zinc-700 px-3 py-1 rounded text-white">Refresh</button>
+                            </div>
                         </div>
                         
                         {isLoadingFiles ? (
@@ -564,7 +579,11 @@ if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
                                 {fileList.map((file) => (
                                     <div key={file.name} className="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden group relative">
                                         <div className="aspect-square bg-black flex items-center justify-center overflow-hidden">
-                                            <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                            {file.url.toLowerCase().match(/\.(mp4|webm|mov)$/) ? (
+                                                <video src={file.url} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                            )}
                                         </div>
                                         <div className="p-2 text-xs truncate text-gray-400">{file.name}</div>
                                         
@@ -826,6 +845,15 @@ if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
                         <InputGroup label="Anon Key" value={dbConfig.supabaseKey || ''} onChange={(v) => updateDbConfig({...dbConfig, supabaseKey: v})} type="password" />
                         <InputGroup label="Storage Bucket Name" value={dbConfig.storageBucket || 'public'} onChange={(v) => updateDbConfig({...dbConfig, storageBucket: v})} />
                         <button onClick={handleTestSupabase} className="mt-4 bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-sm w-full">Test Connection</button>
+                    </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-zinc-800">
+                    <h4 className="font-bold text-blue-400 mb-4">S3 Compatibility Settings (Supabase)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <InputGroup label="Endpoint" value={dbConfig.s3Endpoint || ''} onChange={(v) => updateDbConfig({...dbConfig, s3Endpoint: v})} />
+                        <InputGroup label="Access Key" value={dbConfig.s3AccessKey || ''} onChange={(v) => updateDbConfig({...dbConfig, s3AccessKey: v})} />
+                        <InputGroup label="Secret Key" value={dbConfig.s3SecretKey || ''} onChange={(v) => updateDbConfig({...dbConfig, s3SecretKey: v})} type="password" />
                     </div>
                 </div>
                 

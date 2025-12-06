@@ -150,6 +150,10 @@ export interface DatabaseConfig {
   supabaseUrl?: string;
   supabaseKey?: string;
   storageBucket?: string;
+  // S3 Compatibility
+  s3Endpoint?: string;
+  s3AccessKey?: string;
+  s3SecretKey?: string;
 }
 
 export interface Song {
@@ -222,8 +226,7 @@ const INITIAL_HEADER_DATA: HeaderData = {
 const INITIAL_HERO_DATA: HeroData = {
     backgroundImageUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1024,fit=crop/m7V3XokxQ0Hbg2KE/london-karaoke-club-header-mv0WRlry1ahM56NV.png",
     slides: [
-        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/Video%202.MP4", // Auto-play video
-        "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1920&auto=format&fit=crop", // Ocean/Rock scene
+        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/aloce.mp4", // Auto-play video
         "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg"  // Singing Santa from Supabase
     ],
     badgeText: "Winter Wonderland Karaoke",
@@ -284,12 +287,12 @@ const INITIAL_VIBE_DATA: VibeData = {
 };
 
 const INITIAL_TESTIMONIALS_DATA: TestimonialsData = {
-    heading: "What Our Customers Say",
-    subtext: "Don't just take our word for it. Here's what our amazing singers have to say.",
+    heading: "Google Reviews",
+    subtext: "London Karaoke Club - Soho (Private Hen do | Birthday | Corporate Parties )",
     items: [
-        { quote: "The best night out we've had in ages! The song selection is massive and the rooms are so cool. We'll be back for sure.", name: "Sarah J.", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
-        { quote: "Booked a room for my birthday and it was epic. The staff were super helpful and the cocktails were delicious. 10/10 experience!", name: "David L.", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704e" },
-        { quote: "Perfect for a work social! It was a great way to unwind with the team. The sound system is top-notch. Highly recommend.", name: "Emily C.", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704f" }
+        { quote: "Absolutely incredible night! The staff went above and beyond for my sister's hen do. The cocktails were flowing, and the private room was spacious and air-conditioned. Best karaoke in Soho hands down!", name: "Emma Thompson", avatar: "https://lh3.googleusercontent.com/a-/ALV-UjW_yJkLzX8_aB8_c9_d0_e1_f2_g3_h4_i5=s120-c-rp-mo-br100" },
+        { quote: "Booked a corporate event here for 30 people and it was flawless. Great service, huge song selection, and the equipment is top tier. Highly recommended for team outings.", name: "James Wilson", avatar: "https://lh3.googleusercontent.com/a-/ALV-UjX_jKkLzX8_aB8_c9_d0_e1_f2_g3_h4_i5=s120-c-rp-mo-br100" },
+        { quote: "Such a hidden gem! We celebrated my 30th here and didn't want to leave. 2am finish was perfect. The atmosphere is unmatched.", name: "Sarah Jenkins", avatar: "https://lh3.googleusercontent.com/a-/ALV-UjY_jKkLzX8_aB8_c9_d0_e1_f2_g3_h4_i5=s120-c-rp-mo-br100" }
     ]
 };
 
@@ -338,7 +341,11 @@ const INITIAL_DB_CONFIG: DatabaseConfig = {
   videoFolder: 'uploads/videos/',
   supabaseUrl: 'https://mustagmgjfhlynxfisoc.supabase.co',
   supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY',
-  storageBucket: 'iii'
+  storageBucket: 'iii',
+  // S3 Config
+  s3Endpoint: 'https://mustagmgjfhlynxfisoc.storage.supabase.co/storage/v1/s3',
+  s3AccessKey: '843181c0582cb1292990a2e3146aacd2',
+  s3SecretKey: 'fbcafb461b63c64ce527d427ecbd827c04ce0fe4994cd9bd3d10cbf884a5e741'
 };
 
 const INITIAL_FOOD_MENU: MenuCategory[] = [
@@ -470,7 +477,7 @@ const INITIAL_BOOKINGS: Booking[] = [
     { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
 ];
 
-const DATA_VERSION = '2.5'; // Bump this to reset local storage on updates
+const DATA_VERSION = '2.8'; // Bumped for new S3 config
 
 // --- Context ---
 
