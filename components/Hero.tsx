@@ -115,7 +115,7 @@ const Hero: React.FC = () => {
   const isVideo = (url: string) => url.toLowerCase().match(/\.(mp4|webm|mov)$/);
 
   return (
-    <section className="relative h-screen flex flex-col items-center justify-end pb-8 md:pb-12 text-center text-white overflow-hidden bg-black">
+    <section className="relative h-screen flex flex-col items-center justify-end pb-8 md:pb-12 text-center text-white overflow-hidden bg-black" aria-label="Welcome">
       <style>{`
         @keyframes fade-in-scale {
           0% { opacity: 0; transform: scale(0.95); }
@@ -134,10 +134,13 @@ const Hero: React.FC = () => {
       {/* Background with Enhanced Parallax 
           - Increased height to 140% and top offset to -20% to allow for larger movement without gaps.
           - Adjusted translate factor to 0.3 for a subtle 'slower than foreground' effect.
+          - Added aria-hidden=true to hide background visuals from screen readers.
+          - Added motion-reduce classes to respect user preferences.
       */}
       <div 
-        className="absolute w-full h-[140%] -top-[20%] left-0 z-0 will-change-transform" 
+        className="absolute w-full h-[140%] -top-[20%] left-0 z-0 will-change-transform motion-reduce:transform-none" 
         style={{ transform: `translateY(${scrollY * 0.3}px) scale(1.1)` }}
+        aria-hidden="true"
       >
         {slides.map((slide, index) => {
              const activeClass = index === currentSlide ? 'opacity-100' : 'opacity-0';
@@ -150,6 +153,7 @@ const Hero: React.FC = () => {
                         muted
                         loop
                         playsInline
+                        aria-hidden="true"
                         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${activeClass}`}
                     />
                  );
@@ -158,7 +162,7 @@ const Hero: React.FC = () => {
                 <img 
                     key={index}
                     src={slide}
-                    alt={`Hero Slide ${index + 1}`}
+                    alt="" /* Decorative background image, empty alt is correct for accessibility */
                     // Using object-[center_20%] ensures faces (usually in upper 3rd) are preserved on mobile.
                     className={`absolute inset-0 w-full h-full object-cover object-[center_20%] transition-opacity duration-1000 ease-in-out ${activeClass}`}
                 />
@@ -170,21 +174,21 @@ const Hero: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/90"></div>
       </div>
       
-      {/* Snowfall Effect */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      {/* Snowfall Effect - Decorative */}
+      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
           {snowflakes.map(s => (
               <div 
                 key={s.id} 
                 style={s.style} 
-                className="absolute top-[-20px] bg-white rounded-full blur-[1px]" 
+                className="absolute top-[-20px] bg-white rounded-full blur-[1px] motion-reduce:animate-none" 
               />
           ))}
       </div>
 
-      {/* Floating Party Particles (Icons & Text) */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      {/* Floating Party Particles (Icons & Text) - Decorative */}
+      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
         {particles.map(p => (
-            <div key={p.id} style={p.style} className="absolute bottom-[-160px] opacity-0 z-0">
+            <div key={p.id} style={p.style} className="absolute bottom-[-160px] opacity-0 z-0 motion-reduce:animate-none">
             {p.content}
             </div>
         ))}
@@ -192,17 +196,17 @@ const Hero: React.FC = () => {
 
       <div className="relative z-10 p-6 max-w-5xl mx-auto">
         <div className="mb-4 inline-block">
-           <span className="py-1 px-4 rounded-full bg-red-600/80 backdrop-blur-sm border border-red-400 text-white text-xs md:text-sm font-bold tracking-wider uppercase animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)]">
+           <span className="py-1 px-4 rounded-full bg-red-600/80 backdrop-blur-sm border border-red-400 text-white text-xs md:text-sm font-bold tracking-wider uppercase animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)] motion-reduce:animate-none">
              🎄 {heroData.badgeText} 🎄
            </span>
         </div>
-        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight animate-fade-in-scale text-transparent bg-clip-text bg-gradient-to-r from-white via-red-200 to-green-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight animate-fade-in-scale text-transparent bg-clip-text bg-gradient-to-r from-white via-red-200 to-green-100 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] motion-reduce:animate-none">
           {heroData.headingText}
         </h1>
-        <p className="mt-4 text-sm md:text-lg max-w-2xl mx-auto text-gray-200 animate-fade-in-up drop-shadow-md" style={{ animationDelay: '0.5s' }}>
+        <p className="mt-4 text-sm md:text-lg max-w-2xl mx-auto text-gray-200 animate-fade-in-up drop-shadow-md motion-reduce:animate-none" style={{ animationDelay: '0.5s' }}>
           {heroData.subText}
         </p>
-        <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white text-base font-bold py-2 px-6 rounded-full border-2 border-white transition-transform duration-300 ease-in-out hover:scale-105 animate-fade-in-up shadow-[0_0_20px_rgba(220,38,38,0.5)]" style={{ animationDelay: '0.8s' }}>
+        <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-6 bg-red-600 hover:bg-red-700 text-white text-base font-bold py-2 px-6 rounded-full border-2 border-white transition-transform duration-300 ease-in-out hover:scale-105 animate-fade-in-up shadow-[0_0_20px_rgba(220,38,38,0.5)] motion-reduce:animate-none motion-reduce:transform-none" style={{ animationDelay: '0.8s' }}>
           {heroData.buttonText}
         </a>
       </div>
