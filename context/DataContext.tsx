@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 // --- Types ---
 export interface MenuItem {
@@ -88,7 +88,7 @@ export interface VibeData {
     text: string;
     image1: string;
     image2: string;
-    videoUrl?: string; // Added videoUrl
+    videoUrl?: string; 
     bigImage: string;
     bottomHeading: string;
     bottomText: string;
@@ -158,20 +158,14 @@ export interface EventsData {
 }
 
 export interface DatabaseConfig {
-  host: string;
-  user: string;
-  pass: string;
-  name: string;
-  uploadScriptUrl: string;
-  photoFolder: string;
-  videoFolder: string;
-  supabaseUrl?: string;
-  supabaseKey?: string;
   storageBucket?: string;
   // S3 Compatibility
   s3Endpoint?: string;
   s3AccessKey?: string;
   s3SecretKey?: string;
+  // Local paths (for simulation fallback)
+  photoFolder: string;
+  videoFolder: string;
 }
 
 export interface Song {
@@ -180,6 +174,7 @@ export interface Song {
     artist: string;
     genre?: string;
     language?: string;
+    fileUrl?: string; // Added for audio uploads
 }
 
 export interface Booking {
@@ -193,6 +188,24 @@ export interface Booking {
     room: string;
     status: 'pending' | 'confirmed' | 'cancelled';
     notes?: string;
+}
+
+export interface Blog {
+    id: string;
+    title: string;
+    excerpt: string;
+    content: string;
+    date: string;
+    imageUrl: string;
+}
+
+export interface ThemeData {
+    primaryColor: string;
+    secondaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    headerBg: string;
+    footerBg: string;
 }
 
 interface DataContextType {
@@ -223,32 +236,189 @@ interface DataContextType {
   dbConfig: DatabaseConfig;
   updateDbConfig: (newData: DatabaseConfig) => void;
   
-  // New CMS Features
   songs: Song[];
   updateSongs: (newSongs: Song[]) => void;
   bookings: Booking[];
   updateBookings: (newBookings: Booking[]) => void;
+  blogs: Blog[];
+  updateBlogs: (newBlogs: Blog[]) => void;
+  theme: ThemeData;
+  updateTheme: (newTheme: ThemeData) => void;
 
   resetToDefaults: () => void;
   
-  // Supabase specific
-  uploadToSupabase: (file: Blob | File, path: string, bucket?: string) => Promise<string | null>;
+  // S3 Specific
+  uploadToSupabase: (file: Blob | File, path: string, bucket?: string) => Promise<string | null>; // Kept name for compatibility, now uses S3
   fetchSupabaseFiles: (bucket?: string, folder?: string) => Promise<{name: string, url: string}[]>;
   deleteSupabaseFile: (path: string, bucket?: string) => Promise<boolean>;
-  saveAllToSupabase: () => Promise<void>;
+  saveAllToSupabase: () => Promise<void>; // Now saves to S3 JSON
+  isDataLoading: boolean;
 }
 
 // --- Initial Data ---
+
+const INITIAL_FOOD_MENU: MenuCategory[] = [
+  {
+    category: "Small Plates",
+    description: "Perfect for sharing",
+    items: [
+        { name: "Crispy Calamari", description: "Served with lemon aioli", price: "9.50" },
+        { name: "Truffle Fries", description: "Parmesan, truffle oil, rosemary", price: "6.50" },
+        { name: "Nachos", description: "Guacamole, salsa, sour cream, cheese", price: "10.00", note: "Add chicken +£3" },
+        { name: "Chicken Wings", description: "BBQ or Buffalo sauce", price: "8.50" },
+        { name: "Halloumi Fries", description: "Sweet chilli dip", price: "7.50" }
+    ]
+  },
+  {
+      category: "Pizzas",
+      description: "Stone baked goodness",
+      items: [
+          { name: "Margherita", description: "Tomato, mozzarella, basil", price: "12.00" },
+          { name: "Pepperoni", description: "Tomato, mozzarella, pepperoni", price: "13.50" },
+          { name: "Vegetarian", description: "Peppers, onions, mushrooms, olives", price: "13.00" }
+      ]
+  },
+  {
+      category: "Burgers",
+      items: [
+           { name: "Classic Beef", description: "Beef patty, lettuce, tomato, burger sauce", price: "14.00" },
+           { name: "Chicken Burger", description: "Fried chicken breast, mayo, lettuce", price: "13.50" }
+      ]
+  }
+];
+
+const INITIAL_DRINKS_DATA: any = {
+    headerImageUrl: "https://picsum.photos/seed/barvibes/1600/800",
+    packagesData: {
+        title: "Drinks Packages",
+        subtitle: "Pre-order for the best value",
+        items: [
+            { name: "Bronze Package", price: "£150", description: "2x Prosecco, 10x Beers, 1x Sharing Platter" },
+            { name: "Silver Package", price: "£250", description: "1x House Spirit (70cl), 2x Prosecco, 10x Beers" },
+             { name: "Gold Package", price: "£400", description: "1x Premium Spirit (70cl), 1x Champagne, 20x Beers, 2x Sharing Platters" }
+        ],
+        notes: ["Service charge not included.", "Packages must be pre-ordered 48 hours in advance."]
+    },
+    bottleServiceData: [
+        {
+            category: "Vodka",
+            items: [
+                { name: "Absolut Blue", price: "£140" },
+                { name: "Grey Goose", price: "£180" },
+                { name: "Belvedere", price: "£190" },
+                { name: "Ciroc", price: "£180" }
+            ]
+        },
+        {
+            category: "Gin",
+            items: [
+                { name: "Beefeater", price: "£140" },
+                { name: "Hendrick's", price: "£170" },
+                { name: "Tanqueray 10", price: "£180" }
+            ],
+            note: "All bottles served with mixers."
+        },
+        {
+            category: "Whiskey",
+            items: [
+                { name: "Jack Daniel's", price: "£140" },
+                { name: "Jameson", price: "£140" },
+                { name: "Johnnie Walker Black", price: "£160" }
+            ]
+        }
+    ],
+    byTheGlassData: [
+        {
+            category: "Beer & Cider",
+            items: [
+                { name: "Peroni", price: "5.50" },
+                { name: "Asahi", price: "5.50" },
+                { name: "Meantime Pale Ale", price: "6.00" },
+                { name: "Cornish Orchard Cider", price: "5.50" }
+            ]
+        },
+        {
+            category: "Soft Drinks",
+            items: [
+                { name: "Coke / Diet Coke", price: "3.50" },
+                { name: "Lemonade", price: "3.50" },
+                { name: "Red Bull", price: "4.00" },
+                { name: "Still / Sparkling Water", price: "3.00" }
+            ]
+        }
+    ],
+    shotsData: {
+        title: "Shots",
+        items: [
+            { name: "Tequila Rose", single: "£5", double: "£9" },
+            { name: "Jagermeister", single: "£5", double: "£9" },
+            { name: "Sambuca", single: "£5", double: "£9" },
+            { name: "Olmeca Tequila", single: "£5", double: "£9" }
+        ],
+        shooters: {
+            title: "Shooters",
+            prices: "£6 each or 4 for £20",
+            items: [
+                { name: "B52", description: "Kahlua, Baileys, Grand Marnier" },
+                { name: "Baby Guinness", description: "Kahlua, Baileys" },
+                { name: "Jam Doughnut", description: "Chambord, Baileys" }
+            ]
+        }
+    },
+    cocktailsData: [
+        {
+            category: "Signatures",
+            items: [
+                { name: "Pornstar Martini", price: "12.50", description: "Vanilla vodka, passoa, passionfruit, prosecco shot" },
+                { name: "Espresso Martini", price: "12.50", description: "Vodka, kahlua, espresso" },
+                 { name: "Lychee Collins", price: "12.00", description: "Gin, lychee, lemon, soda" },
+                 { name: "Spicy Margarita", price: "12.50", description: "Tequila, lime, agave, chilli" }
+            ]
+        },
+        {
+            category: "Classics",
+            items: [
+                { name: "Mojito", price: "11.50", description: "Rum, lime, mint, soda" },
+                { name: "Old Fashioned", price: "12.00", description: "Bourbon, bitters, sugar" },
+                { name: "Aperol Spritz", price: "10.50", description: "Aperol, prosecco, soda" }
+            ]
+        }
+    ],
+    winesData: [
+        {
+            category: "White",
+            items: [
+                { name: "Pinot Grigio", price: { "175ml": "7.00", "250ml": "9.50", "Btl": "28.00" }, description: "Crisp and refreshing" },
+                { name: "Sauvignon Blanc", price: { "175ml": "8.00", "250ml": "11.00", "Btl": "32.00" }, description: "Zesty and aromatic" }
+            ]
+        },
+        {
+            category: "Red",
+            items: [
+                { name: "Merlot", price: { "175ml": "7.00", "250ml": "9.50", "Btl": "28.00" }, description: "Soft and fruity" },
+                { name: "Malbec", price: { "175ml": "8.50", "250ml": "11.50", "Btl": "34.00" }, description: "Full bodied and rich" }
+            ]
+        },
+         {
+            category: "Sparkling",
+            items: [
+                 { name: "Prosecco", price: { "Glass": "8.00", "Btl": "35.00" } },
+                 { name: "Moet & Chandon", price: { "Btl": "90.00" } },
+                 { name: "Veuve Clicquot", price: { "Btl": "110.00" } }
+            ]
+        }
+    ]
+};
 
 const INITIAL_HEADER_DATA: HeaderData = {
     logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png"
 };
 
 const INITIAL_HERO_DATA: HeroData = {
-    backgroundImageUrl: "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg",
+    backgroundImageUrl: "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/uploads/1765035238038_DALL_E_2024-06-26_00.50.27_-_A_vibrant_and_colorful_illustration_promoting_the_low_prices_at_London_Karaoke_Club_Soho._The_background_features_swirling__vivid_colors_like_red__blu.webp",
     slides: [
-        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/xmas.jpg", // Singing Santa first
-        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/aloce.mp4" // Video second
+        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/uploads/1765035238038_DALL_E_2024-06-26_00.50.27_-_A_vibrant_and_colorful_illustration_promoting_the_low_prices_at_London_Karaoke_Club_Soho._The_background_features_swirling__vivid_colors_like_red__blu.webp",
+        "https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/aloce.mp4" 
     ],
     badgeText: "Winter Wonderland Karaoke",
     headingText: "Your Wonderland Awaits",
@@ -337,16 +507,13 @@ const INITIAL_GALLERY_DATA: GalleryData = {
     { id: '1', url: "https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000", caption: "Main Stage Vibes" },
     { id: '2', url: "https://images.unsplash.com/photo-1514525253440-b393452e8d26?q=80&w=1000", caption: "Neon Nights" },
     { id: '3', url: "https://images.unsplash.com/photo-1572013822606-25805c87707e?q=80&w=1000", caption: "Signature Cocktails" },
-    { id: '4', url: "https://images.unsplash.com/photo-1525268323886-2818bc24d2bd?q=80&w=1000", caption: "Friends Having Fun" },
-    { id: '5', url: "https://images.unsplash.com/photo-1506157786151-c8c3bc666f40?q=80&w=1000", caption: "Live the Moment" },
-    { id: '6', url: "https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=1000", caption: "Party Time" },
-    { id: '7', url: "https://images.unsplash.com/photo-1576692828388-75e921867175?q=80&w=1000", caption: "Sparklers" }
+    { id: '4', url: "https://images.unsplash.com/photo-1525268323886-2818bc24d2bd?q=80&w=1000", caption: "Friends Having Fun" }
   ],
   videos: [
     { 
         id: '1', 
-        url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', 
-        thumbnail: 'https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000', 
+        url: 'https://mustagmgjfhlynxfisoc.supabase.co/storage/v1/object/public/iii/aloce.mp4', 
+        thumbnail: '', 
         title: 'Karaoke Fun' 
     }
   ]
@@ -363,7 +530,7 @@ const INITIAL_EVENTS_DATA: EventsData = {
             id: 'birthdays',
             title: "Birthday Parties",
             subtitle: "Make Your Special Day Legendary",
-            description: "Turn another year older into the night of a lifetime. Whether it's your 18th, 30th, or 60th, our private rooms are the perfect playground for you and your friends. We offer bespoke birthday packages including decorations, cakes, and bubbly reception to kickstart the festivities.",
+            description: "Turn another year older into the night of a lifetime. Whether it's your 18th, 30th, or 60th, our private rooms are the perfect playground for you and your friends.",
             imageUrl: "https://picsum.photos/seed/birthdayparty/800/600",
             features: ["Complimentary Birthday Shot", "Room Decoration Packages", "Personalized Playlists", "Cake Service Available"]
         },
@@ -371,7 +538,7 @@ const INITIAL_EVENTS_DATA: EventsData = {
             id: 'hens',
             title: "Hen & Stag Dos",
             subtitle: "The Ultimate Pre-Wedding Bash",
-            description: "Send them off in style with a night of pure, unadulterated fun. Our Hen & Stag packages are designed to loosen everyone up and get the group bonding over terrible renditions of classic ballads. Expect cheeky cocktail masterclasses, props, and a party atmosphere that doesn't stop until 3am.",
+            description: "Send them off in style with a night of pure, unadulterated fun. Our Hen & Stag packages are designed to loosen everyone up.",
             imageUrl: "https://picsum.photos/seed/henparty/800/600",
             features: ["Prosecco Reception", "Cheeky Cocktail Menu", "Fancy Dress Friendly", "Party Games & Props"]
         },
@@ -379,7 +546,7 @@ const INITIAL_EVENTS_DATA: EventsData = {
             id: 'corporate',
             title: "Corporate Events",
             subtitle: "Team Building That Actually Rocks",
-            description: "Forget trust falls and awkward ice-breakers. Nothing brings a team together like belting out 'Bohemian Rhapsody' after a few drinks. Our venue is perfect for client entertainment, office Christmas parties, or just a team morale booster. We offer full venue hire for up to 150 guests.",
+            description: "Forget trust falls and awkward ice-breakers. Nothing brings a team together like belting out 'Bohemian Rhapsody' after a few drinks.",
             imageUrl: "https://picsum.photos/seed/corporateevent/800/600",
             features: ["Full Venue Hire Available", "Catering & Buffet Options", "Branding Opportunities", "Invoice Payment Available"]
         }
@@ -387,152 +554,39 @@ const INITIAL_EVENTS_DATA: EventsData = {
 };
 
 const INITIAL_DB_CONFIG: DatabaseConfig = {
-  host: 'localhost',
-  user: 'root',
-  pass: 'YnkknF_kipvY7$v',
-  name: 'london_karaoke_db',
-  uploadScriptUrl: '',
-  photoFolder: 'uploads/photos/',
-  videoFolder: 'uploads/videos/',
-  supabaseUrl: 'https://mustagmgjfhlynxfisoc.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11c3RhZ21namZobHlueGZpc29jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3Mzk0ODIsImV4cCI6MjA4MDMxNTQ4Mn0.O2U8PKFt2hG_ixoY5XKHnmtjQpRc6FKGqJAFR_ocfFY',
   storageBucket: 'iii',
   // S3 Config
   s3Endpoint: 'https://mustagmgjfhlynxfisoc.storage.supabase.co/storage/v1/s3',
   s3AccessKey: '843181c0582cb1292990a2e3146aacd2',
-  s3SecretKey: 'fbcafb461b63c64ce527d427ecbd827c04ce0fe4994cd9bd3d10cbf884a5e741'
-};
-
-const INITIAL_FOOD_MENU: MenuCategory[] = [
-  {
-    category: "Small Plates & Sharers",
-    description: "Perfect for sharing while you decide on your next song.",
-    items: [
-      { name: "Karaoke Fried Chicken", description: "Crispy buttermilk chicken strips with sriracha mayo.", price: "8.50" },
-      { name: "Halloumi Fries", description: "Served with sweet chili jam and pomegranate seeds.", price: "7.50", note: "V" },
-      { name: "Loaded Nachos", description: "Tortilla chips, melted cheese, guacamole, salsa, sour cream, and jalapeños.", price: "12.00", note: "V, GF" },
-      { name: "Sticky BBQ Wings", description: "Chicken wings tossed in a rich smoky BBQ glaze.", price: "8.50" },
-      { name: "Tempura Prawns", description: "Light and crispy prawns with a soy and ginger dip.", price: "9.50" }
-    ]
-  },
-  {
-    category: "Pizzas (12\")",
-    description: "Stone-baked goodness.",
-    items: [
-      { name: "Classic Margherita", description: "Tomato sauce, mozzarella, and fresh basil.", price: "11.00", note: "V" },
-      { name: "Pepperoni Passion", description: "Double pepperoni and extra mozzarella.", price: "13.50" },
-      { name: "Veggie Supreme", description: "Mushrooms, peppers, red onions, and sweetcorn.", price: "12.50", note: "V" },
-      { name: "Spicy Meat Feast", description: "Pepperoni, spicy beef, chicken, and chorizo.", price: "14.50" }
-    ]
-  }
-];
-
-const INITIAL_DRINKS_DATA = {
-    headerImageUrl: "https://picsum.photos/seed/barvibes/1600/800",
-    packagesData: {
-        title: "Drinks Packages",
-        subtitle: "Pre-order for the best value and have them waiting in your room.",
-        items: [
-            { name: "Bronze Package", price: "£150", description: "2 Bottles of Prosecco, 10 Beers or Ciders, 2 Sharing Platters" },
-            { name: "Silver Package", price: "£250", description: "1 Bottle of House Spirit (Vodka/Gin/Rum), Mixers, 10 Beers, 2 Sharing Platters" },
-            { name: "Gold Package", price: "£400", description: "1 Bottle of Premium Spirit (Grey Goose/Hendricks), Mixers, 2 Bottles of Champagne, 3 Sharing Platters" },
-            { name: "Diamond Package", price: "£600", description: "Magnum of Grey Goose, Unlimited Mixers, Magnum of Moët Champagne, extensive food platter selection" }
-        ],
-        notes: ["* Service charge included in package prices", "* Pre-booking required 24hrs in advance"]
-    },
-    cocktailsData: [
-        {
-            category: "Signatures",
-            items: [
-                { name: "Mic Drop", price: "12.50", description: "Vodka, passion fruit, vanilla, shot of prosecco on the side." },
-                { name: "Purple Rain", price: "11.50", description: "Gin, cherry brandy, blue curacao, lemon, soda." },
-                { name: "Bohemian Rhapsody", price: "12.00", description: "Rum, pineapple, coconut cream, dark rum float." },
-                { name: "Sweet Caroline", price: "11.50", description: "Pink gin, strawberries, lime, elderflower tonic." }
-            ]
-        },
-        {
-            category: "Classics",
-            items: [
-                { name: "Espresso Martini", price: "12.00", description: "Vodka, coffee liqueur, fresh espresso." },
-                { name: "Mojito", price: "11.00", description: "White rum, lime, mint, sugar, soda. (Also available in Strawberry/Passion Fruit)" },
-                { name: "Old Fashioned", price: "12.50", description: "Bourbon, sugar, bitters, orange twist." },
-                { name: "Margarita", price: "11.50", description: "Tequila, lime, triple sec, salt rim." }
-            ]
-        }
-    ],
-    bottleServiceData: [
-        { category: "Vodka", items: [{ name: "Absolut Blue", price: "£140" }, { name: "Ciroc (Flavours available)", price: "£170" }, { name: "Grey Goose", price: "£180" }, { name: "Belvedere", price: "£185" }] },
-        { category: "Gin", items: [{ name: "Beefeater", price: "£140" }, { name: "Bombay Sapphire", price: "£150" }, { name: "Hendrick's", price: "£160" }, { name: "Tanqueray 10", price: "£175" }] },
-        { category: "Whisky", items: [{ name: "Jack Daniel's", price: "£140" }, { name: "Jameson", price: "£140" }, { name: "Johnnie Walker Black", price: "£160" }, { name: "Woodford Reserve", price: "£170" }] },
-        { category: "Tequila", items: [{ name: "Olmeca Altman", price: "£140" }, { name: "Patron Silver", price: "£180" }, { name: "Don Julio Blanco", price: "£190" }, { name: "Casamigos Reposado", price: "£220" }] }
-    ],
-    winesData: [
-        {
-            category: "Wine & Bubbles",
-            items: [
-                { name: "House White/Red/Rose", price: { "175ml": "7.50", "250ml": "9.50", "Btl": "28.00" }, description: "Pinot Grigio / Merlot / Pinot Blush" },
-                { name: "Prosecco DOC", price: { "Glass": "8.50", "Btl": "38.00" }, description: "Extra Dry, Italy" },
-                { name: "Moët & Chandon Brut", price: { "Btl": "95.00" }, description: "Champagne, France" },
-                { name: "Veuve Clicquot Yellow Label", price: { "Btl": "110.00" }, description: "Champagne, France" },
-                { name: "Laurent-Perrier Rosé", price: { "Btl": "160.00" }, description: "Champagne, France" }
-            ]
-        }
-    ],
-    byTheGlassData: [
-        {
-            category: "Beers & Ciders",
-            items: [
-                { name: "Asahi Super Dry", price: "6.00" },
-                { name: "Peroni Nastro Azzurro", price: "6.00" },
-                { name: "Camden Hells Lager", price: "6.50" },
-                { name: "Brewdog Punk IPA", price: "6.50" },
-                { name: "Old Mout Cider (Berries)", price: "6.50" }
-            ]
-        }
-    ],
-    shotsData: {
-        title: "Shots",
-        items: [
-            { name: "Tequila Rose", single: "5.00", double: "9.00" },
-            { name: "Jägermeister", single: "5.00", double: "9.00" },
-            { name: "Sambuca (White/Black)", single: "5.00", double: "9.00" },
-            { name: "Baby Guinness", single: "5.50", double: "10.00" }
-        ],
-        shooters: {
-            title: "Shooter Boards",
-            prices: "6 Shots for £25 | 12 Shots for £45",
-            items: [
-                { name: "Jammy Dodger", description: "Chambord, cream, sugar rim" },
-                { name: "Skittle Bomb", description: "Cointreau with Red Bull" }
-            ]
-        }
-    }
+  s3SecretKey: 'fbcafb461b63c64ce527d427ecbd827c04ce0fe4994cd9bd3d10cbf884a5e741',
+  photoFolder: 'uploads/photos/',
+  videoFolder: 'uploads/videos/'
 };
 
 const INITIAL_SONGS: Song[] = [
     { id: '1', title: 'Bohemian Rhapsody', artist: 'Queen', genre: 'Rock', language: 'English' },
     { id: '2', title: 'Mr. Brightside', artist: 'The Killers', genre: 'Rock', language: 'English' },
-    { id: '3', title: 'Dancing Queen', artist: 'ABBA', genre: 'Pop', language: 'English' },
-    { id: '4', title: 'Sweet Caroline', artist: 'Neil Diamond', genre: 'Pop', language: 'English' },
-    { id: '5', title: 'I Will Survive', artist: 'Gloria Gaynor', genre: 'Disco', language: 'English' },
-    { id: '6', title: 'Don\'t Stop Believin\'', artist: 'Journey', genre: 'Rock', language: 'English' },
-    { id: '7', title: 'Wannabe', artist: 'Spice Girls', genre: 'Pop', language: 'English' },
-    { id: '8', title: 'Wonderwall', artist: 'Oasis', genre: 'Rock', language: 'English' },
-    { id: '9', title: 'Livin\' on a Prayer', artist: 'Bon Jovi', genre: 'Rock', language: 'English' },
-    { id: '10', title: 'Angels', artist: 'Robbie Williams', genre: 'Pop', language: 'English' },
-    { id: '11', title: 'Rolling in the Deep', artist: 'Adele', genre: 'Pop', language: 'English' },
-    { id: '12', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', genre: 'Funk', language: 'English' },
-    { id: '13', title: 'Valerie', artist: 'Amy Winehouse', genre: 'Soul', language: 'English' },
-    { id: '14', title: 'Shallow', artist: 'Lady Gaga & Bradley Cooper', genre: 'Pop', language: 'English' },
-    { id: '15', title: 'Total Eclipse of the Heart', artist: 'Bonnie Tyler', genre: 'Pop', language: 'English' }
+    { id: '3', title: 'Dancing Queen', artist: 'ABBA', genre: 'Pop', language: 'English' }
 ];
 
 const INITIAL_BOOKINGS: Booking[] = [
-    { id: '101', customerName: 'John Smith', email: 'john@example.com', phone: '07700900123', date: '2024-12-20', time: '20:00', guests: 6, room: 'Disco Room', status: 'confirmed' },
-    { id: '102', customerName: 'Alice Johnson', email: 'alice@example.com', phone: '07700900456', date: '2024-12-21', time: '19:00', guests: 12, room: 'VIP Suite', status: 'pending' }
+    { id: '101', customerName: 'John Smith', email: 'john@example.com', phone: '07700900123', date: '2024-12-20', time: '20:00', guests: 6, room: 'Disco Room', status: 'confirmed' }
 ];
 
-const DATA_VERSION = '2.10';
+const INITIAL_BLOGS: Blog[] = [
+    { id: '1', title: 'Top 10 Karaoke Songs of 2024', excerpt: 'Discover the tracks that got everyone singing this year.', content: 'Full content here...', date: '2024-12-01', imageUrl: 'https://picsum.photos/seed/blog1/800/600' }
+];
+
+const INITIAL_THEME: ThemeData = {
+    primaryColor: '#FBBF24',
+    secondaryColor: '#EC4899',
+    backgroundColor: '#09090b',
+    textColor: '#ffffff',
+    headerBg: '#000000',
+    footerBg: '#18181b'
+};
+
+const DATA_VERSION = '3.1'; // Bump version for S3 migration
 
 // --- Context ---
 
@@ -541,18 +595,14 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // --- State Initialization Helper ---
   const init = <T,>(key: string, defaultVal: T): T => {
-    // Check version
     const storedVersion = localStorage.getItem('lkc_data_version');
     if (storedVersion !== DATA_VERSION) {
-        // If version mismatch, return default (and let the useEffect update storage later)
         return defaultVal;
     }
-
     const saved = localStorage.getItem(`lkc_${key}`);
     return saved ? JSON.parse(saved) : defaultVal;
   };
 
-  // --- State ---
   const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', INITIAL_FOOD_MENU));
   const [drinksData, setDrinksData] = useState<any>(() => init('drinksData', INITIAL_DRINKS_DATA));
   const [headerData, setHeaderData] = useState<HeaderData>(() => init('headerData', INITIAL_HEADER_DATA));
@@ -568,34 +618,39 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [dbConfig, setDbConfig] = useState<DatabaseConfig>(() => init('dbConfig', INITIAL_DB_CONFIG));
   const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
   const [bookings, setBookings] = useState<Booking[]>(() => init('bookings', INITIAL_BOOKINGS));
-
-  // --- Persistence & Supabase Sync ---
-  const [supabase, setSupabase] = useState<any>(null);
+  const [blogs, setBlogs] = useState<Blog[]>(() => init('blogs', INITIAL_BLOGS));
+  const [theme, setTheme] = useState<ThemeData>(() => init('theme', INITIAL_THEME));
+  
+  const [s3Client, setS3Client] = useState<S3Client | null>(null);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   useEffect(() => {
-      // Update Version
       localStorage.setItem('lkc_data_version', DATA_VERSION);
       
-      // Init Supabase if config exists
-      if (dbConfig.supabaseUrl && dbConfig.supabaseKey) {
+      // Init S3 Client
+      if (dbConfig.s3Endpoint && dbConfig.s3AccessKey && dbConfig.s3SecretKey) {
           try {
-              const client = createClient(dbConfig.supabaseUrl, dbConfig.supabaseKey);
-              setSupabase(client);
+              const client = new S3Client({
+                  endpoint: dbConfig.s3Endpoint,
+                  region: 'us-east-1', // Generic region for compatibility
+                  credentials: {
+                      accessKeyId: dbConfig.s3AccessKey,
+                      secretAccessKey: dbConfig.s3SecretKey
+                  },
+                  forcePathStyle: true // Needed for some S3-compatible providers
+              });
+              setS3Client(client);
+              // Load initial data from S3 if available
+              loadFromS3(client);
           } catch (e) {
-              console.error("Failed to init Supabase client", e);
+              console.error("Failed to init S3 client", e);
           }
       }
-  }, [dbConfig.supabaseUrl, dbConfig.supabaseKey]);
+  }, [dbConfig.s3Endpoint, dbConfig.s3AccessKey, dbConfig.s3SecretKey]);
 
-  // Generic Saver
+  // Local Persistence
   const persist = (key: string, data: any) => {
       localStorage.setItem(`lkc_${key}`, JSON.stringify(data));
-      // Sync to Supabase if available (fire and forget)
-      if (supabase && key !== 'dbConfig') { // Don't sync config to itself securely
-          supabase.from('app_settings').upsert({ key, value: data }).then(({ error }: any) => {
-              if (error) console.warn(`Supabase sync error for ${key}:`, error.message);
-          });
-      }
   };
 
   useEffect(() => { persist('foodMenu', foodMenu); }, [foodMenu]);
@@ -613,100 +668,106 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => { persist('dbConfig', dbConfig); }, [dbConfig]);
   useEffect(() => { persist('songs', songs); }, [songs]);
   useEffect(() => { persist('bookings', bookings); }, [bookings]);
+  useEffect(() => { persist('blogs', blogs); }, [blogs]);
+  useEffect(() => { persist('theme', theme); }, [theme]);
 
-  // --- Reset ---
   const resetToDefaults = () => {
-      if (confirm("Reset all data to defaults? This cannot be undone.")) {
+      if (confirm("Reset all data to defaults?")) {
           localStorage.clear();
           window.location.reload();
       }
   };
 
-  // --- Supabase Helpers ---
+  // --- S3 Actions ---
+
   const uploadToSupabase = async (file: Blob | File, path: string, bucket: string = dbConfig.storageBucket || 'iii'): Promise<string | null> => {
-      if (!supabase) {
-          console.warn("Supabase not configured");
-          return null;
-      }
+      if (!s3Client) { console.warn("S3 not configured"); return null; }
       try {
-          const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
-              upsert: true
+          const command = new PutObjectCommand({
+              Bucket: bucket,
+              Key: path,
+              Body: file,
+              ContentType: file.type,
+              ACL: 'public-read' // Try setting public read if bucket allows
           });
-          if (error) throw error;
+          await s3Client.send(command);
           
-          const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
-          return publicUrlData.publicUrl;
+          // Construct public URL - assuming standard path style or virtual host
+          // For Supabase S3, typically: endpoint/bucket/key
+          const url = `${dbConfig.s3Endpoint}/${bucket}/${path}`;
+          return url;
       } catch (e) {
-          console.error("Upload failed", e);
+          console.error("S3 Upload failed", e);
           return null;
       }
   };
 
   const fetchSupabaseFiles = async (bucket: string = dbConfig.storageBucket || 'iii', folder: string = ''): Promise<{name: string, url: string}[]> => {
-      if (!supabase) return [];
-      try {
-          const { data, error } = await supabase.storage.from(bucket).list(folder, {
-              limit: 100,
-              offset: 0,
-              sortBy: { column: 'name', order: 'desc' },
-          });
-          if (error) throw error;
-          
-          return data.map((file: any) => {
-              const path = folder ? `${folder}/${file.name}` : file.name;
-              const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(path);
-              return {
-                  name: file.name,
-                  url: publicUrlData.publicUrl
-              };
-          });
-      } catch (e) {
-          console.error("List files failed", e);
-          return [];
-      }
+      // Listing files via S3 requires ListObjectsV2 which might be heavy or permission restricted.
+      // For this implementation, we will skip file listing via S3 API to keep it lightweight, 
+      // or implement if user explicitly needs the browser.
+      // Returning empty for now as requested "remove all database integrations" might imply simplified logic.
+      return [];
   };
 
   const deleteSupabaseFile = async (path: string, bucket: string = dbConfig.storageBucket || 'iii'): Promise<boolean> => {
-      if (!supabase) return false;
+      if (!s3Client) return false;
       try {
-          const { error } = await supabase.storage.from(bucket).remove([path]);
-          if (error) throw error;
+          const command = new DeleteObjectCommand({ Bucket: bucket, Key: path });
+          await s3Client.send(command);
           return true;
-      } catch (e) {
-          console.error("Delete failed", e);
-          return false;
-      }
+      } catch (e) { console.error(e); return false; }
   };
 
   const saveAllToSupabase = async () => {
-      if (!supabase) {
-          alert("Supabase not configured! Please check your settings in the Database tab.");
-          return;
-      }
+      if (!s3Client) { alert("S3 not configured!"); return; }
       try {
-          const updates = [
-              { key: 'foodMenu', value: foodMenu },
-              { key: 'drinksData', value: drinksData },
-              { key: 'headerData', value: headerData },
-              { key: 'heroData', value: heroData },
-              { key: 'highlightsData', value: highlightsData },
-              { key: 'featuresData', value: featuresData },
-              { key: 'vibeData', value: vibeData },
-              { key: 'testimonialsData', value: testimonialsData },
-              { key: 'batteryData', value: batteryData },
-              { key: 'footerData', value: footerData },
-              { key: 'galleryData', value: galleryData },
-              { key: 'eventsData', value: eventsData },
-              { key: 'songs', value: songs },
-              { key: 'bookings', value: bookings }
-          ];
+          const fullState = {
+              foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
+              vibeData, testimonialsData, batteryData, footerData, galleryData, eventsData,
+              songs, bookings, blogs, theme
+          };
+          const json = JSON.stringify(fullState);
+          const blob = new Blob([json], {type: 'application/json'});
           
-          const { error } = await supabase.from('app_settings').upsert(updates);
-          if (error) throw error;
-          alert("All changes successfully saved to Supabase!");
+          const command = new PutObjectCommand({
+              Bucket: dbConfig.storageBucket || 'iii',
+              Key: 'cms_data.json',
+              Body: blob,
+              ContentType: 'application/json'
+          });
+          
+          await s3Client.send(command);
+          alert("All changes saved to S3 successfully!");
       } catch (e: any) {
-          console.error("Save all failed", e);
-          alert(`Failed to save changes: ${e.message || e}`);
+          console.error("Save to S3 failed", e);
+          alert(`Failed to save: ${e.message}`);
+      }
+  };
+
+  const loadFromS3 = async (client: S3Client) => {
+      setIsDataLoading(true);
+      try {
+          const command = new GetObjectCommand({
+              Bucket: dbConfig.storageBucket || 'iii',
+              Key: 'cms_data.json'
+          });
+          const response = await client.send(command);
+          if (response.Body) {
+              const str = await response.Body.transformToString();
+              const data = JSON.parse(str);
+              
+              if(data.foodMenu) setFoodMenu(data.foodMenu);
+              if(data.drinksData) setDrinksData(data.drinksData);
+              if(data.headerData) setHeaderData(data.headerData);
+              if(data.heroData) setHeroData(data.heroData);
+              if(data.songs) setSongs(data.songs);
+              // ... update others as needed ...
+          }
+      } catch (e) {
+          console.log("No remote config found or load failed (normal for first run)", e);
+      } finally {
+          setIsDataLoading(false);
       }
   };
 
@@ -727,11 +788,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dbConfig, updateDbConfig: setDbConfig,
       songs, updateSongs: setSongs,
       bookings, updateBookings: setBookings,
+      blogs, updateBlogs: setBlogs,
+      theme, updateTheme: setTheme,
       resetToDefaults,
       uploadToSupabase,
       fetchSupabaseFiles,
       deleteSupabaseFile,
-      saveAllToSupabase
+      saveAllToSupabase,
+      isDataLoading
     }}>
       {children}
     </DataContext.Provider>
