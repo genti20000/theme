@@ -1,10 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useData, MenuItem, Song, Booking, GalleryItem, VideoItem } from '../context/DataContext';
 
 interface AdminDashboardProps {}
 
-// Reusable Components
+// --- Reusable Components ---
+
 const SectionCard: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({ title, description, children }) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg mb-8">
     <div className="mb-6 border-b border-zinc-800 pb-4">
@@ -34,6 +34,56 @@ const InputGroup: React.FC<{ label: string; value: string; onChange: (val: strin
     )}
   </div>
 );
+
+const JsonEditor: React.FC<{ data: any; onSave: (newData: any) => void; label: string }> = ({ data, onSave, label }) => {
+    const [jsonStr, setJsonStr] = useState(JSON.stringify(data, null, 2));
+    const [isValid, setIsValid] = useState(true);
+
+    useEffect(() => {
+        setJsonStr(JSON.stringify(data, null, 2));
+    }, [data]);
+
+    const handleChange = (val: string) => {
+        setJsonStr(val);
+        try {
+            JSON.parse(val);
+            setIsValid(true);
+        } catch (e) {
+            setIsValid(false);
+        }
+    };
+
+    const handleApply = () => {
+        try {
+            const parsed = JSON.parse(jsonStr);
+            onSave(parsed);
+            alert('Data structure updated!');
+        } catch (e) {
+            alert('Invalid JSON');
+        }
+    };
+
+    return (
+        <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-semibold text-gray-300">{label} (Advanced Editor)</label>
+                <button 
+                    onClick={handleApply} 
+                    disabled={!isValid}
+                    className={`text-xs px-3 py-1 rounded ${isValid ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-red-900 text-red-200 cursor-not-allowed'}`}
+                >
+                    Apply Changes
+                </button>
+            </div>
+            <textarea 
+                className={`w-full bg-zinc-950 border ${isValid ? 'border-zinc-700' : 'border-red-500'} rounded-lg px-4 py-3 text-xs font-mono text-green-400 focus:outline-none h-64`}
+                value={jsonStr}
+                onChange={(e) => handleChange(e.target.value)}
+            />
+            {!isValid && <p className="text-red-500 text-xs mt-1">Invalid JSON format</p>}
+        </div>
+    );
+};
 
 const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string; multiple?: boolean; onBulkUpload?: (files: File[]) => void }> = ({ onUpload, label = "Upload Image", multiple = false, onBulkUpload }) => {
     const { dbConfig, uploadToSupabase } = useData();
@@ -101,85 +151,14 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string;
     );
 };
 
-const MultiUploader: React.FC<{ onUploadComplete: (urls: {url: string, type: 'image' | 'video'}[]) => void }> = ({ onUploadComplete }) => {
-    const { dbConfig, uploadToSupabase } = useData();
-    const [uploading, setUploading] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleBulkUpload = async (files: File[]) => {
-        setUploading(true);
-        setProgress(0);
-        const uploadedItems: {url: string, type: 'image' | 'video'}[] = [];
-        
-        const total = files.length;
-        let current = 0;
-
-        for (const file of files) {
-            const isVideo = file.type.startsWith('video/');
-            const type = isVideo ? 'video' : 'image';
-            
-            try {
-                const bucket = dbConfig.storageBucket || 'iii'; 
-                const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-                const path = `uploads/${Date.now()}_${cleanName}`;
-                const url = await uploadToSupabase(file, path, bucket);
-                if (url) {
-                    uploadedItems.push({ url: url, type });
-                }
-            } catch (e) {}
-            
-            current++;
-            setProgress(Math.round((current / total) * 100));
-        }
-        
-        onUploadComplete(uploadedItems);
-        setUploading(false);
-        setProgress(0);
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) handleBulkUpload(Array.from(e.target.files));
-    }
-
-    return (
-        <div className="w-full">
-            <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-sm font-semibold py-8 rounded-xl border-2 border-dashed border-zinc-700 hover:border-yellow-400 transition-colors flex flex-col items-center justify-center gap-2"
-                disabled={uploading}
-            >
-                {uploading ? (
-                    <>
-                        <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                        <span>Uploading {progress}%...</span>
-                    </>
-                ) : (
-                    <>
-                        <span>Click to Upload Files to S3</span>
-                    </>
-                )}
-            </button>
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleChange} 
-                className="hidden" 
-                accept="image/*,video/*"
-                multiple
-            />
-        </div>
-    );
-}
-
 const ImageField: React.FC<{ url: string; onUpdate: (url: string) => void }> = ({ url, onUpdate }) => {
     return (
         <div className="flex gap-4 items-start bg-zinc-950/30 p-3 rounded-lg border border-zinc-800/50">
             <div className="w-16 h-16 bg-black rounded overflow-hidden flex-shrink-0 border border-zinc-700">
-                {url.match(/\.(mp4|webm|mov)$/i) ? (
+                {url && url.match(/\.(mp4|webm|mov)$/i) ? (
                     <video src={url} className="w-full h-full object-cover" muted />
                 ) : (
-                    <img src={url} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={url} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
                 )}
             </div>
             <div className="flex-1 space-y-2">
@@ -197,7 +176,6 @@ const ImageField: React.FC<{ url: string; onUpdate: (url: string) => void }> = (
     );
 };
 
-
 const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -210,7 +188,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
     vibeData, testimonialsData, batteryData, footerData, galleryData, eventsData,
     dbConfig, songs, bookings, blogs, theme,
-    resetToDefaults, saveAllToSupabase
+    saveAllToSupabase
   } = useData();
   const [activeTab, setActiveTab] = useState<string>('header');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -260,6 +238,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
   // Helper Wrappers
   const handleHeroChange = (field: string, value: any) => { updateHeroData({ ...heroData, [field]: value }); };
+  const handleHighlightsChange = (field: string, value: any) => { updateHighlightsData({ ...highlightsData, [field]: value }); };
+  const handleVibeChange = (field: string, value: any) => { updateVibeData({ ...vibeData, [field]: value }); };
+  const handleBatteryChange = (field: string, value: any) => { updateBatteryData({ ...batteryData, [field]: value }); };
+  const handleFooterChange = (field: string, value: any) => { updateFooterData({ ...footerData, [field]: value }); };
+
   
   if (!isAuthenticated) return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
@@ -288,8 +271,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             <button onClick={() => setIsAuthenticated(false)} className="text-sm text-gray-400 hover:text-white">Logout</button>
           </div>
         </div>
-        <div className="container mx-auto px-6 flex gap-6 text-sm font-semibold overflow-x-auto no-scrollbar">
-             {['header', 'hero', 'events', 'songs', 'bookings', 'files', 'gallery', 'database'].map((tab) => (
+        <div className="container mx-auto px-6 flex gap-6 text-sm font-semibold overflow-x-auto no-scrollbar pb-0">
+             {['header', 'hero', 'menu', 'drinks', 'songs', 'highlights', 'features', 'vibe', 'testimonials', 'battery', 'footer', 'events', 'gallery', 'database'].map((tab) => (
                  <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 border-b-2 transition-colors whitespace-nowrap capitalize ${activeTab === tab ? 'border-yellow-400 text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}>{tab}</button>
              ))}
         </div>
@@ -304,6 +287,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             <SectionCard title="Homepage Hero" description="">
                  <InputGroup label="Badge Text" value={heroData.badgeText} onChange={(v) => handleHeroChange('badgeText', v)} />
                  <InputGroup label="Main Heading" value={heroData.headingText} onChange={(v) => handleHeroChange('headingText', v)} />
+                 <InputGroup label="Sub Text" value={heroData.subText} onChange={(v) => handleHeroChange('subText', v)} />
+                 <InputGroup label="Button Text" value={heroData.buttonText} onChange={(v) => handleHeroChange('buttonText', v)} />
                  <div className="border-t border-zinc-800 pt-6 mt-4">
                     <label className="block text-sm font-semibold text-gray-300 mb-4">Slideshow</label>
                     <div className="space-y-2 mb-4">
@@ -312,6 +297,79 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                         ))}
                     </div>
                  </div>
+            </SectionCard>
+        )}
+
+        {/* Menu (Food) Settings */}
+        {activeTab === 'menu' && (
+            <SectionCard title="Food Menu" description="Edit food categories and items.">
+                <JsonEditor data={foodMenu} onSave={updateFoodMenu} label="Food Menu JSON" />
+            </SectionCard>
+        )}
+
+        {/* Drinks Settings */}
+        {activeTab === 'drinks' && (
+            <SectionCard title="Drinks Menu" description="Edit drinks, packages, and bottle service.">
+                <div className="mb-6"><label className="block text-sm font-semibold text-gray-300 mb-2">Header Image</label><ImageField url={drinksData.headerImageUrl || ''} onUpdate={(v) => updateDrinksData({...drinksData, headerImageUrl: v})} /></div>
+                <JsonEditor data={drinksData} onSave={updateDrinksData} label="Drinks Data JSON" />
+            </SectionCard>
+        )}
+
+        {/* Highlights Settings */}
+        {activeTab === 'highlights' && (
+            <SectionCard title="Highlights Section" description="">
+                <InputGroup label="Heading" value={highlightsData.heading} onChange={(v) => handleHighlightsChange('heading', v)} />
+                <InputGroup label="Subtext" value={highlightsData.subtext} onChange={(v) => handleHighlightsChange('subtext', v)} />
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Main Image</label><ImageField url={highlightsData.mainImageUrl} onUpdate={(v) => handleHighlightsChange('mainImageUrl', v)} /></div>
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Side Image</label><ImageField url={highlightsData.sideImageUrl} onUpdate={(v) => handleHighlightsChange('sideImageUrl', v)} /></div>
+                <JsonEditor data={highlightsData.featureList} onSave={(v) => handleHighlightsChange('featureList', v)} label="Feature List" />
+            </SectionCard>
+        )}
+
+        {/* Features Settings */}
+        {activeTab === 'features' && (
+            <SectionCard title="Features Section" description="Experience, Occasions, and Grid.">
+                <JsonEditor data={featuresData} onSave={updateFeaturesData} label="Features Data JSON" />
+            </SectionCard>
+        )}
+
+        {/* Vibe Settings */}
+        {activeTab === 'vibe' && (
+            <SectionCard title="The Vibe (Fitness)" description="">
+                <InputGroup label="Heading" value={vibeData.heading} onChange={(v) => handleVibeChange('heading', v)} />
+                <InputGroup label="Text" value={vibeData.text} onChange={(v) => handleVibeChange('text', v)} type="textarea" />
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Video URL</label><ImageField url={vibeData.videoUrl || ''} onUpdate={(v) => handleVibeChange('videoUrl', v)} /></div>
+                <div className="mb-4"><label className="block text-sm font-semibold text-gray-300 mb-2">Big Bottom Image</label><ImageField url={vibeData.bigImage} onUpdate={(v) => handleVibeChange('bigImage', v)} /></div>
+                <InputGroup label="Bottom Heading" value={vibeData.bottomHeading} onChange={(v) => handleVibeChange('bottomHeading', v)} />
+                <InputGroup label="Bottom Text" value={vibeData.bottomText} onChange={(v) => handleVibeChange('bottomText', v)} type="textarea" />
+            </SectionCard>
+        )}
+
+        {/* Testimonials Settings */}
+        {activeTab === 'testimonials' && (
+            <SectionCard title="Testimonials" description="Manage reviews.">
+                <InputGroup label="Heading" value={testimonialsData.heading} onChange={(v) => updateTestimonialsData({...testimonialsData, heading: v})} />
+                <InputGroup label="Subtext" value={testimonialsData.subtext} onChange={(v) => updateTestimonialsData({...testimonialsData, subtext: v})} />
+                <JsonEditor data={testimonialsData.items} onSave={(v) => updateTestimonialsData({...testimonialsData, items: v})} label="Reviews JSON" />
+            </SectionCard>
+        )}
+
+        {/* Battery Settings */}
+        {activeTab === 'battery' && (
+            <SectionCard title="Stats Section" description="">
+                <InputGroup label="Stat Number" value={batteryData.statNumber} onChange={(v) => handleBatteryChange('statNumber', v)} />
+                <InputGroup label="Prefix" value={batteryData.statPrefix} onChange={(v) => handleBatteryChange('statPrefix', v)} />
+                <InputGroup label="Suffix" value={batteryData.statSuffix} onChange={(v) => handleBatteryChange('statSuffix', v)} />
+                <InputGroup label="Subtext" value={batteryData.subText} onChange={(v) => handleBatteryChange('subText', v)} />
+            </SectionCard>
+        )}
+
+        {/* Footer Settings */}
+        {activeTab === 'footer' && (
+            <SectionCard title="Footer CTA" description="">
+                <InputGroup label="Heading" value={footerData.ctaHeading} onChange={(v) => handleFooterChange('ctaHeading', v)} />
+                <InputGroup label="Text" value={footerData.ctaText} onChange={(v) => handleFooterChange('ctaText', v)} type="textarea" />
+                <InputGroup label="Button Text" value={footerData.ctaButtonText} onChange={(v) => handleFooterChange('ctaButtonText', v)} />
             </SectionCard>
         )}
 
@@ -332,7 +390,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                                 <td className="px-4 py-2"><input value={s.title} onChange={(e) => handleUpdateSong(s.id, 'title', e.target.value)} className="bg-transparent w-full outline-none"/></td>
                                 <td className="px-4 py-2"><input value={s.artist} onChange={(e) => handleUpdateSong(s.id, 'artist', e.target.value)} className="bg-transparent w-full outline-none"/></td>
                                 <td className="px-4 py-2">
-                                    {/* Updated: File Upload for Song */}
                                     <div className="flex gap-2 items-center">
                                         <input value={s.fileUrl || ''} onChange={(e) => handleUpdateSong(s.id, 'fileUrl', e.target.value)} className="bg-transparent w-full outline-none text-blue-400 placeholder-zinc-600" placeholder="https://..." />
                                         <ImageUploader onUpload={(url) => handleUpdateSong(s.id, 'fileUrl', url)} label="Up" />
