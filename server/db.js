@@ -2,12 +2,34 @@ import pg from 'pg';
 import bcrypt from 'bcryptjs';
 
 const { Pool } = pg;
+const hasDatabase = Boolean(process.env.DATABASE_URL);
+const pool = hasDatabase
+  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  : null;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+const memoryStore = {
+  adminUsers: new Map(),
+  siteSettings: null
+};
 
 export const initDatabase = async () => {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || '12345';
+
+  if (!hasDatabase) {
+    if (!memoryStore.adminUsers.has(adminEmail)) {
+      const passwordHash = await bcrypt.hash(adminPassword, 10);
+      memoryStore.adminUsers.set(adminEmail, {
+        id: 1,
+        email: adminEmail,
+        password_hash: passwordHash,
+        created_at: new Date().toISOString()
+      });
+      console.log(`Seeded in-memory admin user: ${adminEmail}`);
+    }
+    return;
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS site_settings (
       id INTEGER PRIMARY KEY,
@@ -25,9 +47,6 @@ export const initDatabase = async () => {
     );
   `);
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-
   if (adminEmail && adminPassword) {
     const existing = await pool.query('SELECT id FROM admin_users WHERE email = $1', [adminEmail]);
     if (existing.rowCount === 0) {
@@ -42,16 +61,26 @@ export const initDatabase = async () => {
 };
 
 export const getAdminByEmail = async (email) => {
+  if (!hasDatabase) {
+    return memoryStore.adminUsers.get(email);
+  }
   const result = await pool.query('SELECT * FROM admin_users WHERE email = $1', [email]);
   return result.rows[0];
 };
 
 export const getSiteSettings = async () => {
+  if (!hasDatabase) {
+    return memoryStore.siteSettings;
+  }
   const result = await pool.query('SELECT content FROM site_settings WHERE id = 1');
   return result.rows[0]?.content ?? null;
 };
 
 export const saveSiteSettings = async (content) => {
+  if (!hasDatabase) {
+    memoryStore.siteSettings = content;
+    return;
+  }
   await pool.query(
     `INSERT INTO site_settings (id, content, updated_at)
      VALUES (1, $1, NOW())
