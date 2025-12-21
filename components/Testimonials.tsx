@@ -5,6 +5,8 @@ import { useData } from '../context/DataContext';
 const Testimonials: React.FC = () => {
   const { testimonialsData } = useData();
 
+  if (!testimonialsData || !testimonialsData.items) return null;
+
   return (
     <section className="py-16 md:py-24 bg-zinc-950 border-t border-zinc-900">
       <div className="container mx-auto px-6">
@@ -34,6 +36,8 @@ const Testimonials: React.FC = () => {
                 quote={item.quote}
                 name={item.name}
                 avatar={item.avatar}
+                rating={item.rating}
+                date={item.date}
             />
           ))}
         </div>
@@ -46,9 +50,11 @@ interface TestimonialCardProps {
   quote: string;
   name: string;
   avatar: string;
+  rating?: number;
+  date?: string;
 }
 
-const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, name, avatar }) => {
+const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, name, avatar, rating = 5, date = 'a week ago' }) => {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col h-full border border-gray-200">
       <div className="flex items-center gap-4 mb-4">
@@ -56,10 +62,10 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, name, avatar }
           <div>
               <p className="font-bold text-gray-900 text-sm">{name}</p>
               <div className="flex text-yellow-400 text-xs">
-                {[...Array(5)].map((_, i) => (
+                {[...Array(rating)].map((_, i) => (
                   <svg key={i} className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2L9.19 8.63L2 9.24l5.46 4.73L5.82 21z"/></svg>
                 ))}
-                <span className="text-gray-400 ml-2">a week ago</span>
+                <span className="text-gray-400 ml-2">{date}</span>
               </div>
           </div>
           <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5 ml-auto opacity-50" />

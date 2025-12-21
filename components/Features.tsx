@@ -5,7 +5,7 @@ import { useData } from '../context/DataContext';
 const Features: React.FC = () => {
   const { featuresData } = useData();
   
-  if (!featuresData) return null;
+  if (!featuresData || !featuresData.experience || !featuresData.occasions) return null;
   
   const { experience, occasions, grid } = featuresData;
 
@@ -46,7 +46,7 @@ const Features: React.FC = () => {
         </div>
 
         <div className="mt-12 grid md:grid-cols-3 gap-8 text-sm">
-            {occasions?.items?.map((item, idx) => (
+            {occasions?.items && occasions?.items.map((item, idx) => (
                 <div key={idx} className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800">
                     <h5 className="font-bold mb-3 text-xl">{item.title}</h5>
                     <p className="text-gray-400 leading-relaxed">{item.text}</p>
@@ -60,7 +60,7 @@ const Features: React.FC = () => {
         </div>
 
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {grid?.items?.map((item, index) => (
+            {grid?.items && grid?.items.map((item, index) => (
                 <FeatureCard 
                     key={index}
                     title={item.title}

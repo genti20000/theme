@@ -6,6 +6,8 @@ const EventsPage: React.FC = () => {
   const { eventsData } = useData();
   const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
 
+  if (!eventsData || !eventsData.hero) return null;
+
   return (
     <div className="bg-black min-h-screen text-white">
       {/* Hero Section */}
@@ -26,7 +28,7 @@ const EventsPage: React.FC = () => {
 
       {/* Sections */}
       <div className="container mx-auto px-6 py-12">
-        {eventsData.sections.map((section, index) => (
+        {eventsData.sections && eventsData.sections.map((section, index) => (
             <div key={section.id} id={section.id} className={`flex flex-col md:flex-row gap-12 items-center mb-32 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
                 {/* Image Side */}
                 <div className="w-full md:w-1/2">
@@ -50,7 +52,7 @@ const EventsPage: React.FC = () => {
                     
                     {/* Features List */}
                     <ul className="space-y-3 pt-4">
-                        {section.features.map((feature, i) => (
+                        {section.features && section.features.map((feature, i) => (
                             <li key={i} className="flex items-center text-gray-400">
                                 <svg className="w-5 h-5 mr-3 text-yellow-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
