@@ -18,3 +18,28 @@ View your app in AI Studio: https://ai.studio/apps/drive/1jWfVzsD1j70JUOolhkhxzR
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Backend API (Node + PostgreSQL)
+
+This project includes a Node.js API server for admin authentication, content storage, and uploads.
+
+### Environment variables
+
+Create a `.env` file for the API server:
+
+```
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+JWT_SECRET=change-me
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-me
+CORS_ORIGIN=http://localhost:5173
+PORT=3001
+```
+
+### Start the API server
+
+```
+npm run server
+```
+
+The React app can call the API via `VITE_API_BASE_URL` (e.g. `http://localhost:3001`).

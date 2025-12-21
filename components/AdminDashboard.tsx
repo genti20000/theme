@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useData, Song, MenuCategory, MenuItem } from '../context/DataContext';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -22,7 +22,7 @@ const InputGroup: React.FC<{ label: string; value: string; onChange: (val: strin
 );
 
 const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string }> = ({ onUpload, label = "Upload" }) => {
-    const { uploadToSupabase } = useData();
+    const { uploadToStorage } = useData();
     const [uploading, setUploading] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -30,7 +30,7 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string 
         const file = e.target.files?.[0];
         if (!file) return;
         setUploading(true);
-        const url = await uploadToSupabase(file, `uploads/${Date.now()}_${file.name}`);
+        const url = await uploadToStorage(file, `uploads/${Date.now()}_${file.name}`);
         if (url) onUpload(url);
         setUploading(false);
     };
@@ -47,20 +47,75 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string 
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
   const { 
-    saveAllToSupabase, isDataLoading, config, updateConfig,
+    saveAllToDatabase, isDataLoading,
     songs, updateSongs, heroData, updateHeroData, footerData, updateFooterData,
     foodMenu, updateFoodMenu, vibeData, updateVibeData
   } = useData();
 
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/session`, { credentials: 'include' });
+        if (response.ok) setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Session check failed', error);
+      }
+    };
+    checkSession();
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAuthenticating(true);
+    setAuthError('');
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error?.message || 'Login failed.');
+      }
+      setIsAuthenticated(true);
+      setPassword('');
+    } catch (error: any) {
+      setAuthError(error.message);
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${apiBaseUrl}/api/logout`, { method: 'POST', credentials: 'include' });
+    } finally {
+      setIsAuthenticated(false);
+      setEmail('');
+      setPassword('');
+    }
+  };
+
   if (!isAuthenticated) return (
     <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white">
-      <form onSubmit={(e) => { e.preventDefault(); if (password === 'admin123') setIsAuthenticated(true); }} className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl">
-        <h2 className="text-2xl font-bold mb-6 text-center">LKC Admin</h2>
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-zinc-800 p-3 rounded mb-4" placeholder="Password"/>
-        <button className="w-full bg-yellow-400 text-black font-bold py-3 rounded hover:bg-yellow-300">Login</button>
+      <form onSubmit={handleLogin} className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl">
+        <h2 className="text-2xl font-bold mb-2 text-center">LKC Admin</h2>
+        <p className="text-sm text-gray-400 mb-6 text-center">Sign in to manage site content</p>
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded mb-3" placeholder="Email" required />
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-zinc-800 p-3 rounded mb-4" placeholder="Password" required />
+        {authError && <div className="text-xs text-red-400 mb-3">{authError}</div>}
+        <button className="w-full bg-yellow-400 text-black font-bold py-3 rounded hover:bg-yellow-300 disabled:opacity-70" disabled={isAuthenticating}>
+          {isAuthenticating ? 'Signing in...' : 'Login'}
+        </button>
       </form>
     </div>
   );
@@ -69,17 +124,25 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
       <div className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 p-4 flex justify-between items-center">
         <h2 className="text-xl font-bold">LKC Control Center</h2>
-        <button 
-            onClick={saveAllToSupabase} 
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleLogout}
+            className="border border-zinc-700 px-4 py-2 rounded-full text-sm text-gray-300 hover:text-white hover:border-zinc-500"
+          >
+            Logout
+          </button>
+          <button 
+            onClick={saveAllToDatabase} 
             disabled={isDataLoading}
             className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full font-bold shadow-lg transition-all"
-        >
-            {isDataLoading ? 'Saving...' : 'SAVE TO SUPABASE'}
-        </button>
+          >
+            {isDataLoading ? 'Saving...' : 'SAVE CHANGES'}
+          </button>
+        </div>
       </div>
 
       <div className="flex bg-zinc-900 border-b border-zinc-800 overflow-x-auto scrollbar-hide">
-        {['general', 'vibe', 'songs', 'food', 'database'].map(t => (
+        {['general', 'vibe', 'songs', 'food'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-4 capitalize font-bold transition-colors ${activeTab === t ? 'text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-500 hover:text-gray-300'}`}>{t}</button>
         ))}
       </div>
@@ -130,13 +193,6 @@ const AdminDashboard: React.FC = () => {
             </SectionCard>
         )}
 
-        {activeTab === 'database' && (
-            <SectionCard title="Supabase Configuration">
-                <InputGroup label="Project URL" value={config.url} onChange={v => updateConfig({...config, url: v})} />
-                <InputGroup label="Anon / Public Key" value={config.anonKey} onChange={v => updateConfig({...config, anonKey: v})} type="password" />
-                <InputGroup label="Storage Bucket Name" value={config.bucket} onChange={v => updateConfig({...config, bucket: v})} />
-            </SectionCard>
-        )}
       </div>
     </div>
   );
