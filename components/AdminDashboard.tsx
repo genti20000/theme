@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ password })
       });
       if (!response.ok) {
         const error = await response.json();
@@ -100,7 +100,6 @@ const AdminDashboard: React.FC = () => {
       await fetch(`${apiBaseUrl}/api/logout`, { method: 'POST', credentials: 'include' });
     } finally {
       setIsAuthenticated(false);
-      setEmail('');
       setPassword('');
     }
   };
@@ -110,7 +109,6 @@ const AdminDashboard: React.FC = () => {
       <form onSubmit={handleLogin} className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl">
         <h2 className="text-2xl font-bold mb-2 text-center">LKC Admin</h2>
         <p className="text-sm text-gray-400 mb-6 text-center">Sign in to manage site content</p>
-        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded mb-3" placeholder="Email" required />
         <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-zinc-800 p-3 rounded mb-4" placeholder="Password" required />
         {authError && <div className="text-xs text-red-400 mb-3">{authError}</div>}
         <button className="w-full bg-yellow-400 text-black font-bold py-3 rounded hover:bg-yellow-300 disabled:opacity-70" disabled={isAuthenticating}>

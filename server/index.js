@@ -43,9 +43,11 @@ app.get('/api/session', (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ message: 'Email and password are required.' });
+  if (!password) return res.status(400).json({ message: 'Password is required.' });
 
-  const user = await getAdminByEmail(email);
+  const fallbackEmail = process.env.ADMIN_EMAIL || 'admin';
+  const resolvedEmail = email || fallbackEmail;
+  const user = await getAdminByEmail(resolvedEmail);
   if (!user) return res.status(401).json({ message: 'Invalid credentials.' });
 
   const matches = await bcrypt.compare(password, user.password_hash);
