@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { useData, Song, MenuCategory, MenuItem } from '../context/DataContext';
+import { useData, Song, MenuCategory, MenuItem, FirebaseConfig } from '../context/DataContext';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8">
@@ -22,7 +22,7 @@ const InputGroup: React.FC<{ label: string; value: string; onChange: (val: strin
 );
 
 const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string }> = ({ onUpload, label = "Upload" }) => {
-    const { uploadToSupabase } = useData();
+    const { uploadToFirebase } = useData();
     const [uploading, setUploading] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -30,7 +30,7 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string 
         const file = e.target.files?.[0];
         if (!file) return;
         setUploading(true);
-        const url = await uploadToSupabase(file, `uploads/${Date.now()}_${file.name}`);
+        const url = await uploadToFirebase(file, `uploads/${Date.now()}_${file.name}`);
         if (url) onUpload(url);
         setUploading(false);
     };
@@ -50,7 +50,7 @@ const AdminDashboard: React.FC = () => {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('general');
   const { 
-    saveAllToSupabase, isDataLoading, dbConfig, updateDbConfig,
+    saveAllToFirebase, isDataLoading, fbConfig, updateFbConfig,
     songs, updateSongs, heroData, updateHeroData, footerData, updateFooterData,
     foodMenu, updateFoodMenu, drinksData, updateDrinksData
   } = useData();
@@ -86,7 +86,7 @@ const AdminDashboard: React.FC = () => {
       <div className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 p-4 flex justify-between items-center">
         <h2 className="text-xl font-bold">LKC Control Center</h2>
         <button 
-            onClick={saveAllToSupabase} 
+            onClick={saveAllToFirebase} 
             disabled={isDataLoading}
             className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full font-bold shadow-lg transition-all"
         >
@@ -152,18 +152,21 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {activeTab === 'database' && (
-            <SectionCard title="Supabase API Configuration">
-                <InputGroup label="Supabase URL" value={dbConfig.supabaseUrl} onChange={v => updateDbConfig({...dbConfig, supabaseUrl: v})} />
-                <InputGroup label="Supabase Service Role/Anon Key" value={dbConfig.supabaseKey} onChange={v => updateDbConfig({...dbConfig, supabaseKey: v})} type="password" />
-                <InputGroup label="Storage Bucket Name" value={dbConfig.storageBucket} onChange={v => updateDbConfig({...dbConfig, storageBucket: v})} />
+            <SectionCard title="Firebase API Configuration">
+                <InputGroup label="API Key" value={fbConfig.apiKey} onChange={v => updateFbConfig({...fbConfig, apiKey: v})} />
+                <InputGroup label="Auth Domain" value={fbConfig.authDomain} onChange={v => updateFbConfig({...fbConfig, authDomain: v})} />
+                <InputGroup label="Database URL" value={fbConfig.databaseURL} onChange={v => updateFbConfig({...fbConfig, databaseURL: v})} />
+                <InputGroup label="Project ID" value={fbConfig.projectId} onChange={v => updateFbConfig({...fbConfig, projectId: v})} />
+                <InputGroup label="Storage Bucket" value={fbConfig.storageBucket} onChange={v => updateFbConfig({...fbConfig, storageBucket: v})} />
+                <InputGroup label="Messaging Sender ID" value={fbConfig.messagingSenderId} onChange={v => updateFbConfig({...fbConfig, messagingSenderId: v})} />
+                <InputGroup label="App ID" value={fbConfig.appId} onChange={v => updateFbConfig({...fbConfig, appId: v})} />
                 <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/30 rounded-lg text-sm text-yellow-200">
                     <p className="font-bold mb-2">Instructions:</p>
                     <ol className="list-decimal list-inside space-y-1 opacity-80">
-                        <li>Create a table in Supabase named <code>site_settings</code>.</li>
-                        <li>Add a column <code>id</code> (int4, primary key).</li>
-                        <li>Add a column <code>content</code> (jsonb).</li>
-                        <li>Add a column <code>updated_at</code> (timestamptz).</li>
-                        <li>Ensure a row with <code>id: 1</code> exists.</li>
+                        <li>Create a project in Firebase Console.</li>
+                        <li>Enable "Realtime Database" and "Storage".</li>
+                        <li>Copy your "Web App" configuration details here.</li>
+                        <li>Set your Realtime Database rules to allow read/write (ensure security in production).</li>
                     </ol>
                 </div>
             </SectionCard>

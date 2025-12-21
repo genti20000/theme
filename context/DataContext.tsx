@@ -1,6 +1,8 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getDatabase, ref, set, onValue, Database } from 'firebase/database';
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 
 // --- Types ---
 export interface MenuItem {
@@ -18,7 +20,7 @@ export interface MenuCategory {
 
 export interface DrinkItem {
     name: string;
-    price: string | any; // String for simple, Object for wine sizes
+    price: string | any;
     description?: string;
     note?: string;
     single?: string;
@@ -74,9 +76,18 @@ export interface VideoItem { id: string; url: string; thumbnail: string; title: 
 export interface GalleryData { heading: string; subtext: string; images: GalleryItem[]; videos?: VideoItem[]; }
 export interface EventSection { id: string; title: string; subtitle: string; description: string; imageUrl: string; features: string[]; }
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
-export interface DatabaseConfig { supabaseUrl: string; supabaseKey: string; storageBucket: string; }
 export interface Song { id: string; title: string; artist: string; genre?: string; fileUrl?: string; }
 export interface ThemeData { primaryColor: string; secondaryColor: string; backgroundColor: string; textColor: string; headerBg: string; footerBg: string; }
+
+export interface FirebaseConfig {
+    apiKey: string;
+    authDomain: string;
+    databaseURL: string;
+    projectId: string;
+    storageBucket: string;
+    messagingSenderId: string;
+    appId: string;
+}
 
 interface DataContextType {
     foodMenu: MenuCategory[];
@@ -103,16 +114,16 @@ interface DataContextType {
     updateGalleryData: (newData: GalleryData) => void;
     eventsData: EventsData;
     updateEventsData: (newData: EventsData) => void;
-    dbConfig: DatabaseConfig;
-    updateDbConfig: (newData: DatabaseConfig) => void;
+    fbConfig: FirebaseConfig;
+    updateFbConfig: (newData: FirebaseConfig) => void;
     songs: Song[];
     updateSongs: (newSongs: Song[]) => void;
     theme: ThemeData;
     updateTheme: (newTheme: ThemeData) => void;
 
     resetToDefaults: () => void;
-    uploadToSupabase: (file: Blob | File, path: string) => Promise<string | null>;
-    saveAllToSupabase: () => Promise<void>;
+    uploadToFirebase: (file: Blob | File, path: string) => Promise<string | null>;
+    saveAllToFirebase: () => Promise<void>;
     isDataLoading: boolean;
 }
 
@@ -158,9 +169,9 @@ const INITIAL_BATTERY_DATA: BatteryData = { statPrefix: "Over", statNumber: "80K
 const INITIAL_FOOTER_DATA: FooterData = { ctaHeading: "Ready?", ctaText: "Book now.", ctaButtonText: "Book a Room" };
 const INITIAL_GALLERY_DATA: GalleryData = { heading: "Moments", subtext: "Gallery", images: [], videos: [] };
 const INITIAL_EVENTS_DATA: EventsData = { hero: { title: "Celebrate", subtitle: "Events", image: "" }, sections: [] };
-const INITIAL_DB_CONFIG: DatabaseConfig = { supabaseUrl: '', supabaseKey: '', storageBucket: 'iii' };
 const INITIAL_SONGS: Song[] = [{ id: '1', title: 'Bohemian Rhapsody', artist: 'Queen', genre: 'Rock' }];
 const INITIAL_THEME: ThemeData = { primaryColor: '#ec4899', secondaryColor: '#eab308', backgroundColor: '#000000', textColor: '#ffffff', headerBg: '#000000', footerBg: '#18181b' };
+const INITIAL_FB_CONFIG: FirebaseConfig = { apiKey: '', authDomain: '', databaseURL: '', projectId: '', storageBucket: '', messagingSenderId: '', appId: '' };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -182,18 +193,29 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', INITIAL_FOOTER_DATA));
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY_DATA));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', INITIAL_EVENTS_DATA));
-    const [dbConfig, setDbConfig] = useState<DatabaseConfig>(() => init('dbConfig', INITIAL_DB_CONFIG));
+    const [fbConfig, setFbConfig] = useState<FirebaseConfig>(() => init('fbConfig', INITIAL_FB_CONFIG));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
     const [theme, setTheme] = useState<ThemeData>(() => init('theme', INITIAL_THEME));
 
-    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+    const [app, setApp] = useState<FirebaseApp | null>(null);
+    const [db, setDb] = useState<Database | null>(null);
+    const [storage, setStorage] = useState<FirebaseStorage | null>(null);
     const [isDataLoading, setIsDataLoading] = useState(false);
 
     useEffect(() => {
-        if (dbConfig.supabaseUrl && dbConfig.supabaseKey) {
-            setSupabase(createClient(dbConfig.supabaseUrl, dbConfig.supabaseKey));
+        if (fbConfig.apiKey && fbConfig.projectId) {
+            const apps = getApps();
+            let firebaseApp: FirebaseApp;
+            if (!apps.length) {
+                firebaseApp = initializeApp(fbConfig);
+            } else {
+                firebaseApp = apps[0];
+            }
+            setApp(firebaseApp);
+            setDb(getDatabase(firebaseApp));
+            setStorage(getStorage(firebaseApp));
         }
-    }, [dbConfig.supabaseUrl, dbConfig.supabaseKey]);
+    }, [fbConfig]);
 
     const persist = (key: string, data: any) => localStorage.setItem(`lkc_${key}`, JSON.stringify(data));
 
@@ -209,42 +231,45 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('footerData', footerData); }, [footerData]);
     useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
-    useEffect(() => { persist('dbConfig', dbConfig); }, [dbConfig]);
+    useEffect(() => { persist('fbConfig', fbConfig); }, [fbConfig]);
     useEffect(() => { persist('songs', songs); }, [songs]);
     useEffect(() => { persist('theme', theme); }, [theme]);
 
-    const uploadToSupabase = async (file: Blob | File, path: string): Promise<string | null> => {
-        if (!supabase) return null;
-        const { error } = await supabase.storage.from(dbConfig.storageBucket).upload(path, file);
-        if (error) return null;
-        const { data: { publicUrl } } = supabase.storage.from(dbConfig.storageBucket).getPublicUrl(path);
-        return publicUrl;
+    const uploadToFirebase = async (file: Blob | File, path: string): Promise<string | null> => {
+        if (!storage) return null;
+        try {
+            const storageRef = sRef(storage, path);
+            await uploadBytes(storageRef, file);
+            return await getDownloadURL(storageRef);
+        } catch (e) {
+            console.error("Upload error:", e);
+            return null;
+        }
     };
 
-    const saveAllToSupabase = async () => {
-        if (!supabase) { alert("Configure Supabase first."); return; }
+    const saveAllToFirebase = async () => {
+        if (!db) { alert("Configure Firebase first."); return; }
         setIsDataLoading(true);
         const fullState = {
             foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
             vibeData, testimonialsData, batteryData, footerData, galleryData, eventsData,
-            songs, theme
+            songs, theme, updatedAt: new Date().toISOString()
         };
         try {
-            const { error } = await supabase.from('site_settings').upsert({ id: 1, content: fullState, updated_at: new Date() });
-            if (error) throw error;
-            alert("Saved successfully!");
+            await set(ref(db, 'site_settings'), fullState);
+            alert("Saved successfully to Firebase!");
         } catch (e: any) {
             alert("Error saving: " + e.message);
         } finally { setIsDataLoading(false); }
     };
 
     useEffect(() => {
-        if (supabase) {
-            const load = async () => {
-                setIsDataLoading(true);
-                const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
-                if (data?.content) {
-                    const c = data.content;
+        if (db) {
+            setIsDataLoading(true);
+            const settingsRef = ref(db, 'site_settings');
+            return onValue(settingsRef, (snapshot) => {
+                const c = snapshot.val();
+                if (c) {
                     if (c.foodMenu) setFoodMenu(c.foodMenu);
                     if (c.drinksData) setDrinksData(c.drinksData);
                     if (c.headerData) setHeaderData(c.headerData);
@@ -261,10 +286,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     if (c.theme) setTheme(c.theme);
                 }
                 setIsDataLoading(false);
-            };
-            load();
+            });
         }
-    }, [supabase]);
+    }, [db]);
 
     return (
         <DataContext.Provider value={{
@@ -280,12 +304,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             footerData, updateFooterData: setFooterData,
             galleryData, updateGalleryData: setGalleryData,
             eventsData, updateEventsData: setEventsData,
-            dbConfig, updateDbConfig: setDbConfig,
+            fbConfig, updateFbConfig: setFbConfig,
             songs, updateSongs: setSongs,
             theme, updateTheme: setTheme,
             resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
-            uploadToSupabase,
-            saveAllToSupabase,
+            uploadToFirebase,
+            saveAllToFirebase,
             isDataLoading
         }}>
             {children}
