@@ -19,11 +19,25 @@ export interface DrinksData {
 export interface HeaderData { logoUrl: string; }
 export interface HeroData { backgroundImageUrl: string; slides: string[]; badgeText: string; headingText: string; subText: string; buttonText: string; }
 export interface HighlightsData { heading: string; subtext: string; mainImageUrl: string; featureListTitle: string; featureList: string[]; sideImageUrl: string; }
+
 export interface FeaturesData {
     experience: { label: string; heading: string; text: string; image: string; };
     occasions: { heading: string; text: string; items: { title: string; text: string; }[]; };
     grid: { heading: string; items: { title: string; description: string; image: string; }[]; };
 }
+
+export interface VibeData {
+    label: string;
+    heading: string;
+    text: string;
+    image1: string;
+    image2: string;
+    videoUrl?: string;
+    bigImage: string;
+    bottomHeading: string;
+    bottomText: string;
+}
+
 export interface BatteryData { statPrefix: string; statNumber: string; statSuffix: string; subText: string; }
 export interface FooterData { ctaHeading: string; ctaText: string; ctaButtonText: string; }
 export interface GalleryData { heading: string; subtext: string; images: { id: string; url: string; caption: string; }[]; }
@@ -48,6 +62,8 @@ interface DataContextType {
     updateHighlightsData: (newData: HighlightsData) => void;
     featuresData: FeaturesData;
     updateFeaturesData: (newData: FeaturesData) => void;
+    vibeData: VibeData;
+    updateVibeData: (newData: VibeData) => void;
     batteryData: BatteryData;
     updateBatteryData: (newData: BatteryData) => void;
     footerData: FooterData;
@@ -77,11 +93,24 @@ const INITIAL_DRINKS_DATA: DrinksData = {
 const INITIAL_HEADER_DATA: HeaderData = { logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png" };
 const INITIAL_HERO_DATA: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
 const INITIAL_HIGHLIGHTS_DATA: HighlightsData = { heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
+
 const INITIAL_FEATURES_DATA: FeaturesData = {
     experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
     occasions: { heading: "Every Occasion", text: "Parties of all sizes.", items: [] },
     grid: { heading: "Features", items: [] }
 };
+
+const INITIAL_VIBE_DATA: VibeData = {
+    label: "The Vibe",
+    heading: "Electric Soho Nights",
+    text: "Join us for the most vibrant karaoke experience in London.",
+    image1: "https://picsum.photos/seed/vibe1/800/800",
+    image2: "https://picsum.photos/seed/vibe2/800/800",
+    bigImage: "https://picsum.photos/seed/vibebig/1600/900",
+    bottomHeading: "Party Hard",
+    bottomText: "Until 3 AM every single night."
+};
+
 const INITIAL_BATTERY_DATA: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated monthly." };
 const INITIAL_FOOTER_DATA: FooterData = { ctaHeading: "Ready to sing?", ctaText: "Secure your room today.", ctaButtonText: "Book Now" };
 const INITIAL_GALLERY_DATA: GalleryData = { heading: "Moments", subtext: "LKC Gallery", images: [] };
@@ -93,7 +122,12 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const init = <T,>(key: string, defaultVal: T): T => {
         const saved = localStorage.getItem(`lkc_${key}`);
-        return saved ? JSON.parse(saved) : defaultVal;
+        if (!saved) return defaultVal;
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            return defaultVal;
+        }
     };
 
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', INITIAL_FOOD_MENU));
@@ -102,6 +136,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', INITIAL_HERO_DATA));
     const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', INITIAL_HIGHLIGHTS_DATA));
     const [featuresData, setFeaturesData] = useState<FeaturesData>(() => init('featuresData', INITIAL_FEATURES_DATA));
+    const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', INITIAL_VIBE_DATA));
     const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_BATTERY_DATA));
     const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', INITIAL_FOOTER_DATA));
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY_DATA));
@@ -117,6 +152,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, [config.url, config.anonKey]);
 
+    const persist = (key: string, data: any) => localStorage.setItem(`lkc_${key}`, JSON.stringify(data));
+
+    useEffect(() => { persist('foodMenu', foodMenu); }, [foodMenu]);
+    useEffect(() => { persist('drinksData', drinksData); }, [drinksData]);
+    useEffect(() => { persist('headerData', headerData); }, [headerData]);
+    useEffect(() => { persist('heroData', heroData); }, [heroData]);
+    useEffect(() => { persist('highlightsData', highlightsData); }, [highlightsData]);
+    useEffect(() => { persist('featuresData', featuresData); }, [featuresData]);
+    useEffect(() => { persist('vibeData', vibeData); }, [vibeData]);
+    useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
+    useEffect(() => { persist('footerData', footerData); }, [footerData]);
+    useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
+    useEffect(() => { persist('config', config); }, [config]);
+    useEffect(() => { persist('songs', songs); }, [songs]);
+
     const uploadToSupabase = async (file: Blob | File, path: string): Promise<string | null> => {
         if (!supabase) return null;
         const { error } = await supabase.storage.from(config.bucket).upload(path, file, { upsert: true });
@@ -130,7 +180,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsDataLoading(true);
         const fullState = {
             foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
-            batteryData, footerData, galleryData, songs, updatedAt: new Date().toISOString()
+            vibeData, batteryData, footerData, galleryData, songs, updatedAt: new Date().toISOString()
         };
         try {
             const { error } = await supabase.from('site_settings').upsert({ id: 1, content: fullState });
@@ -154,6 +204,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     if (c.heroData) setHeroData(c.heroData);
                     if (c.highlightsData) setHighlightsData(c.highlightsData);
                     if (c.featuresData) setFeaturesData(c.featuresData);
+                    if (c.vibeData) setVibeData(c.vibeData);
                     if (c.batteryData) setBatteryData(c.batteryData);
                     if (c.footerData) setFooterData(c.footerData);
                     if (c.galleryData) setGalleryData(c.galleryData);
@@ -170,6 +221,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             foodMenu, updateFoodMenu: setFoodMenu, drinksData, updateDrinksData: setDrinksData,
             headerData, updateHeaderData: setHeaderData, heroData, updateHeroData: setHeroData,
             highlightsData, updateHighlightsData: setHighlightsData, featuresData, updateFeaturesData: setFeaturesData,
+            vibeData, updateVibeData: setVibeData,
             batteryData, updateBatteryData: setBatteryData, footerData, updateFooterData: setFooterData,
             galleryData, updateGalleryData: setGalleryData, config, updateConfig: setConfig,
             songs, updateSongs: setSongs, resetToDefaults: () => { localStorage.clear(); window.location.reload(); },

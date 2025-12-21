@@ -15,7 +15,7 @@ const InputGroup: React.FC<{ label: string; value: string; onChange: (val: strin
     <input 
       type={type}
       className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none focus:border-yellow-400"
-      value={value}
+      value={value || ''}
       onChange={(e) => onChange(e.target.value)}
     />
   </div>
@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
   const { 
     saveAllToSupabase, isDataLoading, config, updateConfig,
     songs, updateSongs, heroData, updateHeroData, footerData, updateFooterData,
-    foodMenu, updateFoodMenu
+    foodMenu, updateFoodMenu, vibeData, updateVibeData
   } = useData();
 
   if (!isAuthenticated) return (
@@ -72,14 +72,14 @@ const AdminDashboard: React.FC = () => {
         <button 
             onClick={saveAllToSupabase} 
             disabled={isDataLoading}
-            className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full font-bold shadow-lg"
+            className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full font-bold shadow-lg transition-all"
         >
             {isDataLoading ? 'Saving...' : 'SAVE TO SUPABASE'}
         </button>
       </div>
 
       <div className="flex bg-zinc-900 border-b border-zinc-800 overflow-x-auto scrollbar-hide">
-        {['general', 'songs', 'food', 'database'].map(t => (
+        {['general', 'vibe', 'songs', 'food', 'database'].map(t => (
             <button key={t} onClick={() => setActiveTab(t)} className={`px-8 py-4 capitalize font-bold transition-colors ${activeTab === t ? 'text-yellow-400 border-b-2 border-yellow-400' : 'text-gray-500 hover:text-gray-300'}`}>{t}</button>
         ))}
       </div>
@@ -101,14 +101,28 @@ const AdminDashboard: React.FC = () => {
             </>
         )}
 
+        {activeTab === 'vibe' && (
+            <SectionCard title="Vibe Section Settings">
+                <InputGroup label="Label" value={vibeData?.label} onChange={v => updateVibeData({...vibeData, label: v})} />
+                <InputGroup label="Heading" value={vibeData?.heading} onChange={v => updateVibeData({...vibeData, heading: v})} />
+                <InputGroup label="Description" value={vibeData?.text} onChange={v => updateVibeData({...vibeData, text: v})} />
+                <InputGroup label="Bottom Heading" value={vibeData?.bottomHeading} onChange={v => updateVibeData({...vibeData, bottomHeading: v})} />
+                <InputGroup label="Bottom Text" value={vibeData?.bottomText} onChange={v => updateVibeData({...vibeData, bottomText: v})} />
+                <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">Main Background Image</label>
+                    <ImageUploader onUpload={url => updateVibeData({...vibeData, bigImage: url})} label="Upload Big Image" />
+                </div>
+            </SectionCard>
+        )}
+
         {activeTab === 'songs' && (
             <SectionCard title="Song Library">
                 <table className="w-full text-left text-sm">
                     <thead><tr className="border-b border-zinc-800 text-gray-400"><th className="pb-2">Title</th><th className="pb-2">Artist</th><th className="pb-2">Action</th></tr></thead>
                     <tbody>{songs.map(s => (
                         <tr key={s.id} className="border-b border-zinc-800/50">
-                            <td className="py-2"><input value={s.title} onChange={e => updateSongs(songs.map(x => x.id === s.id ? {...x, title: e.target.value} : x))} className="bg-transparent w-full"/></td>
-                            <td className="py-2"><input value={s.artist} onChange={e => updateSongs(songs.map(x => x.id === s.id ? {...x, artist: e.target.value} : x))} className="bg-transparent w-full"/></td>
+                            <td className="py-2"><input value={s.title} onChange={e => updateSongs(songs.map(x => x.id === s.id ? {...x, title: e.target.value} : x))} className="bg-transparent w-full outline-none focus:text-yellow-400"/></td>
+                            <td className="py-2"><input value={s.artist} onChange={e => updateSongs(songs.map(x => x.id === s.id ? {...x, artist: e.target.value} : x))} className="bg-transparent w-full outline-none focus:text-yellow-400"/></td>
                             <td className="py-2"><ImageUploader onUpload={url => updateSongs(songs.map(x => x.id === s.id ? {...x, fileUrl: url} : x))} label="Upload MP3" /></td>
                         </tr>
                     ))}</tbody>
@@ -121,16 +135,6 @@ const AdminDashboard: React.FC = () => {
                 <InputGroup label="Project URL" value={config.url} onChange={v => updateConfig({...config, url: v})} />
                 <InputGroup label="Anon / Public Key" value={config.anonKey} onChange={v => updateConfig({...config, anonKey: v})} type="password" />
                 <InputGroup label="Storage Bucket Name" value={config.bucket} onChange={v => updateConfig({...config, bucket: v})} />
-                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg text-sm">
-                    <p className="font-bold mb-2">Hostinger Deployment Instructions:</p>
-                    <ol className="list-decimal list-inside space-y-2 opacity-80">
-                        <li>Log in to Supabase and create a table named <b>site_settings</b>.</li>
-                        <li>Add columns: <b>id</b> (int4, PK), <b>content</b> (jsonb).</li>
-                        <li>Ensure a row with <b>id=1</b> exists.</li>
-                        <li>In Supabase Storage, create a public bucket named after your bucket config.</li>
-                        <li>Upload your built site to Hostinger's <b>File Manager</b>.</li>
-                    </ol>
-                </div>
             </SectionCard>
         )}
       </div>

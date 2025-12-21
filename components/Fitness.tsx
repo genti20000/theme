@@ -5,6 +5,8 @@ import { useData } from '../context/DataContext';
 const Fitness: React.FC = () => {
   const { vibeData } = useData();
 
+  if (!vibeData) return null;
+
   return (
     <section className="bg-zinc-900 pt-16 md:pt-24 pb-0">
       <div className="container mx-auto px-6 pb-24">
@@ -35,7 +37,6 @@ const Fitness: React.FC = () => {
       </div>
 
       {/* Full Width Bottom Image */}
-      {/* Mobile: Stacked. Desktop: Overlay. */}
       <div className="flex flex-col md:block relative md:py-48 md:min-h-[80vh] md:overflow-hidden">
             
             {/* Image Section */}
