@@ -93,15 +93,12 @@ interface DataContextType {
     exportDatabase: () => string;
     saveToHostinger: () => Promise<void>;
     loadFromHostinger: () => Promise<void>;
-    uploadToSupabase: (file: Blob | File, path: string) => Promise<string | null>;
+    uploadFile: (file: Blob | File) => Promise<string | null>;
     saveAllToSupabase: () => Promise<void>;
     isDataLoading: boolean;
 }
 
-// --- Initial Data Defaults ---
-const INITIAL_FOOD_MENU: MenuCategory[] = [
-    { category: "Small Plates", items: [{ name: "Crispy Calamari", description: "With lemon aioli", price: "9.50" }] }
-];
+const INITIAL_FOOD_MENU: MenuCategory[] = [{ category: "Small Plates", items: [{ name: "Crispy Calamari", description: "With lemon aioli", price: "9.50" }] }];
 const INITIAL_DRINKS_DATA: DrinksData = {
     headerImageUrl: "https://picsum.photos/seed/bar/1600/800",
     packagesData: { title: "Packages", subtitle: "Pre-order", items: [], notes: [] },
@@ -111,41 +108,24 @@ const INITIAL_DRINKS_DATA: DrinksData = {
 const INITIAL_HEADER_DATA: HeaderData = { logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png" };
 const INITIAL_HERO_DATA: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
 const INITIAL_HIGHLIGHTS_DATA: HighlightsData = { heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
-
 const INITIAL_FEATURES_DATA: FeaturesData = {
     experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
     occasions: { heading: "Every Occasion", text: "Parties of all sizes.", items: [] },
     grid: { heading: "Features", items: [] }
 };
-
 const INITIAL_VIBE_DATA: VibeData = {
-    label: "The Vibe",
-    heading: "Electric Soho Nights",
-    text: "Join us for the most vibrant karaoke experience in London.",
-    image1: "https://picsum.photos/seed/vibe1/800/800",
-    image2: "https://picsum.photos/seed/vibe2/800/800",
-    bigImage: "https://picsum.photos/seed/vibebig/1600/900",
-    bottomHeading: "Party Hard",
-    bottomText: "Until 3 AM every single night."
+    label: "The Vibe", heading: "Electric Soho Nights", text: "Join us for the most vibrant karaoke experience in London.",
+    image1: "https://picsum.photos/seed/vibe1/800/800", image2: "https://picsum.photos/seed/vibe2/800/800",
+    bigImage: "https://picsum.photos/seed/vibebig/1600/900", bottomHeading: "Party Hard", bottomText: "Until 3 AM every single night."
 };
-
 const INITIAL_BATTERY_DATA: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated monthly." };
 const INITIAL_FOOTER_DATA: FooterData = { ctaHeading: "Ready to sing?", ctaText: "Secure your room today.", ctaButtonText: "Book Now" };
 const INITIAL_GALLERY_DATA: GalleryData = { heading: "Moments", subtext: "LKC Gallery", images: [] };
 const INITIAL_TESTIMONIALS_DATA: TestimonialsData = {
-    heading: "Loved by the Crowd",
-    subtext: "What our stars have to say about their LKC experience.",
-    items: [
-        { name: "Sarah J.", quote: "Best night out in Soho! The sound quality is incredible.", avatar: "", rating: 5, date: "a week ago" },
-        { name: "James L.", quote: "Private rooms are so much better than the boxes at other places.", avatar: "", rating: 5, date: "2 weeks ago" },
-        { name: "Mila R.", quote: "Amazing cocktails and the staff really looked after us for my birthday.", avatar: "", rating: 5, date: "a month ago" }
-    ]
+    heading: "Loved by the Crowd", subtext: "What our stars have to say.",
+    items: [{ name: "Sarah J.", quote: "Best night out in Soho!", avatar: "", rating: 5, date: "a week ago" }]
 };
-
-const INITIAL_EVENTS_DATA: EventsData = { 
-    hero: { title: "Special Events", subtitle: "Celebrate in Style", image: "https://picsum.photos/seed/events/1600/900" },
-    sections: [] 
-};
+const INITIAL_EVENTS_DATA: EventsData = { hero: { title: "Special Events", subtitle: "Celebrate in Style", image: "https://picsum.photos/seed/events/1600/900" }, sections: [] };
 const INITIAL_SONGS: Song[] = [{ id: '1', title: 'Bohemian Rhapsody', artist: 'Queen' }];
 const INITIAL_CONFIG: SupabaseConfig = { url: '', anonKey: '', bucket: 'public' };
 const INITIAL_ADMIN_PASS: string = 'admin123';
@@ -159,13 +139,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!saved) return defaultVal;
         try {
             const parsed = JSON.parse(saved);
-            if (typeof defaultVal === 'object' && defaultVal !== null && !Array.isArray(defaultVal)) {
-                return { ...defaultVal, ...parsed };
-            }
+            if (typeof defaultVal === 'object' && defaultVal !== null && !Array.isArray(defaultVal)) return { ...defaultVal, ...parsed };
             return parsed;
-        } catch (e) {
-            return defaultVal;
-        }
+        } catch (e) { return defaultVal; }
     };
 
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', INITIAL_FOOD_MENU));
@@ -184,15 +160,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', INITIAL_SYNC_URL));
     const [config, setConfig] = useState<SupabaseConfig>(() => init('config', INITIAL_CONFIG));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
-
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [isDataLoading, setIsDataLoading] = useState(false);
 
-    useEffect(() => {
-        if (config.url && config.anonKey) {
-            setSupabase(createClient(config.url, config.anonKey));
-        }
-    }, [config.url, config.anonKey]);
+    useEffect(() => { if (config.url && config.anonKey) setSupabase(createClient(config.url, config.anonKey)); }, [config.url, config.anonKey]);
 
     const persist = (key: string, data: any) => localStorage.setItem(`lkc_${key}`, JSON.stringify(data));
 
@@ -213,15 +184,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('config', config); }, [config]);
     useEffect(() => { persist('songs', songs); }, [songs]);
 
-    const exportDatabase = () => {
-        const fullState = {
-            foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
-            vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword,
-            version: "1.2",
-            exportedAt: new Date().toISOString()
-        };
-        return JSON.stringify(fullState, null, 2);
-    };
+    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword, version: "1.4", exportedAt: new Date().toISOString() }, null, 2);
 
     const importDatabase = (json: string | any) => {
         try {
@@ -241,101 +204,85 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.songs) setSongs(c.songs);
             if (c.adminPassword) setAdminPassword(c.adminPassword);
             return true;
-        } catch (e) {
-            console.error(e);
-            return false;
+        } catch (e) { return false; }
+    };
+
+    const uploadFile = async (file: Blob | File): Promise<string | null> => {
+        if (!syncUrl) {
+            if (!supabase) return null;
+            const path = `uploads/${Date.now()}_${(file as File).name}`;
+            const { error } = await supabase.storage.from(config.bucket).upload(path, file, { upsert: true });
+            if (error) return null;
+            const { data: { publicUrl } } = supabase.storage.from(config.bucket).getPublicUrl(path);
+            return publicUrl;
         }
+        
+        setIsDataLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch(syncUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${adminPassword}` },
+                body: formData
+            });
+            const res = await response.json();
+            if (res.success) return res.url;
+            throw new Error(res.message);
+        } catch (e) {
+            console.error("Upload failed", e);
+            return null;
+        } finally { setIsDataLoading(false); }
     };
 
     const saveToHostinger = async () => {
-        if (!syncUrl) { alert("Please set a Sync URL first."); return; }
+        if (!syncUrl) return;
         setIsDataLoading(true);
         try {
             const response = await fetch(syncUrl, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': adminPassword
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminPassword}` },
                 body: exportDatabase()
             });
             const res = await response.json();
-            if (res.success) alert("Saved to Hostinger successfully!");
+            if (res.success) alert("Saved to Hostinger!");
             else alert("Error: " + res.message);
-        } catch (e: any) {
-            alert("Connection error. Ensure your db.php is uploaded and has CORS enabled.");
-        } finally { setIsDataLoading(false); }
+        } catch (e) { alert("Connection failed."); } finally { setIsDataLoading(false); }
     };
 
     const loadFromHostinger = async () => {
         if (!syncUrl) return;
         setIsDataLoading(true);
         try {
-            const response = await fetch(syncUrl, {
-                headers: { 'Authorization': adminPassword }
-            });
+            const response = await fetch(syncUrl, { headers: { 'Authorization': `Bearer ${adminPassword}` } });
             const data = await response.json();
-            if (data && !data.error) {
-                importDatabase(data);
-                console.log("Data synced from Hostinger");
-            }
-        } catch (e) {
-            console.warn("Failed to auto-load from Hostinger. Check Sync URL.");
-        } finally { setIsDataLoading(false); }
-    };
-
-    const uploadToSupabase = async (file: Blob | File, path: string): Promise<string | null> => {
-        if (!supabase) return null;
-        const { error } = await supabase.storage.from(config.bucket).upload(path, file, { upsert: true });
-        if (error) return null;
-        const { data: { publicUrl } } = supabase.storage.from(config.bucket).getPublicUrl(path);
-        return publicUrl;
+            if (data && !data.error) importDatabase(data);
+        } catch (e) { console.warn("Load failed."); } finally { setIsDataLoading(false); }
     };
 
     const saveAllToSupabase = async () => {
-        if (!supabase) { alert("Configure Supabase first."); return; }
+        if (!supabase) return;
         setIsDataLoading(true);
-        const fullState = JSON.parse(exportDatabase());
         try {
-            const { error } = await supabase.from('site_settings').upsert({ id: 1, content: fullState });
+            const { error } = await supabase.from('site_settings').upsert({ id: 1, content: JSON.parse(exportDatabase()) });
             if (error) throw error;
             alert("Saved to Supabase!");
-        } catch (e: any) {
-            alert("Error saving: " + e.message);
-        } finally { setIsDataLoading(false); }
+        } catch (e) { alert("Supabase Save Error"); } finally { setIsDataLoading(false); }
     };
-
-    useEffect(() => {
-        if (supabase) {
-            const fetchSettings = async () => {
-                setIsDataLoading(true);
-                const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
-                if (data?.content) {
-                    importDatabase(data.content);
-                }
-                setIsDataLoading(false);
-            };
-            fetchSettings();
-        }
-    }, [supabase]);
 
     return (
         <DataContext.Provider value={{
             foodMenu, updateFoodMenu: setFoodMenu, drinksData, updateDrinksData: setDrinksData,
             headerData, updateHeaderData: setHeaderData, heroData, updateHeroData: setHeroData,
             highlightsData, updateHighlightsData: setHighlightsData, featuresData, updateFeaturesData: setFeaturesData,
-            vibeData, updateVibeData: setVibeData,
-            batteryData, updateBatteryData: setBatteryData, footerData, updateFooterData: setFooterData,
-            galleryData, updateGalleryData: setGalleryData, 
-            testimonialsData, updateTestimonialsData: setTestimonialsData,
-            eventsData, updateEventsData: setEventsData,
-            adminPassword, updateAdminPassword: setAdminPassword,
-            syncUrl, updateSyncUrl: setSyncUrl,
-            config, updateConfig: setConfig,
-            songs, updateSongs: setSongs, resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
-            exportDatabase, importDatabase: (j) => { if(importDatabase(j)) alert("Imported!"); else alert("Failed!"); },
-            saveToHostinger, loadFromHostinger,
-            uploadToSupabase, saveAllToSupabase, isDataLoading
+            vibeData, updateVibeData: setVibeData, batteryData, updateBatteryData: setBatteryData,
+            footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
+            testimonialsData, updateTestimonialsData: setTestimonialsData, eventsData, updateEventsData: setEventsData,
+            adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
+            config, updateConfig: setConfig, songs, updateSongs: setSongs,
+            resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
+            exportDatabase, importDatabase, saveToHostinger, loadFromHostinger,
+            uploadFile, saveAllToSupabase, isDataLoading
         }}>
             {children}
         </DataContext.Provider>
