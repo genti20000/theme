@@ -28,7 +28,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 
 
 const ImageEditor: React.FC = () => {
-  const { galleryData, updateGalleryData, uploadToSupabase, fetchSupabaseFiles } = useData();
+  const { galleryData, updateGalleryData, uploadToStorage, fetchStorageFiles } = useData();
   const [mode, setMode] = useState<'editor' | 'illustrator' | 'video' | 'pro'>('editor');
   const [prompt, setPrompt] = useState<string>('');
   const [imageSize, setImageSize] = useState<'1K' | '2K' | '4K'>('1K');
@@ -103,7 +103,7 @@ const ImageEditor: React.FC = () => {
                   const response = await fetch(generatedImage);
                   const blob = await response.blob();
                   const filename = `gen_${Date.now()}.png`;
-                  const uploadedUrl = await uploadToSupabase(blob, `generated/${filename}`, 'images'); // Assuming 'images' bucket
+                  const uploadedUrl = await uploadToStorage(blob, `generated/${filename}`);
                   if (uploadedUrl) {
                       url = uploadedUrl;
                   }
@@ -389,11 +389,11 @@ const ImageEditor: React.FC = () => {
 
   useEffect(() => {
       if (showGalleryModal && galleryTab === 'storage') {
-          fetchSupabaseFiles('images', '').then(files => {
+          fetchStorageFiles('images').then(files => {
               // Also fetch 'public' bucket if 'images' is empty, or merge them?
               // For simplicity, sticking to 'images' or 'public' based on upload logic
               if (files.length === 0) {
-                  fetchSupabaseFiles('public', '').then(pubFiles => setStorageFiles(pubFiles));
+                  fetchStorageFiles('public').then(pubFiles => setStorageFiles(pubFiles));
               } else {
                   setStorageFiles(files);
               }
