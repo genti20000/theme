@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useData, Song, MenuCategory, MenuItem } from '../context/DataContext';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -54,7 +54,8 @@ const AdminDashboard: React.FC = () => {
     saveAllToSupabase, isDataLoading, config, updateConfig,
     songs, updateSongs, heroData, updateHeroData, footerData, updateFooterData,
     foodMenu, updateFoodMenu, vibeData, updateVibeData, testimonialsData, updateTestimonialsData,
-    adminPassword, updateAdminPassword, exportDatabase, importDatabase
+    adminPassword, updateAdminPassword, exportDatabase, importDatabase,
+    syncUrl, updateSyncUrl, saveToHostinger, loadFromHostinger
   } = useData();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -62,6 +63,8 @@ const AdminDashboard: React.FC = () => {
     if (passwordInput === adminPassword) {
       setIsAuthenticated(true);
       setLoginError(false);
+      // Auto-load from Hostinger if URL is set
+      loadFromHostinger();
     } else {
       setLoginError(true);
       setPasswordInput('');
@@ -90,6 +93,38 @@ const AdminDashboard: React.FC = () => {
     };
     reader.readAsText(file);
   };
+
+  const phpCode = `<?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
+
+$dataFile = 'data.json';
+$authPass = '${adminPassword}'; // Uses your current admin password
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $headers = getallheaders();
+    if (($headers['Authorization'] ?? '') !== $authPass) {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
+    $input = file_get_contents('php://input');
+    if (file_put_contents($dataFile, $input)) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to write file']);
+    }
+} else {
+    if (file_exists($dataFile)) {
+        header('Content-Type: application/json');
+        echo file_get_contents($dataFile);
+    } else {
+        echo json_encode(['error' => 'No data found']);
+    }
+}
+?>`;
 
   if (!isAuthenticated) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-white">
@@ -143,13 +178,24 @@ const AdminDashboard: React.FC = () => {
             </button>
             <h2 className="text-xl font-bold">LKC Control Center</h2>
         </div>
-        <button 
-            onClick={saveAllToSupabase} 
-            disabled={isDataLoading}
-            className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full font-bold shadow-lg transition-all"
-        >
-            {isDataLoading ? 'Saving...' : 'SAVE TO CLOUD'}
-        </button>
+        <div className="flex gap-2">
+            {syncUrl && (
+                <button 
+                    onClick={saveToHostinger}
+                    disabled={isDataLoading}
+                    className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full text-xs font-bold transition-all"
+                >
+                    {isDataLoading ? '...' : 'SYNC HOSTINGER'}
+                </button>
+            )}
+            <button 
+                onClick={saveAllToSupabase} 
+                disabled={isDataLoading}
+                className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-full text-xs font-bold transition-all"
+            >
+                {isDataLoading ? '...' : 'CLOUD SAVE'}
+            </button>
+        </div>
       </div>
 
       <div className="flex bg-zinc-900 border-b border-zinc-800 overflow-x-auto scrollbar-hide">
@@ -263,21 +309,59 @@ const AdminDashboard: React.FC = () => {
 
         {activeTab === 'database' && (
             <div className="space-y-8">
+                <SectionCard title="Hostinger Sync (Simple Way)">
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-400">
+                            Hostinger uses PHP. To sync your data, upload a file named <code className="text-yellow-400">db.php</code> to your website's folder using Hostinger's File Manager.
+                        </p>
+                        
+                        <div className="bg-black p-4 rounded-lg border border-zinc-700 overflow-x-auto">
+                            <pre className="text-[10px] text-green-400 leading-tight">
+                                {phpCode}
+                            </pre>
+                            <button 
+                                onClick={() => { navigator.clipboard.writeText(phpCode); alert("PHP Code copied!"); }}
+                                className="mt-2 text-[10px] bg-zinc-800 hover:bg-zinc-700 px-2 py-1 rounded text-white"
+                            >
+                                Copy PHP Code
+                            </button>
+                        </div>
+
+                        <InputGroup 
+                            label="Sync URL (e.g. https://yourdomain.com/db.php)" 
+                            value={syncUrl} 
+                            onChange={v => updateSyncUrl(v)} 
+                        />
+                        
+                        <div className="flex gap-2">
+                             <button 
+                                onClick={loadFromHostinger}
+                                className="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-2 px-4 rounded transition-all"
+                            >
+                                Fetch Latest from Hostinger
+                            </button>
+                             <button 
+                                onClick={saveToHostinger}
+                                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded transition-all"
+                            >
+                                Send Changes to Hostinger
+                            </button>
+                        </div>
+                    </div>
+                </SectionCard>
+
                 <SectionCard title="Site Security">
                     <InputGroup label="Admin Password" value={adminPassword} onChange={v => updateAdminPassword(v)} type="text" />
-                    <p className="text-xs text-gray-500 mt-2">This is the password used to log into this dashboard.</p>
+                    <p className="text-xs text-gray-500 mt-2">Updating this password will also update your PHP script authentication.</p>
                 </SectionCard>
 
                 <SectionCard title="Local Database Backup">
-                    <p className="text-sm text-gray-400 mb-6">Download your entire site configuration as a JSON file to keep a local backup, or upload a previously saved file to restore your site.</p>
+                    <p className="text-sm text-gray-400 mb-6">Download your entire site configuration as a JSON file.</p>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button 
                             onClick={handleExportDB}
                             className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 px-6 rounded-lg flex-1 transition-all flex items-center justify-center gap-2"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
                             Export Database (.json)
                         </button>
                         <div className="flex-1 relative">
@@ -290,16 +374,13 @@ const AdminDashboard: React.FC = () => {
                             <button 
                                 className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-all flex items-center justify-center gap-2"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
                                 Import Database (.json)
                             </button>
                         </div>
                     </div>
                 </SectionCard>
 
-                <SectionCard title="Cloud Sync (Supabase)">
+                <SectionCard title="Supabase Configuration (Advanced)">
                     <InputGroup label="Project URL" value={config.url} onChange={v => updateConfig({...config, url: v})} />
                     <InputGroup label="Anon / Public Key" value={config.anonKey} onChange={v => updateConfig({...config, anonKey: v})} type="password" />
                     <InputGroup label="Storage Bucket Name" value={config.bucket} onChange={v => updateConfig({...config, bucket: v})} />

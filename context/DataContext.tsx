@@ -84,11 +84,15 @@ interface DataContextType {
     updateSongs: (newSongs: Song[]) => void;
     adminPassword: string;
     updateAdminPassword: (newPass: string) => void;
+    syncUrl: string;
+    updateSyncUrl: (newUrl: string) => void;
     config: SupabaseConfig;
     updateConfig: (newData: SupabaseConfig) => void;
     resetToDefaults: () => void;
     importDatabase: (json: string) => void;
     exportDatabase: () => string;
+    saveToHostinger: () => Promise<void>;
+    loadFromHostinger: () => Promise<void>;
     uploadToSupabase: (file: Blob | File, path: string) => Promise<string | null>;
     saveAllToSupabase: () => Promise<void>;
     isDataLoading: boolean;
@@ -145,6 +149,7 @@ const INITIAL_EVENTS_DATA: EventsData = {
 const INITIAL_SONGS: Song[] = [{ id: '1', title: 'Bohemian Rhapsody', artist: 'Queen' }];
 const INITIAL_CONFIG: SupabaseConfig = { url: '', anonKey: '', bucket: 'public' };
 const INITIAL_ADMIN_PASS: string = 'admin123';
+const INITIAL_SYNC_URL: string = '';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -176,6 +181,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', INITIAL_TESTIMONIALS_DATA));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', INITIAL_EVENTS_DATA));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', INITIAL_ADMIN_PASS));
+    const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', INITIAL_SYNC_URL));
     const [config, setConfig] = useState<SupabaseConfig>(() => init('config', INITIAL_CONFIG));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
 
@@ -203,6 +209,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('testimonialsData', testimonialsData); }, [testimonialsData]);
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
+    useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
     useEffect(() => { persist('config', config); }, [config]);
     useEffect(() => { persist('songs', songs); }, [songs]);
 
@@ -210,15 +217,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const fullState = {
             foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
             vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword,
-            version: "1.1",
+            version: "1.2",
             exportedAt: new Date().toISOString()
         };
         return JSON.stringify(fullState, null, 2);
     };
 
-    const importDatabase = (json: string) => {
+    const importDatabase = (json: string | any) => {
         try {
-            const c = JSON.parse(json);
+            const c = typeof json === 'string' ? JSON.parse(json) : json;
             if (c.foodMenu) setFoodMenu(c.foodMenu);
             if (c.drinksData) setDrinksData(c.drinksData);
             if (c.headerData) setHeaderData(c.headerData);
@@ -233,10 +240,48 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.eventsData) setEventsData(c.eventsData);
             if (c.songs) setSongs(c.songs);
             if (c.adminPassword) setAdminPassword(c.adminPassword);
-            alert("Database imported successfully!");
+            return true;
         } catch (e) {
-            alert("Invalid database file.");
+            console.error(e);
+            return false;
         }
+    };
+
+    const saveToHostinger = async () => {
+        if (!syncUrl) { alert("Please set a Sync URL first."); return; }
+        setIsDataLoading(true);
+        try {
+            const response = await fetch(syncUrl, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': adminPassword
+                },
+                body: exportDatabase()
+            });
+            const res = await response.json();
+            if (res.success) alert("Saved to Hostinger successfully!");
+            else alert("Error: " + res.message);
+        } catch (e: any) {
+            alert("Connection error. Ensure your db.php is uploaded and has CORS enabled.");
+        } finally { setIsDataLoading(false); }
+    };
+
+    const loadFromHostinger = async () => {
+        if (!syncUrl) return;
+        setIsDataLoading(true);
+        try {
+            const response = await fetch(syncUrl, {
+                headers: { 'Authorization': adminPassword }
+            });
+            const data = await response.json();
+            if (data && !data.error) {
+                importDatabase(data);
+                console.log("Data synced from Hostinger");
+            }
+        } catch (e) {
+            console.warn("Failed to auto-load from Hostinger. Check Sync URL.");
+        } finally { setIsDataLoading(false); }
     };
 
     const uploadToSupabase = async (file: Blob | File, path: string): Promise<string | null> => {
@@ -250,10 +295,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const saveAllToSupabase = async () => {
         if (!supabase) { alert("Configure Supabase first."); return; }
         setIsDataLoading(true);
-        const fullState = {
-            foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
-            vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword, updatedAt: new Date().toISOString()
-        };
+        const fullState = JSON.parse(exportDatabase());
         try {
             const { error } = await supabase.from('site_settings').upsert({ id: 1, content: fullState });
             if (error) throw error;
@@ -269,21 +311,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setIsDataLoading(true);
                 const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
                 if (data?.content) {
-                    const c = data.content;
-                    if (c.foodMenu) setFoodMenu(c.foodMenu);
-                    if (c.drinksData) setDrinksData(c.drinksData);
-                    if (c.headerData) setHeaderData(c.headerData);
-                    if (c.heroData) setHeroData(c.heroData);
-                    if (c.highlightsData) setHighlightsData(c.highlightsData);
-                    if (c.featuresData) setFeaturesData(c.featuresData);
-                    if (c.vibeData) setVibeData(c.vibeData);
-                    if (c.batteryData) setBatteryData(c.batteryData);
-                    if (c.footerData) setFooterData(c.footerData);
-                    if (c.galleryData) setGalleryData(c.galleryData);
-                    if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
-                    if (c.eventsData) setEventsData(c.eventsData);
-                    if (c.songs) setSongs(c.songs);
-                    if (c.adminPassword) setAdminPassword(c.adminPassword);
+                    importDatabase(data.content);
                 }
                 setIsDataLoading(false);
             };
@@ -302,9 +330,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             testimonialsData, updateTestimonialsData: setTestimonialsData,
             eventsData, updateEventsData: setEventsData,
             adminPassword, updateAdminPassword: setAdminPassword,
+            syncUrl, updateSyncUrl: setSyncUrl,
             config, updateConfig: setConfig,
             songs, updateSongs: setSongs, resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
-            exportDatabase, importDatabase,
+            exportDatabase, importDatabase: (j) => { if(importDatabase(j)) alert("Imported!"); else alert("Failed!"); },
+            saveToHostinger, loadFromHostinger,
             uploadToSupabase, saveAllToSupabase, isDataLoading
         }}>
             {children}
