@@ -39,7 +39,7 @@ const PageBorder: React.FC = () => (
       }
       @keyframes border-left {
         0% { bottom: -100%; }
-        50%, 100% { bottom: 100%; }
+        50%, 100% { top: 100%; }
       }
       .neon-border-line {
         position: absolute;
@@ -85,6 +85,7 @@ const App: React.FC = () => {
             <>
               <Hero />
               <Highlights />
+              <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
               <Features />
               <Fitness />
               <Battery />

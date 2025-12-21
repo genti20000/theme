@@ -588,6 +588,12 @@ const INITIAL_THEME: ThemeData = {
 
 const DATA_VERSION = '3.1'; // Bump version for S3 migration
 
+// --- Helper to convert Blob/File to Uint8Array for S3 (Fixes fs.readFile error) ---
+const blobToUint8Array = async (blob: Blob | File): Promise<Uint8Array> => {
+    const buffer = await blob.arrayBuffer();
+    return new Uint8Array(buffer);
+};
+
 // --- Context ---
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -683,17 +689,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const uploadToSupabase = async (file: Blob | File, path: string, bucket: string = dbConfig.storageBucket || 'iii'): Promise<string | null> => {
         if (!s3Client) { console.warn("S3 not configured"); return null; }
         try {
+            // Convert to Uint8Array to prevent SDK from trying to check fs for path string
+            const body = await blobToUint8Array(file);
+            
             const command = new PutObjectCommand({
                 Bucket: bucket,
                 Key: path,
-                Body: file,
+                Body: body,
                 ContentType: file.type,
-                ACL: 'public-read' // Try setting public read if bucket allows
+                ACL: 'public-read'
             });
             await s3Client.send(command);
 
-            // Construct public URL - assuming standard path style or virtual host
-            // For Supabase S3, typically: endpoint/bucket/key
             const url = `${dbConfig.s3Endpoint}/${bucket}/${path}`;
             return url;
         } catch (e) {
@@ -703,10 +710,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const fetchSupabaseFiles = async (bucket: string = dbConfig.storageBucket || 'iii', folder: string = ''): Promise<{ name: string, url: string }[]> => {
-        // Listing files via S3 requires ListObjectsV2 which might be heavy or permission restricted.
-        // For this implementation, we will skip file listing via S3 API to keep it lightweight, 
-        // or implement if user explicitly needs the browser.
-        // Returning empty for now as requested "remove all database integrations" might imply simplified logic.
         return [];
     };
 
@@ -728,12 +731,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 songs, bookings, blogs, theme
             };
             const json = JSON.stringify(fullState);
-            const blob = new Blob([json], { type: 'application/json' });
+            const body = new TextEncoder().encode(json); // Convert string to Uint8Array for S3
 
             const command = new PutObjectCommand({
                 Bucket: dbConfig.storageBucket || 'iii',
                 Key: 'cms_data.json',
-                Body: blob,
+                Body: body,
                 ContentType: 'application/json'
             });
 
@@ -761,11 +764,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 if (data.drinksData) setDrinksData(data.drinksData);
                 if (data.headerData) setHeaderData(data.headerData);
                 if (data.heroData) setHeroData(data.heroData);
+                if (data.highlightsData) setHighlightsData(data.highlightsData);
+                if (data.featuresData) setFeaturesData(data.featuresData);
+                if (data.vibeData) setVibeData(data.vibeData);
+                if (data.testimonialsData) setTestimonialsData(data.testimonialsData);
+                if (data.batteryData) setBatteryData(data.batteryData);
+                if (data.footerData) setFooterData(data.footerData);
+                if (data.galleryData) setGalleryData(data.galleryData);
+                if (data.eventsData) setEventsData(data.eventsData);
                 if (data.songs) setSongs(data.songs);
-                // ... update others as needed ...
+                if (data.bookings) setBookings(data.bookings);
+                if (data.blogs) setBlogs(data.blogs);
+                if (data.theme) setTheme(data.theme);
             }
         } catch (e) {
-            console.log("No remote config found or load failed (normal for first run)", e);
+            console.log("No remote config found or load failed", e);
         } finally {
             setIsDataLoading(false);
         }

@@ -10,6 +10,16 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { footerData } = useData();
   const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
 
+  const handleScrollToOffers = () => {
+    onNavigate('home');
+    setTimeout(() => {
+        const section = document.getElementById('special-offers');
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 100);
+  };
+
   return (
     <footer className="bg-zinc-900 text-gray-400 text-xs">
       <div className="container mx-auto px-6 py-12">
@@ -35,8 +45,8 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <h5 className="font-bold text-white mb-4">Book</h5>
             <ul className="space-y-2">
               <li><a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">Book a Room</a></li>
-              <li><a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">Special Offers</a></li>
-              <li><a href="#" className="hover:text-white">FAQs</a></li>
+              <li><button onClick={handleScrollToOffers} className="bg-transparent p-0 text-gray-400 hover:text-white text-left">Special Offers</button></li>
+              <li><a href="#faq" className="hover:text-white">FAQs</a></li>
             </ul>
           </div>
           <div>
@@ -65,7 +75,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-gray-700">
-            <p className="mb-4">More ways to sing: find us in the heart of London. Or call 020 1234 5678.</p>
+            <p className="mb-4">More ways to sing: find us in the heart of London. Or call +44 7761 383514.</p>
             <div className="flex flex-col md:flex-row justify-between items-center">
                 <div className="flex flex-col md:flex-row gap-4">
                     <p>Copyright © 2024 London Karaoke Club. All rights reserved.</p>
