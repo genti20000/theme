@@ -48,6 +48,7 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const { 
     saveAllToSupabase, isDataLoading, config, updateConfig,
@@ -55,12 +56,54 @@ const AdminDashboard: React.FC = () => {
     foodMenu, updateFoodMenu, vibeData, updateVibeData, testimonialsData, updateTestimonialsData
   } = useData();
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === 'admin123') {
+      setIsAuthenticated(true);
+      setLoginError(false);
+    } else {
+      setLoginError(true);
+      setPassword('');
+    }
+  };
+
   if (!isAuthenticated) return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white">
-      <form onSubmit={(e) => { e.preventDefault(); if (password === 'admin123') setIsAuthenticated(true); }} className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-md shadow-2xl">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-white">
+      <form 
+        onSubmit={handleLogin} 
+        className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl"
+      >
         <h2 className="text-2xl font-bold mb-6 text-center">LKC Admin</h2>
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-zinc-800 p-3 rounded mb-4" placeholder="Password"/>
-        <button className="w-full bg-yellow-400 text-black font-bold py-3 rounded hover:bg-yellow-300">Login</button>
+        
+        {loginError && (
+          <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-2 rounded-lg mb-4 text-sm text-center">
+            Incorrect password. Please try again.
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="block text-sm text-gray-400 mb-2">Admin Password</label>
+          <input 
+            type="password" 
+            value={password} 
+            autoFocus
+            onChange={e => setPassword(e.target.value)} 
+            className="w-full bg-zinc-800 border border-zinc-700 p-3 rounded-lg outline-none focus:border-yellow-400 text-white" 
+            placeholder="••••••••"
+          />
+        </div>
+        
+        <button className="w-full bg-yellow-400 text-black font-bold py-3 rounded-lg hover:bg-yellow-300 transition-colors mb-4">
+          Login to Dashboard
+        </button>
+        
+        <button 
+          type="button"
+          onClick={() => window.location.href = '/'}
+          className="w-full text-zinc-500 hover:text-zinc-300 text-sm font-medium transition-colors"
+        >
+          &larr; Back to Website
+        </button>
       </form>
     </div>
   );
@@ -68,7 +111,14 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20">
       <div className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 p-4 flex justify-between items-center">
-        <h2 className="text-xl font-bold">LKC Control Center</h2>
+        <div className="flex items-center gap-4">
+            <button onClick={() => window.location.href = '/'} className="text-zinc-500 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </button>
+            <h2 className="text-xl font-bold">LKC Control Center</h2>
+        </div>
         <button 
             onClick={saveAllToSupabase} 
             disabled={isDataLoading}
