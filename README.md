@@ -36,6 +36,10 @@ CORS_ORIGIN=http://localhost:5173
 PORT=3001
 ```
 
+If `DATABASE_URL` is not set, the API will run in memory using the default
+credentials `admin / 12345` (or the values provided by `ADMIN_EMAIL` and
+`ADMIN_PASSWORD`).
+
 ### Start the API server
 
 ```
