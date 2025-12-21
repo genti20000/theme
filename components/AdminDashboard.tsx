@@ -47,24 +47,48 @@ const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string 
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const { 
     saveAllToSupabase, isDataLoading, config, updateConfig,
     songs, updateSongs, heroData, updateHeroData, footerData, updateFooterData,
-    foodMenu, updateFoodMenu, vibeData, updateVibeData, testimonialsData, updateTestimonialsData
+    foodMenu, updateFoodMenu, vibeData, updateVibeData, testimonialsData, updateTestimonialsData,
+    adminPassword, updateAdminPassword, exportDatabase, importDatabase
   } = useData();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') {
+    if (passwordInput === adminPassword) {
       setIsAuthenticated(true);
       setLoginError(false);
     } else {
       setLoginError(true);
-      setPassword('');
+      setPasswordInput('');
     }
+  };
+
+  const handleExportDB = () => {
+    const data = exportDatabase();
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `lkc_backup_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportDB = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        if (event.target?.result) {
+            importDatabase(event.target.result as string);
+        }
+    };
+    reader.readAsText(file);
   };
 
   if (!isAuthenticated) return (
@@ -85,9 +109,9 @@ const AdminDashboard: React.FC = () => {
           <label className="block text-sm text-gray-400 mb-2">Admin Password</label>
           <input 
             type="password" 
-            value={password} 
+            value={passwordInput} 
             autoFocus
-            onChange={e => setPassword(e.target.value)} 
+            onChange={e => setPasswordInput(e.target.value)} 
             className="w-full bg-zinc-800 border border-zinc-700 p-3 rounded-lg outline-none focus:border-yellow-400 text-white" 
             placeholder="••••••••"
           />
@@ -124,7 +148,7 @@ const AdminDashboard: React.FC = () => {
             disabled={isDataLoading}
             className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-full font-bold shadow-lg transition-all"
         >
-            {isDataLoading ? 'Saving...' : 'SAVE TO SUPABASE'}
+            {isDataLoading ? 'Saving...' : 'SAVE TO CLOUD'}
         </button>
       </div>
 
@@ -238,11 +262,49 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {activeTab === 'database' && (
-            <SectionCard title="Supabase Configuration">
-                <InputGroup label="Project URL" value={config.url} onChange={v => updateConfig({...config, url: v})} />
-                <InputGroup label="Anon / Public Key" value={config.anonKey} onChange={v => updateConfig({...config, anonKey: v})} type="password" />
-                <InputGroup label="Storage Bucket Name" value={config.bucket} onChange={v => updateConfig({...config, bucket: v})} />
-            </SectionCard>
+            <div className="space-y-8">
+                <SectionCard title="Site Security">
+                    <InputGroup label="Admin Password" value={adminPassword} onChange={v => updateAdminPassword(v)} type="text" />
+                    <p className="text-xs text-gray-500 mt-2">This is the password used to log into this dashboard.</p>
+                </SectionCard>
+
+                <SectionCard title="Local Database Backup">
+                    <p className="text-sm text-gray-400 mb-6">Download your entire site configuration as a JSON file to keep a local backup, or upload a previously saved file to restore your site.</p>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <button 
+                            onClick={handleExportDB}
+                            className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 px-6 rounded-lg flex-1 transition-all flex items-center justify-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Export Database (.json)
+                        </button>
+                        <div className="flex-1 relative">
+                            <input 
+                                type="file" 
+                                accept=".json" 
+                                onChange={handleImportDB}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <button 
+                                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-all flex items-center justify-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                Import Database (.json)
+                            </button>
+                        </div>
+                    </div>
+                </SectionCard>
+
+                <SectionCard title="Cloud Sync (Supabase)">
+                    <InputGroup label="Project URL" value={config.url} onChange={v => updateConfig({...config, url: v})} />
+                    <InputGroup label="Anon / Public Key" value={config.anonKey} onChange={v => updateConfig({...config, anonKey: v})} type="password" />
+                    <InputGroup label="Storage Bucket Name" value={config.bucket} onChange={v => updateConfig({...config, bucket: v})} />
+                </SectionCard>
+            </div>
         )}
       </div>
     </div>

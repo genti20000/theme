@@ -82,9 +82,13 @@ interface DataContextType {
     updateEventsData: (newData: EventsData) => void;
     songs: Song[];
     updateSongs: (newSongs: Song[]) => void;
+    adminPassword: string;
+    updateAdminPassword: (newPass: string) => void;
     config: SupabaseConfig;
     updateConfig: (newData: SupabaseConfig) => void;
     resetToDefaults: () => void;
+    importDatabase: (json: string) => void;
+    exportDatabase: () => string;
     uploadToSupabase: (file: Blob | File, path: string) => Promise<string | null>;
     saveAllToSupabase: () => Promise<void>;
     isDataLoading: boolean;
@@ -124,7 +128,6 @@ const INITIAL_VIBE_DATA: VibeData = {
 const INITIAL_BATTERY_DATA: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated monthly." };
 const INITIAL_FOOTER_DATA: FooterData = { ctaHeading: "Ready to sing?", ctaText: "Secure your room today.", ctaButtonText: "Book Now" };
 const INITIAL_GALLERY_DATA: GalleryData = { heading: "Moments", subtext: "LKC Gallery", images: [] };
-
 const INITIAL_TESTIMONIALS_DATA: TestimonialsData = {
     heading: "Loved by the Crowd",
     subtext: "What our stars have to say about their LKC experience.",
@@ -141,6 +144,7 @@ const INITIAL_EVENTS_DATA: EventsData = {
 };
 const INITIAL_SONGS: Song[] = [{ id: '1', title: 'Bohemian Rhapsody', artist: 'Queen' }];
 const INITIAL_CONFIG: SupabaseConfig = { url: '', anonKey: '', bucket: 'public' };
+const INITIAL_ADMIN_PASS: string = 'admin123';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -171,6 +175,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY_DATA));
     const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', INITIAL_TESTIMONIALS_DATA));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', INITIAL_EVENTS_DATA));
+    const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', INITIAL_ADMIN_PASS));
     const [config, setConfig] = useState<SupabaseConfig>(() => init('config', INITIAL_CONFIG));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
 
@@ -197,8 +202,42 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
     useEffect(() => { persist('testimonialsData', testimonialsData); }, [testimonialsData]);
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
+    useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
     useEffect(() => { persist('config', config); }, [config]);
     useEffect(() => { persist('songs', songs); }, [songs]);
+
+    const exportDatabase = () => {
+        const fullState = {
+            foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
+            vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword,
+            version: "1.1",
+            exportedAt: new Date().toISOString()
+        };
+        return JSON.stringify(fullState, null, 2);
+    };
+
+    const importDatabase = (json: string) => {
+        try {
+            const c = JSON.parse(json);
+            if (c.foodMenu) setFoodMenu(c.foodMenu);
+            if (c.drinksData) setDrinksData(c.drinksData);
+            if (c.headerData) setHeaderData(c.headerData);
+            if (c.heroData) setHeroData(c.heroData);
+            if (c.highlightsData) setHighlightsData(c.highlightsData);
+            if (c.featuresData) setFeaturesData(c.featuresData);
+            if (c.vibeData) setVibeData(c.vibeData);
+            if (c.batteryData) setBatteryData(c.batteryData);
+            if (c.footerData) setFooterData(c.footerData);
+            if (c.galleryData) setGalleryData(c.galleryData);
+            if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
+            if (c.eventsData) setEventsData(c.eventsData);
+            if (c.songs) setSongs(c.songs);
+            if (c.adminPassword) setAdminPassword(c.adminPassword);
+            alert("Database imported successfully!");
+        } catch (e) {
+            alert("Invalid database file.");
+        }
+    };
 
     const uploadToSupabase = async (file: Blob | File, path: string): Promise<string | null> => {
         if (!supabase) return null;
@@ -213,7 +252,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsDataLoading(true);
         const fullState = {
             foodMenu, drinksData, headerData, heroData, highlightsData, featuresData,
-            vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, updatedAt: new Date().toISOString()
+            vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword, updatedAt: new Date().toISOString()
         };
         try {
             const { error } = await supabase.from('site_settings').upsert({ id: 1, content: fullState });
@@ -244,6 +283,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
                     if (c.eventsData) setEventsData(c.eventsData);
                     if (c.songs) setSongs(c.songs);
+                    if (c.adminPassword) setAdminPassword(c.adminPassword);
                 }
                 setIsDataLoading(false);
             };
@@ -261,8 +301,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             galleryData, updateGalleryData: setGalleryData, 
             testimonialsData, updateTestimonialsData: setTestimonialsData,
             eventsData, updateEventsData: setEventsData,
+            adminPassword, updateAdminPassword: setAdminPassword,
             config, updateConfig: setConfig,
             songs, updateSongs: setSongs, resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
+            exportDatabase, importDatabase,
             uploadToSupabase, saveAllToSupabase, isDataLoading
         }}>
             {children}
