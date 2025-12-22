@@ -55,6 +55,8 @@ export interface SupabaseConfig {
     bucket: string;
 }
 
+interface ServerFile { name: string; url: string; type: 'image' | 'video'; }
+
 interface DataContextType {
     foodMenu: MenuCategory[];
     updateFoodMenu: (newMenu: MenuCategory[]) => void;
@@ -93,6 +95,7 @@ interface DataContextType {
     exportDatabase: () => string;
     saveToHostinger: () => Promise<void>;
     loadFromHostinger: () => Promise<void>;
+    fetchServerFiles: () => Promise<ServerFile[]>;
     uploadFile: (file: Blob | File) => Promise<string | null>;
     saveAllToSupabase: () => Promise<void>;
     isDataLoading: boolean;
@@ -184,7 +187,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('config', config); }, [config]);
     useEffect(() => { persist('songs', songs); }, [songs]);
 
-    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword, version: "1.4", exportedAt: new Date().toISOString() }, null, 2);
+    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword, version: "1.5", exportedAt: new Date().toISOString() }, null, 2);
 
     const importDatabase = (json: string | any) => {
         try {
@@ -205,6 +208,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.adminPassword) setAdminPassword(c.adminPassword);
             return true;
         } catch (e) { return false; }
+    };
+
+    const fetchServerFiles = async (): Promise<ServerFile[]> => {
+        if (!syncUrl) return [];
+        try {
+            const response = await fetch(`${syncUrl}?list=1`, {
+                headers: { 'Authorization': `Bearer ${adminPassword}` }
+            });
+            const data = await response.json();
+            if (data.success) return data.files;
+            return [];
+        } catch (e) {
+            console.error("Failed to fetch server files", e);
+            return [];
+        }
     };
 
     const uploadFile = async (file: Blob | File): Promise<string | null> => {
@@ -281,7 +299,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             config, updateConfig: setConfig, songs, updateSongs: setSongs,
             resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
-            exportDatabase, importDatabase, saveToHostinger, loadFromHostinger,
+            exportDatabase, importDatabase, saveToHostinger, loadFromHostinger, fetchServerFiles,
             uploadFile, saveAllToSupabase, isDataLoading
         }}>
             {children}
