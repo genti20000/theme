@@ -18,26 +18,22 @@ import Terms from './components/Terms';
 import Gallery from './components/Gallery';
 import SongLibrary from './components/SongLibrary';
 import EventsPage from './components/EventsPage';
+import BlogPage from './components/BlogPage';
 import { DataProvider } from './context/DataContext';
 
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events';
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
 
   const navigateTo = (page: any) => {
-    // If imageEditor is requested (legacy), redirect to home
-    if (page === 'imageEditor') {
-        setCurrentPage('home');
-    } else {
-        setCurrentPage(page);
-    }
+    setCurrentPage(page);
     window.scrollTo(0, 0);
   };
 
   return (
     <DataProvider>
-      <div className="bg-black text-white min-h-screen relative">
+      <div className="bg-black text-white min-h-screen relative selection:bg-pink-500 selection:text-white">
         {currentPage !== 'admin' && <Header onNavigate={navigateTo} />}
         <main>
           {currentPage === 'home' && (
@@ -58,15 +54,12 @@ const App: React.FC = () => {
           {currentPage === 'gallery' && <Gallery />}
           {currentPage === 'songs' && <SongLibrary />}
           {currentPage === 'events' && <EventsPage />}
+          {currentPage === 'blog' && <BlogPage />}
           {currentPage === 'admin' && <AdminDashboard />}
           {currentPage === 'terms' && <Terms />}
         </main>
         {currentPage !== 'admin' && <Footer onNavigate={navigateTo} />}
-        {currentPage !== 'admin' && (
-            <>
-                <WhatsAppButton />
-            </>
-        )}
+        {currentPage !== 'admin' && <WhatsAppButton />}
       </div>
     </DataProvider>
   );

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
@@ -40,7 +39,29 @@ export interface VibeData {
 
 export interface BatteryData { statPrefix: string; statNumber: string; statSuffix: string; subText: string; }
 export interface FooterData { ctaHeading: string; ctaText: string; ctaButtonText: string; }
-export interface GalleryData { heading: string; subtext: string; images: { id: string; url: string; caption: string; }[]; }
+
+export interface GalleryData { 
+  heading: string; 
+  subtext: string; 
+  images: { id: string; url: string; caption: string; }[]; 
+  videos?: { id: string; url: string; thumbnail: string; title: string; }[]; 
+}
+
+export interface BlogPost {
+    id: string;
+    title: string;
+    date: string;
+    excerpt: string;
+    content: string;
+    imageUrl: string;
+}
+
+export interface BlogData {
+    heading: string;
+    subtext: string;
+    posts: BlogPost[];
+}
+
 export interface Song { id: string; title: string; artist: string; genre?: string; fileUrl?: string; }
 
 export interface TestimonialItem { quote: string; name: string; avatar: string; rating?: number; date?: string; }
@@ -78,6 +99,8 @@ interface DataContextType {
     updateFooterData: (newData: FooterData) => void;
     galleryData: GalleryData;
     updateGalleryData: (newData: GalleryData) => void;
+    blogData: BlogData;
+    updateBlogData: (newData: BlogData) => void;
     testimonialsData: TestimonialsData;
     updateTestimonialsData: (newData: TestimonialsData) => void;
     eventsData: EventsData;
@@ -91,6 +114,7 @@ interface DataContextType {
     config: SupabaseConfig;
     updateConfig: (newData: SupabaseConfig) => void;
     resetToDefaults: () => void;
+    purgeCache: () => void;
     importDatabase: (json: string) => void;
     exportDatabase: () => string;
     saveToHostinger: () => Promise<void>;
@@ -100,6 +124,21 @@ interface DataContextType {
     saveAllToSupabase: () => Promise<void>;
     isDataLoading: boolean;
 }
+
+const INITIAL_BLOG_DATA: BlogData = {
+    heading: "LKC Stories",
+    subtext: "Guides, events, and the electric vibe of Soho.",
+    posts: [
+        {
+            id: '1',
+            title: 'Soho Karaoke Guide 2024',
+            date: '2024-06-01',
+            excerpt: 'How to make the most of your private booth experience at LKC.',
+            content: 'Soho is the heart of London nightlife...',
+            imageUrl: 'https://picsum.photos/seed/soho/800/600'
+        }
+    ]
+};
 
 const INITIAL_FOOD_MENU: MenuCategory[] = [{ category: "Small Plates", items: [{ name: "Crispy Calamari", description: "With lemon aioli", price: "9.50" }] }];
 const INITIAL_DRINKS_DATA: DrinksData = {
@@ -123,7 +162,7 @@ const INITIAL_VIBE_DATA: VibeData = {
 };
 const INITIAL_BATTERY_DATA: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated monthly." };
 const INITIAL_FOOTER_DATA: FooterData = { ctaHeading: "Ready to sing?", ctaText: "Secure your room today.", ctaButtonText: "Book Now" };
-const INITIAL_GALLERY_DATA: GalleryData = { heading: "Moments", subtext: "LKC Gallery", images: [] };
+const INITIAL_GALLERY_DATA: GalleryData = { heading: "Moments", subtext: "LKC Gallery", images: [], videos: [] };
 const INITIAL_TESTIMONIALS_DATA: TestimonialsData = {
     heading: "Loved by the Crowd", subtext: "What our stars have to say.",
     items: [{ name: "Sarah J.", quote: "Best night out in Soho!", avatar: "", rating: 5, date: "a week ago" }]
@@ -157,6 +196,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_BATTERY_DATA));
     const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', INITIAL_FOOTER_DATA));
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY_DATA));
+    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG_DATA));
     const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', INITIAL_TESTIMONIALS_DATA));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', INITIAL_EVENTS_DATA));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', INITIAL_ADMIN_PASS));
@@ -180,6 +220,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
     useEffect(() => { persist('footerData', footerData); }, [footerData]);
     useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
+    useEffect(() => { persist('blogData', blogData); }, [blogData]);
     useEffect(() => { persist('testimonialsData', testimonialsData); }, [testimonialsData]);
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
@@ -187,7 +228,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('config', config); }, [config]);
     useEffect(() => { persist('songs', songs); }, [songs]);
 
-    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, testimonialsData, eventsData, songs, adminPassword, version: "1.5", exportedAt: new Date().toISOString() }, null, 2);
+    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, blogData, testimonialsData, eventsData, songs, adminPassword, version: "2.1", exportedAt: new Date().toISOString() }, null, 2);
 
     const importDatabase = (json: string | any) => {
         try {
@@ -202,12 +243,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.batteryData) setBatteryData(c.batteryData);
             if (c.footerData) setFooterData(c.footerData);
             if (c.galleryData) setGalleryData(c.galleryData);
+            if (c.blogData) setBlogData(c.blogData);
             if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
             if (c.eventsData) setEventsData(c.eventsData);
             if (c.songs) setSongs(c.songs);
             if (c.adminPassword) setAdminPassword(c.adminPassword);
             return true;
         } catch (e) { return false; }
+    };
+
+    const purgeCache = () => {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('lkc_')) keysToRemove.push(key);
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        window.location.reload();
     };
 
     const fetchServerFiles = async (): Promise<ServerFile[]> => {
@@ -263,7 +315,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 body: exportDatabase()
             });
             const res = await response.json();
-            if (res.success) alert("Saved to Hostinger!");
+            if (res.success) alert("Changes Saved & Synced Globally!");
             else alert("Error: " + res.message);
         } catch (e) { alert("Connection failed."); } finally { setIsDataLoading(false); }
     };
@@ -284,7 +336,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const { error } = await supabase.from('site_settings').upsert({ id: 1, content: JSON.parse(exportDatabase()) });
             if (error) throw error;
-            alert("Saved to Supabase!");
+            alert("Saved to Supabase Cloud Backup!");
         } catch (e) { alert("Supabase Save Error"); } finally { setIsDataLoading(false); }
     };
 
@@ -295,11 +347,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             highlightsData, updateHighlightsData: setHighlightsData, featuresData, updateFeaturesData: setFeaturesData,
             vibeData, updateVibeData: setVibeData, batteryData, updateBatteryData: setBatteryData,
             footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
-            testimonialsData, updateTestimonialsData: setTestimonialsData, eventsData, updateEventsData: setEventsData,
-            adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
-            config, updateConfig: setConfig, songs, updateSongs: setSongs,
+            blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
+            eventsData, updateEventsData: setEventsData, adminPassword, updateAdminPassword: setAdminPassword,
+            syncUrl, updateSyncUrl: setSyncUrl, config, updateConfig: setConfig, songs, updateSongs: setSongs,
             resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
-            exportDatabase, importDatabase, saveToHostinger, loadFromHostinger, fetchServerFiles,
+            purgeCache, exportDatabase, importDatabase, saveToHostinger, loadFromHostinger, fetchServerFiles,
             uploadFile, saveAllToSupabase, isDataLoading
         }}>
             {children}

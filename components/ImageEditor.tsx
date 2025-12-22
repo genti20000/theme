@@ -1,8 +1,6 @@
 
-
-
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { useData } from '../context/DataContext';
 
 const sampleImages = [
@@ -28,7 +26,8 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 
 
 const ImageEditor: React.FC = () => {
-  const { galleryData, updateGalleryData, uploadToSupabase, fetchSupabaseFiles } = useData();
+  // Fixed destructuring to use correct property names from DataContext
+  const { galleryData, updateGalleryData, uploadFile, fetchServerFiles } = useData();
   const [mode, setMode] = useState<'editor' | 'illustrator' | 'video' | 'pro'>('editor');
   const [prompt, setPrompt] = useState<string>('');
   const [imageSize, setImageSize] = useState<'1K' | '2K' | '4K'>('1K');
@@ -97,18 +96,20 @@ const ImageEditor: React.FC = () => {
       try {
           let url = generatedImage || generatedVideo || '';
           
-          // Try upload to Supabase if generatedImage is base64
+          // Try upload to server if generatedImage is base64
           if (generatedImage && generatedImage.startsWith('data:')) {
               try {
                   const response = await fetch(generatedImage);
                   const blob = await response.blob();
                   const filename = `gen_${Date.now()}.png`;
-                  const uploadedUrl = await uploadToSupabase(blob, `generated/${filename}`, 'images'); // Assuming 'images' bucket
+                  // Use uploadFile from context which handles both Supabase/Hostinger
+                  const file = new File([blob], filename, { type: blob.type });
+                  const uploadedUrl = await uploadFile(file);
                   if (uploadedUrl) {
                       url = uploadedUrl;
                   }
               } catch (e) {
-                  console.error("Failed to upload to Supabase, saving as Base64", e);
+                  console.error("Failed to upload, saving as Base64", e);
               }
           }
 
@@ -116,6 +117,7 @@ const ImageEditor: React.FC = () => {
               const newImages = [...galleryData.images, { id: Date.now().toString(), url: url, caption: 'AI Generated' }];
               updateGalleryData({ ...galleryData, images: newImages });
           } else if (generatedVideo) {
+              // Now galleryData.videos is properly typed
               const newVideos = [...(galleryData.videos || []), { id: Date.now().toString(), url: url, thumbnail: '', title: 'AI Video' }];
               updateGalleryData({ ...galleryData, videos: newVideos });
           }
@@ -139,6 +141,7 @@ const ImageEditor: React.FC = () => {
     setGeneratedImage(null);
 
     try {
+      // Create new instance before calling API
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
@@ -154,7 +157,7 @@ const ImageEditor: React.FC = () => {
           ],
         },
         config: {
-          responseModalities: [Modality.IMAGE],
+          // responseModalities is not required for image generation
         },
       });
 
@@ -188,6 +191,7 @@ const ImageEditor: React.FC = () => {
     setOriginalImage(null);
 
     try {
+      // Create new instance before calling API
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
@@ -195,7 +199,7 @@ const ImageEditor: React.FC = () => {
           parts: [{ text: henPartyPrompt }],
         },
         config: {
-          responseModalities: [Modality.IMAGE],
+          // responseModalities is not required for image generation
         },
       });
 
@@ -238,6 +242,7 @@ const ImageEditor: React.FC = () => {
               }
           }
 
+          // Create new instance before calling API
           const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
           const response = await ai.models.generateContent({
               model: 'gemini-3-pro-image-preview',
@@ -252,7 +257,7 @@ const ImageEditor: React.FC = () => {
           });
 
           let foundImage = false;
-          // Note: Response might contain text parts too, iterate to find image
+          // Iterate through parts to find the image
           for (const part of response.candidates[0].content.parts) {
               if (part.inlineData) {
                   const base64ImageBytes: string = part.inlineData.data;
@@ -282,7 +287,7 @@ const ImageEditor: React.FC = () => {
   };
 
   const handleGenerateVideo = async () => {
-    // Prompt is required if no image is provided, but we can make it flexible
+    // Prompt is required if no image is provided
     if (!prompt && !originalImage) {
       setError('Please enter a prompt or upload an image.');
       return;
@@ -302,12 +307,12 @@ const ImageEditor: React.FC = () => {
             }
         }
 
-        // Create new instance to ensure key is fresh
+        // Create new instance right before call
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
         const params: any = {
             model: 'veo-3.1-fast-generate-preview',
-            prompt: prompt || 'A video based on the image', // Fallback prompt if image provided
+            prompt: prompt || 'A video based on the image',
             config: {
                 numberOfVideos: 1,
                 resolution: '720p',
@@ -324,15 +329,15 @@ const ImageEditor: React.FC = () => {
 
         let operation = await ai.models.generateVideos(params);
 
-        // Polling loop
+        // Polling loop for video generation
         while (!operation.done) {
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
+            await new Promise(resolve => setTimeout(resolve, 5000));
             operation = await ai.operations.getVideosOperation({operation: operation});
         }
 
         const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
         if (videoUri) {
-            // Fetch the actual video bytes using the URI and API key
+            // Fetch mp4 bytes with API key
             const response = await fetch(`${videoUri}&key=${process.env.API_KEY}`);
             if (!response.ok) throw new Error('Failed to download video');
             
@@ -387,19 +392,14 @@ const ImageEditor: React.FC = () => {
     setSelectedSample(null);
   };
 
+  // Fixed storage fetch logic to use correct context API
   useEffect(() => {
       if (showGalleryModal && galleryTab === 'storage') {
-          fetchSupabaseFiles('images', '').then(files => {
-              // Also fetch 'public' bucket if 'images' is empty, or merge them?
-              // For simplicity, sticking to 'images' or 'public' based on upload logic
-              if (files.length === 0) {
-                  fetchSupabaseFiles('public', '').then(pubFiles => setStorageFiles(pubFiles));
-              } else {
-                  setStorageFiles(files);
-              }
+          fetchServerFiles().then(files => {
+              setStorageFiles(files);
           });
       }
-  }, [showGalleryModal, galleryTab]);
+  }, [showGalleryModal, galleryTab, fetchServerFiles]);
 
   return (
     <section className="relative py-16 md:py-24" style={{backgroundImage: "url('https://picsum.photos/seed/darkclub/1600/900')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed'}}>
