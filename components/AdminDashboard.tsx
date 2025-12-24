@@ -355,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         {activeTab === 'gallery' && (
             <SectionCard title="Manage Gallery">
-                <p className="text-xs text-gray-500 mb-6 uppercase tracking-widest">Multi-select files to upload many at once.</p>
+                <p className="text-xs text-gray-500 mb-6 uppercase tracking-widest">Select multiple files at once to upload your collection.</p>
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-8">
                     {galleryData.images.map((img, idx) => (
                         <div key={img.id} className="relative aspect-square border border-zinc-800 rounded-xl overflow-hidden group">
@@ -374,17 +374,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         {activeTab === 'config' && (
             <div className="space-y-8">
-                <SectionCard title="Device Sync & Performance">
+                <SectionCard title="Device Sync & Local Storage">
                     <div className="space-y-4">
-                        <p className="text-xs text-gray-400 font-medium">If changes aren't appearing on other devices, use the Purge button to force a fresh pull from the server.</p>
+                        <p className="text-xs text-gray-400 font-medium">⚠️ PURGE: This clears all unsaved local changes on this device. Use this only if your device is stuck and you have already clicked <strong>'Save All Changes'</strong>.</p>
                         <button onClick={purgeCache} className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all w-full md:w-auto shadow-lg active:scale-95">
                             Purge Device Cache & Reload
                         </button>
                     </div>
                 </SectionCard>
-                <SectionCard title="Server Sync (PHP Backend)">
+                <SectionCard title="Server Connection (Preserve db.php)">
                     <div className="space-y-4">
-                        <p className="text-xs text-gray-500">Ensure your <code>db.php</code> is updated with this exact code to support all features.</p>
+                        <p className="text-xs text-gray-500">The <code>db.php</code> file on your Hostinger server must contain this code for syncing to work.</p>
                         <div className="bg-black p-6 rounded-2xl border border-zinc-800 overflow-x-auto relative">
                             <pre className="text-[10px] text-green-400 leading-tight font-mono">{phpCode}</pre>
                             <button onClick={() => { navigator.clipboard.writeText(phpCode); alert("PHP Code copied!"); }} className="absolute top-4 right-4 text-[10px] bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-white font-black uppercase tracking-widest">Copy Code</button>

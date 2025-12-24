@@ -131,11 +131,11 @@ const INITIAL_BLOG_DATA: BlogData = {
     posts: [
         {
             id: '1',
-            title: 'Soho Karaoke Guide 2024',
-            date: '2024-06-01',
-            excerpt: 'How to make the most of your private booth experience at LKC.',
-            content: 'Soho is the heart of London nightlife...',
-            imageUrl: 'https://picsum.photos/seed/soho/800/600'
+            title: 'Welcome to the New LKC',
+            date: '2024-07-01',
+            excerpt: 'Check out our brand new digital experience.',
+            content: 'We are thrilled to launch our new site...',
+            imageUrl: 'https://picsum.photos/seed/lkc/800/600'
         }
     ]
 };
@@ -228,7 +228,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('config', config); }, [config]);
     useEffect(() => { persist('songs', songs); }, [songs]);
 
-    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, blogData, testimonialsData, eventsData, songs, adminPassword, version: "2.1", exportedAt: new Date().toISOString() }, null, 2);
+    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, blogData, testimonialsData, eventsData, songs, adminPassword, version: "2.2", exportedAt: new Date().toISOString() }, null, 2);
 
     const importDatabase = (json: string | any) => {
         try {
@@ -253,6 +253,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const purgeCache = () => {
+        if (!confirm("This will delete all UNSAVED local changes on this device. Make sure you have clicked 'Save All Changes' first to sync to the server. Continue?")) return;
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -306,7 +307,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const saveToHostinger = async () => {
-        if (!syncUrl) return;
+        if (!syncUrl) {
+            alert("Set your Sync URL in the Config tab first!");
+            return;
+        }
         setIsDataLoading(true);
         try {
             const response = await fetch(syncUrl, {
@@ -315,9 +319,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 body: exportDatabase()
             });
             const res = await response.json();
-            if (res.success) alert("Changes Saved & Synced Globally!");
+            if (res.success) alert("SUCCESS: Changes Synced Globally! Your site is now updated on all devices.");
             else alert("Error: " + res.message);
-        } catch (e) { alert("Connection failed."); } finally { setIsDataLoading(false); }
+        } catch (e) { alert("Connection failed. Check your Sync URL."); } finally { setIsDataLoading(false); }
     };
 
     const loadFromHostinger = async () => {
@@ -336,7 +340,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const { error } = await supabase.from('site_settings').upsert({ id: 1, content: JSON.parse(exportDatabase()) });
             if (error) throw error;
-            alert("Saved to Supabase Cloud Backup!");
+            alert("Cloud Backup Successful!");
         } catch (e) { alert("Supabase Save Error"); } finally { setIsDataLoading(false); }
     };
 
