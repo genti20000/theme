@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
@@ -158,6 +157,11 @@ const INITIAL_FAQ: FAQData = {
     items: [{ question: "What are the hours?", answer: "2pm to 3am daily." }]
 };
 
+const INITIAL_FIREBASE: FirebaseConfig = {
+    databaseURL: "https://gen-lang-client-0728122670-default-rtdb.firebaseio.com/",
+    apiKey: "AIzaSyD4Hr17UMR3eHksOPkUAw7Ad11i8P20gEU"
+};
+
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -168,25 +172,29 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const [headerData, setHeaderData] = useState<HeaderData>(() => init('headerData', INITIAL_SEO));
-    const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', { slides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury suites.", buttonText: "Book Now", backgroundImageUrl: "" }));
+    const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', { slides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury suites.", buttonText: "Book Now", backgroundImageUrl: "https://picsum.photos/seed/lkc1/1920/1080" }));
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', { headerImageUrl: "", packagesData: { title: "Packages", subtitle: "", items: [], notes: [] }, bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } }, cocktailsData: [], winesData: [] }));
-    const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', { heading: "Get Loud", subtext: "", mainImageUrl: "", featureListTitle: "", featureList: [], sideImageUrl: "" }));
-    const [featuresData, setFeaturesData] = useState<FeaturesData>(() => init('featuresData', { experience: { label: "", heading: "", text: "", image: "" }, occasions: { heading: "", text: "", items: [] }, grid: { heading: "", items: [] } }));
-    const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', { label: "", heading: "", text: "", image1: "", image2: "", bigImage: "", bottomHeading: "", bottomText: "" }));
-    const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "" }));
-    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "", ctaText: "", ctaButtonText: "Book Now" }));
-    const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', { heading: "Moments", subtext: "", images: [], videos: [] }));
-    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', { heading: "LKC Stories", subtext: "", posts: [] }));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved", subtext: "", items: [] }));
+    const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', { heading: "Get Loud", subtext: "Best karaoke experience in Soho.", mainImageUrl: "https://picsum.photos/seed/lkc2/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Suites", "Premium Sound", "Waitress Service"], sideImageUrl: "https://picsum.photos/seed/lkc3/500/500" }));
+    const [featuresData, setFeaturesData] = useState<FeaturesData>(() => init('featuresData', { 
+        experience: { label: "The Stage", heading: "Private Suites", text: "Your own world.", image: "https://picsum.photos/seed/lkc4/1200/800" }, 
+        occasions: { heading: "Parties", text: "We host everything.", items: [] }, 
+        grid: { heading: "Tech Features", items: [] } 
+    }));
+    const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', { label: "Atmosphere", heading: "Soho Nights", text: "Join the magic.", image1: "https://picsum.photos/seed/lkc5/800/800", image2: "https://picsum.photos/seed/lkc6/800/800", bigImage: "https://picsum.photos/seed/lkc7/1600/900", bottomHeading: "Sing Forever", bottomText: "Open late." }));
+    const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." }));
+    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready to sing?", ctaText: "Book your room now.", ctaButtonText: "Book Now" }));
+    const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', { heading: "Moments", subtext: "Recent nights at LKC.", images: [], videos: [] }));
+    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', { heading: "LKC Stories", subtext: "Inside Soho's best kept secret.", posts: [] }));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved by You", subtext: "Real reviews from our guests.", items: [] }));
     const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', INITIAL_INFO));
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
-    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "", subtitle: "", image: "" }, sections: [] }));
+    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Special Events", subtitle: "Celebrate with us.", image: "https://picsum.photos/seed/lkc8/1600/900" }, sections: [] }));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', ''));
     const [config, setConfig] = useState<SupabaseConfig>(() => init('config', { url: '', anonKey: '', bucket: 'public' }));
-    const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', { databaseURL: '', apiKey: '' }));
+    const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', INITIAL_FIREBASE));
     const [isDataLoading, setIsDataLoading] = useState(false);
 
     useEffect(() => {
@@ -221,7 +229,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, foodMenu, drinksData, highlightsData, featuresData, vibeData, batteryData, 
         footerData, galleryData, blogData, testimonialsData, infoSectionData, faqData, eventsData, songs, 
-        adminPassword, version: "4.0" 
+        adminPassword, version: "4.1" 
     }, null, 2);
 
     const importDatabase = (json: string | any) => {
@@ -251,7 +259,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!firebaseConfig.databaseURL) return alert("Setup Firebase URL first!");
         setIsDataLoading(true);
         try {
-            const url = `${firebaseConfig.databaseURL.replace(/\/$/, '')}/site.json${firebaseConfig.apiKey ? `?auth=${firebaseConfig.apiKey}` : ''}`;
+            const baseUrl = firebaseConfig.databaseURL.replace(/\/$/, '');
+            const url = `${baseUrl}/site.json${firebaseConfig.apiKey ? `?auth=${firebaseConfig.apiKey}` : ''}`;
             const response = await fetch(url, { method: 'PUT', body: exportDatabase() });
             if (response.ok) alert("Synced to Firebase Realtime Database!");
             else throw new Error("Firebase sync failed");
@@ -309,6 +318,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } catch (e) { return null; } finally { setIsDataLoading(false); }
     };
 
+    const purgeCache = () => {
+        if (confirm("Delete all UNSAVED local data on this browser?")) {
+            localStorage.clear();
+            window.location.reload();
+        }
+    };
+
     return (
         <DataContext.Provider value={{
             foodMenu, updateFoodMenu: setFoodMenu, drinksData, updateDrinksData: setDrinksData,
@@ -322,8 +338,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             config, updateConfig: setConfig, firebaseConfig, updateFirebaseConfig: setFirebaseConfig,
             resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
-            purgeCache: () => { localStorage.clear(); window.location.reload(); },
-            importDatabase, exportDatabase, saveToHostinger, loadFromHostinger, saveToFirebase, loadFromFirebase,
+            purgeCache, importDatabase, exportDatabase, saveToHostinger, loadFromHostinger, saveToFirebase, loadFromFirebase,
             uploadFile, saveAllToSupabase: async () => {}, fetchServerFiles: async () => [], isDataLoading
         }}>
             {children}
