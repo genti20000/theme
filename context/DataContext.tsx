@@ -76,7 +76,7 @@ export interface EventSection { id: string; title: string; subtitle: string; des
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
 
 export interface SupabaseConfig { url: string; anonKey: string; bucket: string; }
-export interface FirebaseConfig { databaseURL: string; apiKey: string; projectId: string; }
+export interface FirebaseConfig { databaseURL: string; apiKey: string; }
 
 interface ServerFile { name: string; url: string; type: 'image' | 'video'; }
 
@@ -159,8 +159,7 @@ const INITIAL_FAQ: FAQData = {
 
 const INITIAL_FIREBASE: FirebaseConfig = {
     databaseURL: "https://gen-lang-client-0728122670-default-rtdb.firebaseio.com/",
-    apiKey: "AIzaSyD4Hr17UMR3eHksOPkUAw7Ad11i8P20gEU",
-    projectId: "gen-lang-client-0728122670"
+    apiKey: "AIzaSyD4Hr17UMR3eHksOPkUAw7Ad11i8P20gEU"
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -230,7 +229,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, foodMenu, drinksData, highlightsData, featuresData, vibeData, batteryData, 
         footerData, galleryData, blogData, testimonialsData, infoSectionData, faqData, eventsData, songs, 
-        adminPassword, version: "4.5" 
+        adminPassword, version: "4.1" 
     }, null, 2);
 
     const importDatabase = (json: string | any) => {
@@ -257,40 +256,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const saveToFirebase = async () => {
-        if (!firebaseConfig.projectId) return alert("Setup Firebase Project ID first!");
+        if (!firebaseConfig.databaseURL) return alert("Setup Firebase URL first!");
         setIsDataLoading(true);
         try {
-            // Using Firestore REST API to save the whole site config
-            const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/settings/site?key=${firebaseConfig.apiKey}`;
-            const payload = {
-                fields: {
-                    content: { stringValue: exportDatabase() },
-                    updatedAt: { timestampValue: new Date().toISOString() }
-                }
-            };
-            const response = await fetch(url, { 
-                method: 'PATCH', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload) 
-            });
-            if (response.ok) alert("Synced to Firebase Firestore!");
-            else {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Firestore sync failed");
-            }
+            const baseUrl = firebaseConfig.databaseURL.replace(/\/$/, '');
+            const url = `${baseUrl}/site.json${firebaseConfig.apiKey ? `?auth=${firebaseConfig.apiKey}` : ''}`;
+            const response = await fetch(url, { method: 'PUT', body: exportDatabase() });
+            if (response.ok) alert("Synced to Firebase Realtime Database!");
+            else throw new Error("Firebase sync failed");
         } catch (e) { alert("Firebase Error: " + e); } finally { setIsDataLoading(false); }
     };
 
     const loadFromFirebase = async () => {
-        if (!firebaseConfig.projectId) return;
+        if (!firebaseConfig.databaseURL) return;
         setIsDataLoading(true);
         try {
-            const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/settings/site?key=${firebaseConfig.apiKey}`;
+            const url = `${firebaseConfig.databaseURL.replace(/\/$/, '')}/site.json`;
             const response = await fetch(url);
             const data = await response.json();
-            if (data?.fields?.content?.stringValue) {
-                importDatabase(data.fields.content.stringValue);
-            }
+            if (data) importDatabase(data);
         } catch (e) { console.error(e); } finally { setIsDataLoading(false); }
     };
 

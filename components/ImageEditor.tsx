@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { useData } from '../context/DataContext';
@@ -13,6 +14,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
     const reader = new FileReader();
     reader.onloadend = () => {
         if (reader.result) {
+            // result is data:..., so we remove the prefix
             resolve((reader.result as string).split(',')[1]);
         } else {
             reject('Failed to read blob');
@@ -24,6 +26,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 
 
 const ImageEditor: React.FC = () => {
+  // Fixed destructuring to use correct property names from DataContext
   const { galleryData, updateGalleryData, uploadFile, fetchServerFiles } = useData();
   const [mode, setMode] = useState<'editor' | 'illustrator' | 'video' | 'pro'>('editor');
   const [prompt, setPrompt] = useState<string>('');
@@ -38,7 +41,6 @@ const ImageEditor: React.FC = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [statusMessage, setStatusMessage] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
@@ -61,7 +63,7 @@ const ImageEditor: React.FC = () => {
         setOriginalImage({ base64, mimeType: file.type, url: URL.createObjectURL(file) });
       } catch (e) {
         console.error(e);
-        setError('Failed to load image.');
+        setError('Failed to load image. Please try another file.');
       }
     }
   };
@@ -71,7 +73,6 @@ const ImageEditor: React.FC = () => {
         setError(null);
         setGeneratedImage(null);
         setIsLoading(true);
-        setStatusMessage('Loading reference image...');
         setSelectedSample(imageUrl);
         setShowGalleryModal(false);
         
@@ -85,7 +86,6 @@ const ImageEditor: React.FC = () => {
         setError('Failed to load image.');
     } finally {
         setIsLoading(false);
-        setStatusMessage('');
     }
   };
 
@@ -93,41 +93,41 @@ const ImageEditor: React.FC = () => {
       if (!generatedImage && !generatedVideo) return;
       
       setIsLoading(true);
-      setStatusMessage('Saving to Cloud Gallery...');
       try {
           let url = generatedImage || generatedVideo || '';
           
+          // Try upload to server if generatedImage is base64
           if (generatedImage && generatedImage.startsWith('data:')) {
               try {
-                  setStatusMessage('Uploading to Hostinger Storage...');
                   const response = await fetch(generatedImage);
                   const blob = await response.blob();
-                  const filename = `ai_gen_${Date.now()}.png`;
+                  const filename = `gen_${Date.now()}.png`;
+                  // Use uploadFile from context which handles both Supabase/Hostinger
                   const file = new File([blob], filename, { type: blob.type });
                   const uploadedUrl = await uploadFile(file);
                   if (uploadedUrl) {
                       url = uploadedUrl;
                   }
               } catch (e) {
-                  console.error("Cloud upload failed", e);
+                  console.error("Failed to upload, saving as Base64", e);
               }
           }
 
           if (generatedImage) {
-              const newImages = [...galleryData.images, { id: Date.now().toString(), url: url, caption: prompt || 'AI Generated Star' }];
+              const newImages = [...galleryData.images, { id: Date.now().toString(), url: url, caption: 'AI Generated' }];
               updateGalleryData({ ...galleryData, images: newImages });
           } else if (generatedVideo) {
-              const newVideos = [...(galleryData.videos || []), { id: Date.now().toString(), url: url, thumbnail: '', title: prompt || 'AI Video' }];
+              // Now galleryData.videos is properly typed
+              const newVideos = [...(galleryData.videos || []), { id: Date.now().toString(), url: url, thumbnail: '', title: 'AI Video' }];
               updateGalleryData({ ...galleryData, videos: newVideos });
           }
           
-          alert('Successfully saved to LKC Gallery!');
+          alert('Saved to Gallery!');
       } catch (e) {
           console.error(e);
           setError('Failed to save to gallery.');
       } finally {
           setIsLoading(false);
-          setStatusMessage('');
       }
   };
 
@@ -137,19 +137,27 @@ const ImageEditor: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setStatusMessage('Reimagining your photo...');
     setError(null);
     setGeneratedImage(null);
 
     try {
+      // Create new instance before calling API
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
           parts: [
-            { inlineData: { data: originalImage.base64, mimeType: originalImage.mimeType } },
+            {
+              inlineData: {
+                data: originalImage.base64,
+                mimeType: originalImage.mimeType,
+              },
+            },
             { text: prompt },
           ],
+        },
+        config: {
+          // responseModalities is not required for image generation
         },
       });
 
@@ -162,72 +170,166 @@ const ImageEditor: React.FC = () => {
           break;
         }
       }
-       if (!foundImage) setError("Image refused by model constraints.");
+       if (!foundImage) {
+        setError("Couldn't generate an image from the response. The model may have refused the request.");
+      }
 
     } catch (e) {
       console.error(e);
-      setError('Generation failed. Please try a different prompt.');
+      setError('An error occurred while generating the image. Please try again.');
     } finally {
       setIsLoading(false);
-      setStatusMessage('');
     }
   };
   
+  const henPartyPrompt = "A widescreen digital illustration for a glamorous hen party at London Karaoke Club in Soho. Energetic, cheeky, and elegant. A modern neon-lit karaoke room with rose-gold accents, pink and black mood lighting, and a sparkling disco ambiance. Include champagne flutes, diamond rings, glittering microphones, and party decor. Stylish women are mid-song, dancing, laughing, and celebrating. Cinematic composition with high contrast lighting. Widescreen landscape format (16:9).";
+
+  const handleGenerateIllustration = async () => {
+    setIsLoading(true);
+    setError(null);
+    setGeneratedImage(null);
+    setOriginalImage(null);
+
+    try {
+      // Create new instance before calling API
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [{ text: henPartyPrompt }],
+        },
+        config: {
+          // responseModalities is not required for image generation
+        },
+      });
+
+      let foundImage = false;
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          const base64ImageBytes: string = part.inlineData.data;
+          setGeneratedImage(`data:image/png;base64,${base64ImageBytes}`);
+          foundImage = true;
+          break;
+        }
+      }
+      if (!foundImage) {
+        setError("Couldn't generate an illustration. The model may have refused the request.");
+      }
+    } catch (e) {
+      console.error(e);
+      setError('An error occurred while generating the illustration. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGenerateProImage = async () => {
-      if (!prompt) return setError('Please enter a prompt.');
+      if (!prompt) {
+          setError('Please enter a prompt.');
+          return;
+      }
       setIsLoading(true);
-      setStatusMessage(`Rendering high-quality ${imageSize} image...`);
       setError(null);
       setGeneratedImage(null);
       
       try {
+          // Check for API Key selection (Required for Gemini 3 Pro Image)
+          const win = window as any;
+          if (win.aistudio?.hasSelectedApiKey) {
+              const hasKey = await win.aistudio.hasSelectedApiKey();
+              if (!hasKey) {
+                  await win.aistudio.openSelectKey();
+              }
+          }
+
+          // Create new instance before calling API
           const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
           const response = await ai.models.generateContent({
               model: 'gemini-3-pro-image-preview',
-              contents: { parts: [{ text: prompt }] },
-              config: { imageConfig: { imageSize: imageSize } }
+              contents: {
+                  parts: [{ text: prompt }],
+              },
+              config: {
+                  imageConfig: {
+                      imageSize: imageSize,
+                  }
+              }
           });
 
           let foundImage = false;
+          // Iterate through parts to find the image
           for (const part of response.candidates[0].content.parts) {
               if (part.inlineData) {
-                  setGeneratedImage(`data:image/png;base64,${part.inlineData.data}`);
+                  const base64ImageBytes: string = part.inlineData.data;
+                  setGeneratedImage(`data:image/png;base64,${base64ImageBytes}`);
                   foundImage = true;
                   break;
               }
           }
-          if (!foundImage) setError("Could not render Pro Image.");
+           if (!foundImage) {
+            setError("Couldn't generate an image. The model may have refused the request.");
+          }
+
       } catch (e: any) {
         console.error(e);
-        setError('An error occurred during pro generation.');
+        if (e.message && e.message.includes('Requested entity was not found')) {
+            setError('API Key session expired or invalid. Please select your key again.');
+            const win = window as any;
+            if (win.aistudio?.openSelectKey) {
+                await win.aistudio.openSelectKey();
+            }
+       } else {
+           setError('An error occurred while generating the image. Please try again.');
+       }
       } finally {
           setIsLoading(false);
-          setStatusMessage('');
       }
   };
 
   const handleGenerateVideo = async () => {
-    if (!prompt && !originalImage) return setError('Input required.');
+    // Prompt is required if no image is provided
+    if (!prompt && !originalImage) {
+      setError('Please enter a prompt or upload an image.');
+      return;
+    }
 
     setIsLoading(true);
-    setStatusMessage('Veo is crafting your video clip (approx 60s)...');
     setError(null);
     setGeneratedVideo(null);
 
     try {
+        // API Key selection for Veo
+        const win = window as any;
+        if (win.aistudio?.hasSelectedApiKey) {
+            const hasKey = await win.aistudio.hasSelectedApiKey();
+            if (!hasKey) {
+                await win.aistudio.openSelectKey();
+            }
+        }
+
+        // Create new instance right before call
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+
         const params: any = {
             model: 'veo-3.1-fast-generate-preview',
-            prompt: prompt || 'Cinematic karaoke atmosphere',
-            config: { numberOfVideos: 1, resolution: '720p', aspectRatio: aspectRatio }
+            prompt: prompt || 'A video based on the image',
+            config: {
+                numberOfVideos: 1,
+                resolution: '720p',
+                aspectRatio: aspectRatio
+            }
         };
 
         if (originalImage) {
-            params.image = { imageBytes: originalImage.base64, mimeType: originalImage.mimeType };
+            params.image = {
+                imageBytes: originalImage.base64,
+                mimeType: originalImage.mimeType
+            };
         }
 
         let operation = await ai.models.generateVideos(params);
 
+        // Polling loop for video generation
         while (!operation.done) {
             await new Promise(resolve => setTimeout(resolve, 5000));
             operation = await ai.operations.getVideosOperation({operation: operation});
@@ -235,173 +337,458 @@ const ImageEditor: React.FC = () => {
 
         const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
         if (videoUri) {
+            // Fetch mp4 bytes with API key
             const response = await fetch(`${videoUri}&key=${process.env.API_KEY}`);
+            if (!response.ok) throw new Error('Failed to download video');
+            
             const blob = await response.blob();
-            setGeneratedVideo(URL.createObjectURL(blob));
+            const url = URL.createObjectURL(blob);
+            setGeneratedVideo(url);
+        } else {
+            throw new Error('No video URI returned from generation.');
         }
+
     } catch (e: any) {
         console.error(e);
-        setError('Video generation failed.');
+        if (e.message && e.message.includes('Requested entity was not found')) {
+             setError('API Key session expired or invalid. Please select your key again.');
+             const win = window as any;
+             if (win.aistudio?.openSelectKey) {
+                 await win.aistudio.openSelectKey();
+             }
+        } else {
+            setError('An error occurred while generating the video. Please try again.');
+        }
     } finally {
         setIsLoading(false);
-        setStatusMessage('');
     }
   };
 
+
   const handleDownload = () => {
-    const url = generatedImage || generatedVideo;
-    if (!url) return;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `lkc_ai_${Date.now()}.${generatedVideo ? 'mp4' : 'png'}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (generatedImage) {
+      const link = document.createElement('a');
+      link.href = generatedImage;
+      link.download = `${mode === 'illustrator' ? 'hen-party-illustration' : 'generated-image'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (generatedVideo) {
+      const link = document.createElement('a');
+      link.href = generatedVideo;
+      link.download = 'karaoke-video.mp4';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
+
+  const resetState = () => {
+    setPrompt('');
+    setOriginalImage(null);
+    setGeneratedImage(null);
+    setGeneratedVideo(null);
+    setError(null);
+    setSelectedSample(null);
+  };
+
+  // Fixed storage fetch logic to use correct context API
+  useEffect(() => {
+      if (showGalleryModal && galleryTab === 'storage') {
+          fetchServerFiles().then(files => {
+              setStorageFiles(files);
+          });
+      }
+  }, [showGalleryModal, galleryTab, fetchServerFiles]);
 
   return (
     <section className="relative py-16 md:py-24" style={{backgroundImage: "url('https://picsum.photos/seed/darkclub/1600/900')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed'}}>
         <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-sm"></div>
-        
-        {/* Loading Overlay */}
-        {isLoading && (
-            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in-up">
-                <div className="relative w-24 h-24 mb-6">
-                    <div className="absolute inset-0 border-4 border-zinc-800 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                    <div className="absolute inset-2 border-2 border-pink-500 border-b-transparent rounded-full animate-spin [animation-duration:1.5s]"></div>
-                </div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Processing Magic</h3>
-                <p className="text-gray-400 font-bold uppercase text-xs tracking-widest animate-pulse">{statusMessage || 'Connecting to Gemini Cloud...'}</p>
-            </div>
-        )}
-
         <div className="relative container mx-auto px-6">
             <div className="text-center max-w-3xl mx-auto mb-12">
             <h3 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-400">AI Creative Studio</h3>
-            <p className="text-lg md:text-xl text-gray-300 mt-4">Edit photos, create party art, or generate stunning videos for your night out.</p>
+            <p className="text-lg md:text-xl text-gray-300 mt-4">
+                Edit photos, create party art, or generate stunning videos for your night out.
+            </p>
             </div>
 
             <div className="flex justify-center mb-8">
-            <div className="bg-black/50 p-1.5 rounded-full flex gap-2 flex-wrap justify-center border border-zinc-800">
-                {['editor', 'illustrator', 'pro', 'video'].map(m => (
-                    <button key={m} onClick={() => { setMode(m as any); setGeneratedImage(null); setGeneratedVideo(null); }} className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${mode === m ? 'bg-yellow-400 text-black shadow-lg scale-105' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}>
-                        {m}
-                    </button>
-                ))}
+            <div className="bg-black/50 p-1.5 rounded-full flex gap-2 flex-wrap justify-center">
+                <button 
+                onClick={() => { setMode('editor'); resetState(); }} 
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${mode === 'editor' ? 'bg-yellow-400 text-black' : 'text-white hover:bg-zinc-700'}`}
+                >
+                Photo Editor
+                </button>
+                <button 
+                onClick={() => { setMode('illustrator'); resetState(); }} 
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${mode === 'illustrator' ? 'bg-yellow-400 text-black' : 'text-white hover:bg-zinc-700'}`}
+                >
+                Hen Party
+                </button>
+                <button 
+                onClick={() => { setMode('pro'); resetState(); }} 
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${mode === 'pro' ? 'bg-yellow-400 text-black' : 'text-white hover:bg-zinc-700'}`}
+                >
+                Pro Generator
+                </button>
+                <button 
+                onClick={() => { setMode('video'); resetState(); }} 
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${mode === 'video' ? 'bg-yellow-400 text-black' : 'text-white hover:bg-zinc-700'}`}
+                >
+                Video Maker
+                </button>
             </div>
             </div>
 
             {mode === 'editor' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <div className="bg-black/70 backdrop-blur-md p-8 rounded-3xl flex flex-col gap-6 border border-zinc-700 shadow-2xl">
-                        <div>
-                            <label className="block text-sm font-black uppercase tracking-widest mb-4 text-gray-500">1. Select Base Image</label>
-                            <div className="grid grid-cols-3 gap-4 mb-4">
-                                {sampleImages.map((img) => (
-                                    <button key={img.url} onClick={() => handleSelectSample(img.url)} className={`relative rounded-xl overflow-hidden border-2 transition-all ${selectedSample === img.url ? 'border-pink-500 scale-105' : 'border-zinc-700 hover:border-pink-400'}`}>
-                                        <img src={img.url} alt={img.name} className="aspect-square object-cover" />
-                                        <span className="absolute bottom-1 left-2 text-white text-[10px] font-black uppercase">{img.name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <button onClick={() => fileInputRef.current?.click()} className="text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-bold uppercase text-[10px] tracking-widest py-3 px-4 rounded-xl transition-all border border-zinc-700">Upload File</button>
-                                <button onClick={() => setShowGalleryModal(true)} className="text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-bold uppercase text-[10px] tracking-widest py-3 px-4 rounded-xl transition-all border border-zinc-700">From Gallery</button>
-                            </div>
-                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-black uppercase tracking-widest mb-4 text-gray-500">2. Instructions</label>
-                            <textarea
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                placeholder="e.g. 'Add a neon disco ball', 'Make it look like a 90s Polaroid'"
-                                className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-2xl p-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow resize-none"
-                            />
-                        </div>
-                        
-                        <button onClick={handleGenerateEdit} disabled={isLoading || !originalImage || !prompt} className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-zinc-800 disabled:text-zinc-600 text-black text-xs font-black py-4 rounded-full transition-all uppercase tracking-widest shadow-lg">
-                            {isLoading ? 'Processing...' : '✨ Generate Edit'}
+                {/* Controls */}
+                <div className="bg-black/70 backdrop-blur-md p-8 rounded-2xl flex flex-col gap-6 border border-zinc-700">
+                    <div>
+                    <label className="block text-lg font-semibold mb-3 text-gray-200">1. Choose an Image</label>
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                        {sampleImages.map((img) => (
+                        <button key={img.url} onClick={() => handleSelectSample(img.url)} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedSample === img.url ? 'border-pink-500 scale-105' : 'border-zinc-700 hover:border-pink-400'}`}>
+                            <img src={img.url} alt={img.name} className="aspect-square object-cover" />
+                            <div className="absolute inset-0 bg-black/40"></div>
+                            <span className="absolute bottom-2 left-2 text-white text-xs font-bold">{img.name}</span>
                         </button>
-                        {error && <p className="text-red-400 text-[10px] font-bold text-center uppercase tracking-widest">{error}</p>}
+                        ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <button onClick={() => fileInputRef.current?.click()} className="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors">
+                            Upload File
+                        </button>
+                        <button onClick={() => setShowGalleryModal(true)} className="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors">
+                            From Gallery
+                        </button>
+                    </div>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
                     </div>
 
-                    <div className="flex flex-col gap-8">
-                        <div className="bg-zinc-900/50 p-6 rounded-3xl border border-zinc-800 shadow-xl">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 text-center">Output Preview</h4>
-                            <div className="aspect-square w-full bg-black rounded-2xl flex items-center justify-center overflow-hidden border border-zinc-800 relative">
-                                {!isLoading && generatedImage ? (
-                                    <img src={generatedImage} alt="Generated" className="w-full h-full object-contain" />
-                                ) : (
-                                    <p className="text-gray-600 text-xs font-bold uppercase tracking-widest">Ready for Magic</p>
-                                )}
-                            </div>
-                            {generatedImage && !isLoading && (
-                                <div className="mt-6 flex flex-col gap-3">
-                                    <button onClick={handleDownload} className="w-full bg-white text-black font-black py-3 rounded-full text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all">Download PNG</button>
-                                    <button onClick={handleSaveToGallery} className="w-full bg-pink-600 text-white font-black py-3 rounded-full text-[10px] uppercase tracking-widest hover:bg-pink-500 transition-all">Save to Site Gallery</button>
-                                </div>
-                            )}
+                    <div>
+                    <label htmlFor="prompt-input" className="block text-lg font-semibold mb-3 text-gray-200">2. Describe Your Edit</label>
+                    <textarea
+                        id="prompt-input"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="e.g., 'Add a retro 80s filter', 'Make the background a futuristic cityscape', 'Change the microphone to gold'"
+                        className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow"
+                        rows={4}
+                    />
+                    </div>
+                    
+                    <button onClick={handleGenerateEdit} disabled={isLoading || !originalImage || !prompt} className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-zinc-600 disabled:cursor-not-allowed text-black text-lg font-bold py-3 px-4 rounded-full transition-all duration-300 ease-in-out hover:scale-105 disabled:hover:scale-100 flex items-center justify-center">
+                    {isLoading ? (
+                        <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Generating...
+                        </>
+                    ) : '✨ Generate Edit'}
+                    </button>
+                    {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                </div>
+
+                {/* Image Display */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col items-center">
+                        <h4 className="text-xl font-bold mb-3 text-gray-300">Before</h4>
+                        <div className="aspect-square w-full bg-black/50 rounded-lg flex items-center justify-center overflow-hidden border border-zinc-700">
+                            {originalImage ? (
+                                <img src={originalImage.url} alt="Original" className="w-full h-full object-contain" />
+                            ) : <p className="text-gray-500">Select an image</p>}
                         </div>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <h4 className="text-xl font-bold mb-3 text-gray-300">After</h4>
+                        <div className="aspect-square w-full bg-black/50 rounded-lg flex items-center justify-center overflow-hidden relative border border-zinc-700">
+                            {isLoading && <p className="text-gray-400">Generating...</p>}
+                            {!isLoading && generatedImage && (
+                                <img src={generatedImage} alt="Generated" className="w-full h-full object-contain" />
+                            )}
+                            {!isLoading && !generatedImage && <p className="text-gray-500">Your edit will appear here</p>}
+                        </div>
+                        {generatedImage && !isLoading && (
+                            <div className="mt-4 text-center w-full space-y-2">
+                                <button onClick={handleDownload} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Download Image
+                                </button>
+                                <button onClick={handleSaveToGallery} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Save to Gallery
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                </div>
+            )}
+
+            {/* Other Modes ... (Kept existing) */}
+            {mode === 'illustrator' && (
+                <div className="max-w-4xl mx-auto flex flex-col items-center">
+                    <div className="w-full bg-black/70 backdrop-blur-md border border-zinc-700 p-8 rounded-2xl flex flex-col items-center gap-6">
+                    <h4 className="text-2xl font-bold text-center">Your Custom Hen Party Artwork</h4>
+                    <p className="text-gray-400 text-center max-w-lg">Click the button below to generate a unique, glamorous, and widescreen illustration for your event—perfect for sharing online or using as a keepsake!</p>
+                    <button onClick={handleGenerateIllustration} disabled={isLoading} className="w-full max-w-xs bg-yellow-400 hover:bg-yellow-500 disabled:bg-zinc-600 disabled:cursor-not-allowed text-black text-lg font-bold py-3 px-4 rounded-full transition-all duration-300 ease-in-out hover:scale-105 disabled:hover:scale-100 flex items-center justify-center">
+                        {isLoading ? (
+                        <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Generating...
+                        </>
+                        ) : '✨ Generate Illustration'}
+                    </button>
+                    {error && <p className="text-red-400 text-sm text-center mt-2">{error}</p>}
+                    </div>
+
+                    <div className="w-full mt-8">
+                    <div className="aspect-video w-full bg-black/50 rounded-lg flex items-center justify-center overflow-hidden border border-zinc-700">
+                        {isLoading && <p className="text-gray-400">Generating your masterpiece...</p>}
+                        {!isLoading && generatedImage && (
+                            <img src={generatedImage} alt="Generated Hen Party Illustration" className="w-full h-full object-contain" />
+                        )}
+                        {!isLoading && !generatedImage && <p className="text-gray-500">Your illustration will appear here</p>}
+                    </div>
+                    {generatedImage && !isLoading && (
+                        <div className="mt-4 text-center flex gap-4 justify-center">
+                            <button onClick={handleDownload} className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                Download
+                            </button>
+                            <button onClick={handleSaveToGallery} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                Save to Gallery
+                            </button>
+                        </div>
+                    )}
                     </div>
                 </div>
             )}
 
-            {/* Other modes follow the same refined UI pattern... */}
             {mode === 'pro' && (
-                <div className="max-w-2xl mx-auto bg-black/70 backdrop-blur-md p-10 rounded-[3rem] border border-zinc-700 shadow-2xl">
-                    <h4 className="text-2xl font-black mb-2 text-center">Gemini 3 Pro <span className="text-pink-500">Image</span></h4>
-                    <p className="text-gray-500 text-center text-sm mb-8">Ultra high definition generation for club promotion.</p>
-                    
-                    <div className="flex gap-2 mb-8 bg-zinc-800/50 p-1 rounded-full">
-                        {['1K', '2K', '4K'].map(s => (
-                            <button key={s} onClick={() => setImageSize(s as any)} className={`flex-1 py-2 rounded-full text-[10px] font-black tracking-widest transition-all ${imageSize === s ? 'bg-white text-black' : 'text-gray-500 hover:text-white'}`}>{s}</button>
-                        ))}
-                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                   <div className="bg-black/70 backdrop-blur-md p-8 rounded-2xl flex flex-col gap-6 border border-zinc-700">
+                        <div>
+                             <h4 className="text-2xl font-bold mb-2">Pro Image Generator</h4>
+                             <p className="text-gray-400 text-sm mb-6">Create high-quality images using the advanced Nano Banana Pro model.</p>
+                             
+                             <label className="block text-sm font-semibold mb-2 text-gray-200">Image Size</label>
+                             <div className="flex gap-4 mb-6">
+                                 {['1K', '2K', '4K'].map((size) => (
+                                     <button
+                                         key={size}
+                                         onClick={() => setImageSize(size as any)}
+                                         className={`flex-1 py-2 px-4 rounded-lg font-bold border transition-all ${imageSize === size ? 'bg-pink-600 border-pink-500 text-white' : 'bg-zinc-800 border-zinc-700 text-gray-400 hover:bg-zinc-700'}`}
+                                     >
+                                         {size}
+                                     </button>
+                                 ))}
+                             </div>
 
-                    <textarea
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder="Detailed prompt for Pro Image..."
-                        className="w-full h-40 bg-zinc-800/50 border border-zinc-700 rounded-3xl p-6 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow mb-8"
-                    />
+                             <label className="block text-sm font-semibold mb-2 text-gray-200">Prompt</label>
+                             <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder="Describe the image you want to generate in detail..."
+                                className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow mb-6"
+                            />
 
-                    <button onClick={handleGenerateProImage} disabled={isLoading || !prompt} className="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-4 rounded-full text-xs uppercase tracking-widest shadow-xl mb-4">
-                        Generate High-Def Visual
-                    </button>
-                    {error && <p className="text-red-500 text-[10px] font-black text-center uppercase mb-6">{error}</p>}
+                            <button onClick={handleGenerateProImage} disabled={isLoading || !prompt} className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-zinc-600 disabled:cursor-not-allowed text-black text-lg font-bold py-3 px-4 rounded-full transition-all duration-300 ease-in-out hover:scale-105 disabled:hover:scale-100 flex items-center justify-center">
+                                {isLoading ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Generating...
+                                    </>
+                                ) : '✨ Generate Pro Image'}
+                            </button>
+                            {error && <p className="text-red-400 text-sm text-center mt-2">{error}</p>}
+                        </div>
+                   </div>
 
-                    {generatedImage && (
-                        <div className="animate-fade-in-up mt-8">
-                            <img src={generatedImage} className="w-full rounded-3xl shadow-2xl border border-zinc-700 mb-6" alt="" />
-                            <div className="flex gap-4">
-                                <button onClick={handleDownload} className="flex-1 bg-white text-black font-black py-3 rounded-xl text-[10px] uppercase tracking-widest">Download</button>
-                                <button onClick={handleSaveToGallery} className="flex-1 bg-yellow-400 text-black font-black py-3 rounded-xl text-[10px] uppercase tracking-widest">Add to Gallery</button>
+                   <div className="flex flex-col items-center justify-center">
+                        <div className="aspect-square w-full bg-black/50 rounded-lg flex items-center justify-center overflow-hidden relative border border-zinc-700">
+                            {isLoading && <p className="text-gray-400 animate-pulse">Designing your {imageSize} image...</p>}
+                            {!isLoading && generatedImage && (
+                                <img src={generatedImage} alt="Generated" className="w-full h-full object-contain" />
+                            )}
+                            {!isLoading && !generatedImage && <p className="text-gray-500">Your pro image will appear here</p>}
+                        </div>
+                        {generatedImage && !isLoading && (
+                            <div className="mt-4 text-center w-full space-y-2">
+                                <button onClick={handleDownload} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Download {imageSize} Image
+                                </button>
+                                <button onClick={handleSaveToGallery} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Save to Gallery
+                                </button>
+                            </div>
+                        )}
+                   </div>
+                </div>
+            )}
+
+            {mode === 'video' && (
+                <div className="max-w-4xl mx-auto flex flex-col items-center">
+                    <div className="w-full bg-black/70 backdrop-blur-md border border-zinc-700 p-8 rounded-2xl flex flex-col gap-6">
+                        <h4 className="text-2xl font-bold text-center">Video Maker (Veo)</h4>
+                        <p className="text-gray-400 text-center max-w-lg mx-auto">Upload a photo to animate it, or describe a scene to generate a video from scratch.</p>
+                        
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <label className="block text-sm font-semibold mb-2 text-gray-200">1. Upload Image (Optional)</label>
+                                <div className="flex gap-2 mb-2">
+                                    <button onClick={() => fileInputRef.current?.click()} className="flex-1 h-32 border-2 border-dashed border-zinc-600 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-pink-500 hover:text-pink-500 transition-colors bg-zinc-800/50">
+                                        {originalImage ? (
+                                            <img src={originalImage.url} className="h-full w-full object-contain rounded-lg" />
+                                        ) : (
+                                            <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <span>Upload</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setShowGalleryModal(true)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-gray-300 text-sm font-semibold py-2 rounded transition-colors">
+                                        From Gallery
+                                    </button>
+                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
+                                    {originalImage && <button onClick={() => setOriginalImage(null)} className="text-xs text-red-400 mt-2 underline text-center w-full">Remove Image</button>}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold mb-2 text-gray-200">2. Video Settings</label>
+                                <div className="flex gap-2 mb-4">
+                                     <button onClick={() => setAspectRatio('16:9')} className={`flex-1 py-1.5 px-3 rounded text-sm font-semibold border ${aspectRatio === '16:9' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-zinc-800 border-zinc-700 text-gray-400'}`}>Landscape (16:9)</button>
+                                     <button onClick={() => setAspectRatio('9:16')} className={`flex-1 py-1.5 px-3 rounded text-sm font-semibold border ${aspectRatio === '9:16' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-zinc-800 border-zinc-700 text-gray-400'}`}>Portrait (9:16)</button>
+                                </div>
+
+                                <label className="block text-sm font-semibold mb-2 text-gray-200">3. Prompt</label>
+                                <textarea
+                                    value={prompt}
+                                    onChange={(e) => setPrompt(e.target.value)}
+                                    placeholder={originalImage ? "Describe how to animate this image..." : "Describe the video you want to create..."}
+                                    className="w-full h-24 bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow resize-none text-sm"
+                                />
                             </div>
                         </div>
-                    )}
+
+                        <button onClick={handleGenerateVideo} disabled={isLoading || (!prompt && !originalImage)} className="w-full max-w-md mx-auto bg-yellow-400 hover:bg-yellow-500 disabled:bg-zinc-600 disabled:cursor-not-allowed text-black text-lg font-bold py-3 px-4 rounded-full transition-all duration-300 ease-in-out hover:scale-105 disabled:hover:scale-100 flex items-center justify-center">
+                            {isLoading ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Generating Video...
+                            </>
+                            ) : '🎬 Generate Video'}
+                        </button>
+                        {error && <p className="text-red-400 text-sm text-center mt-2">{error}</p>}
+                        <p className="text-xs text-gray-500 text-center">Video generation takes a minute or two. Please be patient!</p>
+                    </div>
+
+                    <div className="w-full mt-8">
+                        <div className={`w-full bg-black/50 rounded-lg flex items-center justify-center overflow-hidden border border-zinc-700 relative ${aspectRatio === '16:9' ? 'aspect-video' : 'aspect-[9/16] max-w-sm mx-auto'}`}>
+                            {isLoading && (
+                                <div className="text-center p-8">
+                                    <div className="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                    <p className="text-gray-400 animate-pulse">Creating your video... this may take a moment.</p>
+                                </div>
+                            )}
+                            {!isLoading && generatedVideo && (
+                                <video controls autoPlay loop className="w-full h-full object-contain">
+                                    <source src={generatedVideo} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            )}
+                            {!isLoading && !generatedVideo && <p className="text-gray-500">Your generated video will appear here</p>}
+                        </div>
+                        {generatedVideo && !isLoading && (
+                            <div className="mt-4 text-center w-full space-y-2">
+                                <button onClick={handleDownload} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Download Video
+                                </button>
+                                <button onClick={handleSaveToGallery} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 ease-in-out hover:scale-105">
+                                    Save to Gallery
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
 
+        {/* Gallery Select Modal */}
         {showGalleryModal && (
-            <div className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4">
-                <div className="bg-zinc-900 w-full max-w-5xl h-[85vh] rounded-[3rem] border border-zinc-800 flex flex-col overflow-hidden shadow-[0_0_100px_rgba(236,72,153,0.2)]">
-                    <div className="p-8 border-b border-zinc-800 flex justify-between items-center">
-                        <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Asset Library</h3>
-                        <button onClick={() => setShowGalleryModal(false)} className="bg-zinc-800 hover:bg-red-600 p-2 rounded-full transition-all group">
-                            <svg className="w-6 h-6 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
+            <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+                <div className="bg-zinc-900 w-full max-w-4xl h-[80vh] rounded-2xl border border-zinc-800 flex flex-col overflow-hidden">
+                    <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                        <div className="flex gap-4 items-center">
+                            <h3 className="text-xl font-bold text-white">Select Image</h3>
+                            <div className="flex bg-zinc-800 rounded-lg p-1">
+                                <button 
+                                    onClick={() => setGalleryTab('site')} 
+                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${galleryTab === 'site' ? 'bg-zinc-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    Gallery (Curated)
+                                </button>
+                                <button 
+                                    onClick={() => setGalleryTab('storage')} 
+                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${galleryTab === 'storage' ? 'bg-zinc-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    All Uploads (Storage)
+                                </button>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowGalleryModal(false)} className="text-gray-400 hover:text-white">Close</button>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 scrollbar-hide">
-                        {galleryData.images.map((img) => (
-                            <button key={img.id} onClick={() => handleSelectSample(img.url)} className="aspect-square rounded-2xl overflow-hidden border border-zinc-800 hover:border-pink-500 transition-all relative group shadow-lg">
-                                <img src={img.url} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            </button>
-                        ))}
+                    
+                    <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {galleryTab === 'site' ? (
+                            galleryData.images.map((img) => (
+                                <button 
+                                    key={img.id} 
+                                    onClick={() => handleSelectSample(img.url)}
+                                    className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
+                                >
+                                    <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span className="text-white text-xs font-bold">Select</span>
+                                    </div>
+                                </button>
+                            ))
+                        ) : (
+                            storageFiles.map((file, idx) => (
+                                <button 
+                                    key={idx} 
+                                    onClick={() => handleSelectSample(file.url)}
+                                    className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
+                                >
+                                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                                        <span className="text-white text-xs font-bold mb-1">Select</span>
+                                        <span className="text-gray-300 text-[10px] truncate w-full text-center">{file.name}</span>
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                        {galleryTab === 'storage' && storageFiles.length === 0 && (
+                            <div className="col-span-full text-center py-10 text-gray-500">
+                                <p>No files found in storage bucket.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
