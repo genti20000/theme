@@ -1,10 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // --- Types ---
 export interface MenuItem { name: string; description: string; price: string; note?: string; }
 export interface MenuCategory { category: string; description?: string; items: MenuItem[]; }
-export interface DrinkItem { name: string; price: string | any; description?: string; note?: string; single?: string; double?: string; }
+export interface DrinkItem { name: string; price: any; description?: string; note?: string; single?: string; double?: string; }
 export interface DrinkCategory { category: string; items: DrinkItem[]; note?: string; }
 export interface DrinksData {
     headerImageUrl: string;
@@ -75,8 +74,7 @@ export interface FAQData { heading: string; subtext: string; items: FAQItem[]; }
 export interface EventSection { id: string; title: string; subtitle: string; description: string; imageUrl: string; features: string[]; }
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
 
-export interface SupabaseConfig { url: string; anonKey: string; bucket: string; }
-export interface FirebaseConfig { databaseURL: string; apiKey: string; }
+export interface FirebaseConfig { databaseURL: string; apiKey: string; projectId: string; }
 
 interface ServerFile { name: string; url: string; type: 'image' | 'video'; }
 
@@ -117,8 +115,6 @@ interface DataContextType {
     updateAdminPassword: (newPass: string) => void;
     syncUrl: string;
     updateSyncUrl: (newUrl: string) => void;
-    config: SupabaseConfig;
-    updateConfig: (newData: SupabaseConfig) => void;
     firebaseConfig: FirebaseConfig;
     updateFirebaseConfig: (newData: FirebaseConfig) => void;
     resetToDefaults: () => void;
@@ -129,37 +125,15 @@ interface DataContextType {
     loadFromHostinger: () => Promise<void>;
     saveToFirebase: () => Promise<void>;
     loadFromFirebase: () => Promise<void>;
-    fetchServerFiles: () => Promise<ServerFile[]>;
     uploadFile: (file: Blob | File) => Promise<string | null>;
-    saveAllToSupabase: () => Promise<void>;
+    fetchServerFiles: () => Promise<ServerFile[]>;
     isDataLoading: boolean;
 }
 
-const INITIAL_SEO: HeaderData = { 
-    logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png",
-    siteTitle: "London Karaoke Club | Private Rooms Soho",
-    siteDescription: "Luxury private karaoke booths in London Soho. 80,000+ songs, cocktails and more."
-};
-
-const INITIAL_INFO: InfoSectionData = {
-    heading: "Private Karaoke in Soho | London Karaoke Club",
-    sections: [
-        { title: "No Boxes, Just Epic Sound", content: "We are not a franchise. Our spaces are your personal club.", color: "pink" }
-    ],
-    footerTitle: "Prebook Your Exclusive Space",
-    footerText: "Advance prebooking is required—no walk-ins allowed.",
-    footerHighlight: "Prebook Now | Plan via WhatsApp"
-};
-
-const INITIAL_FAQ: FAQData = {
-    heading: "Common Questions",
-    subtext: "Everything you need to know before you sing.",
-    items: [{ question: "What are the hours?", answer: "2pm to 3am daily." }]
-};
-
 const INITIAL_FIREBASE: FirebaseConfig = {
     databaseURL: "https://gen-lang-client-0728122670-default-rtdb.firebaseio.com/",
-    apiKey: "AIzaSyD4Hr17UMR3eHksOPkUAw7Ad11i8P20gEU"
+    apiKey: "AIzaSyD4Hr17UMR3eHksOPkUAw7Ad11i8P20gEU",
+    projectId: "gen-lang-client-0728122670"
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -171,29 +145,44 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try { return JSON.parse(saved); } catch (e) { return defaultVal; }
     };
 
-    const [headerData, setHeaderData] = useState<HeaderData>(() => init('headerData', INITIAL_SEO));
-    const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', { slides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury suites.", buttonText: "Book Now", backgroundImageUrl: "https://picsum.photos/seed/lkc1/1920/1080" }));
+    const [headerData, setHeaderData] = useState<HeaderData>(() => init('headerData', { logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png", siteTitle: "London Karaoke Club", siteDescription: "Luxury private karaoke booths in London Soho." }));
+    const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', { slides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury suites.", buttonText: "Book Now", backgroundImageUrl: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=2070&auto=format&fit=crop" }));
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', { headerImageUrl: "", packagesData: { title: "Packages", subtitle: "", items: [], notes: [] }, bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } }, cocktailsData: [], winesData: [] }));
-    const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', { heading: "Get Loud", subtext: "Best karaoke experience in Soho.", mainImageUrl: "https://picsum.photos/seed/lkc2/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Suites", "Premium Sound", "Waitress Service"], sideImageUrl: "https://picsum.photos/seed/lkc3/500/500" }));
+    const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', { heading: "Get Loud", subtext: "The ultimate Soho destination for private karaoke.", mainImageUrl: "https://images.unsplash.com/photo-1525362081669-2b476bb628c3?q=80&w=2000&auto=format&fit=crop", featureListTitle: "Why LKC?", featureList: ["Private Boutique Suites", "Premium Sound Engineering", "Hostess Service", "80,000+ Song Library"], sideImageUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop" }));
     const [featuresData, setFeaturesData] = useState<FeaturesData>(() => init('featuresData', { 
-        experience: { label: "The Stage", heading: "Private Suites", text: "Your own world.", image: "https://picsum.photos/seed/lkc4/1200/800" }, 
-        occasions: { heading: "Parties", text: "We host everything.", items: [] }, 
-        grid: { heading: "Tech Features", items: [] } 
+        experience: { label: "The Stage", heading: "Boutique Suites", text: "Immerse yourself in a world of neon and sound.", image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop" }, 
+        occasions: { heading: "Parties & Occasions", text: "From birthdays to corporate takeovers.", items: [
+            { title: "Hen & Stag", text: "Celebrate the last night of freedom in style." },
+            { title: "Corporate", text: "Team building with a microphone and cocktails." },
+            { title: "Birthdays", text: "Your special day, your stage, your anthem." }
+        ] }, 
+        grid: { heading: "The LKC Standard", items: [] } 
     }));
-    const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', { label: "Atmosphere", heading: "Soho Nights", text: "Join the magic.", image1: "https://picsum.photos/seed/lkc5/800/800", image2: "https://picsum.photos/seed/lkc6/800/800", bigImage: "https://picsum.photos/seed/lkc7/1600/900", bottomHeading: "Sing Forever", bottomText: "Open late." }));
-    const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." }));
-    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready to sing?", ctaText: "Book your room now.", ctaButtonText: "Book Now" }));
-    const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', { heading: "Moments", subtext: "Recent nights at LKC.", images: [], videos: [] }));
-    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', { heading: "LKC Stories", subtext: "Inside Soho's best kept secret.", posts: [] }));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved by You", subtext: "Real reviews from our guests.", items: [] }));
-    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', INITIAL_INFO));
-    const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
-    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Special Events", subtitle: "Celebrate with us.", image: "https://picsum.photos/seed/lkc8/1600/900" }, sections: [] }));
+    const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', { label: "Atmosphere", heading: "Soho Nights", text: "Where the pulse of London meets your vocal chords.", image1: "https://images.unsplash.com/photo-1514525253361-bee8a4874a73?q=80&w=1964&auto=format&fit=crop", image2: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop", bigImage: "https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=2070&auto=format&fit=crop", bottomHeading: "Scream If You Want To Go Faster", bottomText: "London's premier late-night karaoke club." }));
+    const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated weekly with the latest global hits." }));
+    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready to take the stage?", ctaText: "Book your private suite in Soho today.", ctaButtonText: "Book Online Now" }));
+    const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', { 
+        heading: "LKC Moments", 
+        subtext: "Glimpses into the most legendary nights in Soho.", 
+        images: [
+            { id: "1", url: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070&auto=format&fit=crop", caption: "Cocktail Perfection" },
+            { id: "2", url: "https://images.unsplash.com/photo-1496337589254-7e19d01ced44?q=80&w=2070&auto=format&fit=crop", caption: "The Neon Vibe" },
+            { id: "3", url: "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=2070&auto=format&fit=crop", caption: "Group Anthems" },
+            { id: "4", url: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=2070&auto=format&fit=crop", caption: "Late Night Energy" },
+            { id: "5", url: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=2069&auto=format&fit=crop", caption: "Soho's Finest" },
+            { id: "6", url: "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=2070&auto=format&fit=crop", caption: "Vocal Mastery" }
+        ], 
+        videos: [] 
+    }));
+    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', { heading: "LKC Stories", subtext: "Trends, news, and tips from the heart of Soho.", posts: [] }));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved by the Crowd", subtext: "Real stories from our stage.", items: [] }));
+    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { heading: "Soho's Hidden Stage", sections: [], footerTitle: "", footerText: "", footerHighlight: "" }));
+    const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', { heading: "Common Questions", subtext: "Everything you need to know before you sing.", items: [] }));
+    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Bespoke Events", subtitle: "We make it personal.", image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=2070&auto=format&fit=crop" }, sections: [] }));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', ''));
-    const [config, setConfig] = useState<SupabaseConfig>(() => init('config', { url: '', anonKey: '', bucket: 'public' }));
     const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', INITIAL_FIREBASE));
     const [isDataLoading, setIsDataLoading] = useState(false);
 
@@ -223,13 +212,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('songs', songs); }, [songs]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
     useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
-    useEffect(() => { persist('config', config); }, [config]);
     useEffect(() => { persist('firebaseConfig', firebaseConfig); }, [firebaseConfig]);
 
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, foodMenu, drinksData, highlightsData, featuresData, vibeData, batteryData, 
         footerData, galleryData, blogData, testimonialsData, infoSectionData, faqData, eventsData, songs, 
-        adminPassword, version: "4.1" 
+        adminPassword, version: "5.1" 
     }, null, 2);
 
     const importDatabase = (json: string | any) => {
@@ -256,25 +244,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const saveToFirebase = async () => {
-        if (!firebaseConfig.databaseURL) return alert("Setup Firebase URL first!");
+        if (!firebaseConfig.projectId) return alert("Setup Firebase Project ID first!");
         setIsDataLoading(true);
         try {
-            const baseUrl = firebaseConfig.databaseURL.replace(/\/$/, '');
-            const url = `${baseUrl}/site.json${firebaseConfig.apiKey ? `?auth=${firebaseConfig.apiKey}` : ''}`;
-            const response = await fetch(url, { method: 'PUT', body: exportDatabase() });
-            if (response.ok) alert("Synced to Firebase Realtime Database!");
-            else throw new Error("Firebase sync failed");
+            const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/settings/site?key=${firebaseConfig.apiKey}`;
+            const payload = { fields: { content: { stringValue: exportDatabase() }, updatedAt: { timestampValue: new Date().toISOString() } } };
+            const response = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (response.ok) alert("Synced to Firebase Firestore!");
+            else throw new Error("Firestore sync failed");
         } catch (e) { alert("Firebase Error: " + e); } finally { setIsDataLoading(false); }
     };
 
     const loadFromFirebase = async () => {
-        if (!firebaseConfig.databaseURL) return;
+        if (!firebaseConfig.projectId) return;
         setIsDataLoading(true);
         try {
-            const url = `${firebaseConfig.databaseURL.replace(/\/$/, '')}/site.json`;
+            const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/settings/site?key=${firebaseConfig.apiKey}`;
             const response = await fetch(url);
             const data = await response.json();
-            if (data) importDatabase(data);
+            if (data?.fields?.content?.stringValue) importDatabase(data.fields.content.stringValue);
         } catch (e) { console.error(e); } finally { setIsDataLoading(false); }
     };
 
@@ -308,22 +296,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const response = await fetch(syncUrl, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${adminPassword}` },
-                body: formData
-            });
+            const response = await fetch(syncUrl, { method: 'POST', headers: { 'Authorization': `Bearer ${adminPassword}` }, body: formData });
             const res = await response.json();
             return res.success ? res.url : null;
         } catch (e) { return null; } finally { setIsDataLoading(false); }
     };
 
-    const purgeCache = () => {
-        if (confirm("Delete all UNSAVED local data on this browser?")) {
-            localStorage.clear();
-            window.location.reload();
-        }
+    const fetchServerFiles = async (): Promise<ServerFile[]> => {
+        if (!syncUrl) return [];
+        try {
+            const response = await fetch(`${syncUrl}?action=list`, { headers: { 'Authorization': `Bearer ${adminPassword}` } });
+            const data = await response.json();
+            return Array.isArray(data) ? data : [];
+        } catch (e) { return []; }
     };
+
+    const purgeCache = () => { if (confirm("Delete all local data?")) { localStorage.clear(); window.location.reload(); } };
 
     return (
         <DataContext.Provider value={{
@@ -336,10 +324,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
             eventsData, updateEventsData: setEventsData, songs, updateSongs: setSongs,
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
-            config, updateConfig: setConfig, firebaseConfig, updateFirebaseConfig: setFirebaseConfig,
-            resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
+            firebaseConfig, updateFirebaseConfig: setFirebaseConfig, resetToDefaults: () => {},
             purgeCache, importDatabase, exportDatabase, saveToHostinger, loadFromHostinger, saveToFirebase, loadFromFirebase,
-            uploadFile, saveAllToSupabase: async () => {}, fetchServerFiles: async () => [], isDataLoading
+            uploadFile, fetchServerFiles, isDataLoading
         }}>
             {children}
         </DataContext.Provider>
