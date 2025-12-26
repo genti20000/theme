@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -42,7 +43,6 @@ const App: React.FC = () => {
               <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
               <Features />
               <Fitness />
-              <Gallery isHomePreview={true} onNavigate={navigateTo} />
               <Battery />
               <Testimonials />
               <InfoSection />
