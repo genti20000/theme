@@ -5,9 +5,14 @@ import { useData } from '../context/DataContext';
 const Gallery: React.FC = () => {
   const { galleryData, isDataLoading } = useData();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('grid');
+  const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
   const images = galleryData.images || [];
+
+  const handleImageLoad = (id: string) => {
+      setLoadedImages(prev => ({ ...prev, [id]: true }));
+  };
 
   useEffect(() => {
     if (viewMode === 'carousel' && images.length > 0) {
@@ -21,73 +26,104 @@ const Gallery: React.FC = () => {
   if (isDataLoading && images.length === 0) {
       return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 mb-4"></div>
-            <p className="text-zinc-500 font-black tracking-widest uppercase text-xs">Accessing Visuals...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mb-4"></div>
+            <p className="text-gray-400 font-bold tracking-widest uppercase text-xs">Loading Gallery...</p>
         </div>
       );
   }
 
   return (
-    <div className="bg-black min-h-screen text-white pt-24 pb-24 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-pink-900/10 rounded-full blur-[150px] pointer-events-none"></div>
-      
+    <div className="bg-black min-h-screen text-white pt-24 pb-24 relative select-none">
+      <style>{`
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-gallery-item { animation: fadeInScale 0.6s ease-out forwards; }
+      `}</style>
+
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tighter uppercase italic">{galleryData.heading}</h2>
-          <p className="text-zinc-400 text-xl font-light mb-12">{galleryData.subtext}</p>
-          
-          <div className="flex justify-center gap-4 p-2 bg-zinc-900/50 backdrop-blur-md rounded-2xl w-max mx-auto border border-zinc-800">
-              <button 
-                onClick={() => setViewMode('grid')} 
-                className={`px-10 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all ${viewMode === 'grid' ? 'bg-pink-600 text-white shadow-xl' : 'text-zinc-500 hover:text-zinc-300'}`}
-              >
-                Grid
-              </button>
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tighter">{galleryData.heading}</h2>
+          <p className="text-gray-400 text-lg mb-8">{galleryData.subtext}</p>
+          <div className="flex justify-center gap-4 bg-zinc-900/50 p-1 rounded-full w-max mx-auto border border-zinc-800">
               <button 
                 onClick={() => setViewMode('carousel')} 
-                className={`px-10 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all ${viewMode === 'carousel' ? 'bg-pink-600 text-white shadow-xl' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`px-8 py-2 rounded-full text-xs font-black tracking-widest uppercase transition-all ${viewMode === 'carousel' ? 'bg-yellow-400 text-black shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
               >
                 Carousel
+              </button>
+              <button 
+                onClick={() => setViewMode('grid')} 
+                className={`px-8 py-2 rounded-full text-xs font-black tracking-widest uppercase transition-all ${viewMode === 'grid' ? 'bg-yellow-400 text-black shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+              >
+                Grid
               </button>
           </div>
         </div>
 
-        {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {viewMode === 'grid' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {images.map((img, idx) => (
                     <div 
                         key={img.id} 
-                        className="relative group aspect-square rounded-[2rem] overflow-hidden bg-zinc-900 border border-zinc-800 animate-fade-in-up shadow-2xl"
+                        className="relative aspect-square rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 animate-gallery-item group shadow-2xl"
                         style={{ animationDelay: `${idx * 0.1}s` }}
                     >
+                        {!loadedImages[img.id] && <div className="absolute inset-0 animate-pulse bg-zinc-800"></div>}
                         <img 
                             src={img.url} 
                             alt={img.caption} 
-                            className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-125" 
+                            onLoad={() => handleImageLoad(img.id)}
+                            className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${loadedImages[img.id] ? 'opacity-100' : 'opacity-0'}`} 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 p-8 flex items-end">
-                            <p className="text-white font-black text-xs uppercase tracking-widest">{img.caption}</p>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-6 flex items-end">
+                            <p className="text-white font-bold text-sm tracking-wide">{img.caption}</p>
                         </div>
                     </div>
                 ))}
             </div>
-        ) : (
-            <div className="max-w-6xl mx-auto relative group">
-                <div className="aspect-video md:aspect-[21/9] bg-zinc-900 rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(236,72,153,0.1)] border border-zinc-800 relative">
-                     <div className="absolute inset-0 flex transition-transform duration-1000 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+        )}
+        
+        {viewMode === 'carousel' && images.length > 0 && (
+             <div className="max-w-5xl mx-auto group">
+                 <div className="relative aspect-video md:aspect-[21/9] bg-zinc-900 rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(250,204,21,0.1)] border border-zinc-800">
+                     <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
                          {images.map((img, i) => (
                              <img key={i} src={img.url} className="w-full h-full object-cover flex-shrink-0" />
                          ))}
                      </div>
-                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                     <div className="absolute bottom-12 left-12">
-                         <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter">{images[currentIndex]?.caption}</h4>
+                     
+                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                     
+                     <button 
+                        onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)} 
+                        className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/40 backdrop-blur-md text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-yellow-400 hover:text-black border border-white/10"
+                     >
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                     </button>
+                     <button 
+                        onClick={() => setCurrentIndex((currentIndex + 1) % images.length)} 
+                        className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/40 backdrop-blur-md text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-yellow-400 hover:text-black border border-white/10"
+                     >
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                     </button>
+
+                     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+                        {images.map((_, i) => (
+                            <button 
+                                key={i} 
+                                onClick={() => setCurrentIndex(i)}
+                                className={`h-1.5 rounded-full transition-all ${currentIndex === i ? 'w-8 bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'w-2 bg-white/30 hover:bg-white/50'}`} 
+                            />
+                        ))}
                      </div>
-                </div>
-                
-                <button onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)} className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-pink-600 text-white p-5 rounded-full backdrop-blur-md transition-all">←</button>
-                <button onClick={() => setCurrentIndex((currentIndex + 1) % images.length)} className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-pink-600 text-white p-5 rounded-full backdrop-blur-md transition-all">→</button>
-            </div>
+                 </div>
+                 <div className="mt-8 text-center animate-gallery-item">
+                    <p className="text-yellow-400 font-black tracking-widest uppercase text-xs mb-2">Current Slide</p>
+                    <h4 className="text-2xl font-bold">{images[currentIndex].caption || "Atmospheric Soho Karaoke"}</h4>
+                 </div>
+             </div>
         )}
       </div>
     </div>
