@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useData } from '../context/DataContext';
 
@@ -58,35 +59,44 @@ header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
-$db_host = 'localhost';
-$db_name = 'u973281047_content_db';
-$db_user = 'u973281047_content_user';
-$db_pass = 'YOUR_DB_PASSWORD'; // Set this manually!
-$auth_key = '${adminPassword}';
-
-try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8", $db_user, $db_pass);
-    $pdo->exec("CREATE TABLE IF NOT EXISTS lkc_settings (id INT PRIMARY KEY DEFAULT 1, data LONGTEXT)");
-} catch (PDOException $e) { die(json_encode(['success'=>false, 'error'=>$e->getMessage()])); }
+$auth_key = 'Bearer ${adminPassword}';
+$data_file = 'site_data.json';
+$upload_dir = 'uploads/';
 
 $headers = getallheaders();
 $auth = $headers['Authorization'] ?? '';
-if ($auth !== "Bearer $auth_key") { http_response_code(401); die(json_encode(['success'=>false])); }
+if ($auth !== $auth_key) { http_response_code(401); die(json_encode(['success'=>false, 'error'=>'Auth Failed'])); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = file_get_contents('php://input');
     if (isset($_FILES['file'])) {
-        $name = time().'_'.$_FILES['file']['name'];
-        move_uploaded_file($_FILES['file']['tmp_name'], 'uploads/'.$name);
-        echo json_encode(['success'=>true, 'url'=>'https://'.$_SERVER['HTTP_HOST'].'/uploads/'.$name]);
+        if (!is_dir($upload_dir)) mkdir($upload_dir, 0755);
+        $name = time().'_'.basename($_FILES['file']['name']);
+        if (move_uploaded_file($_FILES['file']['tmp_name'], $upload_dir.$name)) {
+            echo json_encode(['success'=>true, 'url'=>'https://'.$_SERVER['HTTP_HOST'].'/'.$upload_dir.$name]);
+        } else {
+            echo json_encode(['success'=>false, 'error'=>'Upload failed']);
+        }
     } else {
-        $stmt = $pdo->prepare("INSERT INTO lkc_settings (id, data) VALUES (1, ?) ON DUPLICATE KEY UPDATE data = VALUES(data)");
-        $stmt->execute([$input]);
-        echo json_encode(['success'=>true]);
+        $input = file_get_contents('php://input');
+        if (file_put_contents($data_file, $input)) {
+            echo json_encode(['success'=>true]);
+        } else {
+            echo json_encode(['success'=>false, 'error'=>'Write failed']);
+        }
     }
 } else {
-    $stmt = $pdo->query("SELECT data FROM lkc_settings WHERE id = 1");
-    echo $stmt->fetchColumn() ?: json_encode(['error'=>'no data']);
+    if (isset($_GET['list'])) {
+        $files = array_diff(scandir($upload_dir), ['.', '..']);
+        $result = [];
+        foreach($files as $f) $result[] = ['name'=>$f, 'url'=>'https://'.$_SERVER['HTTP_HOST'].'/'.$upload_dir.$f];
+        echo json_encode(['success'=>true, 'files'=>$result]);
+    } else {
+        if (file_exists($data_file)) {
+            echo file_get_contents($data_file);
+        } else {
+            echo json_encode(['error'=>'no data']);
+        }
+    }
 }
 ?>`;
 
@@ -203,14 +213,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         {tab === 'config' && (
             <div className="space-y-12">
-                <SectionCard title="MySQL Sync (Hostinger)">
-                    <p className="text-xs text-zinc-500 mb-6 uppercase tracking-widest">Connect to your u973281047_content_db</p>
+                <SectionCard title="Subdomain Sync (files.londonkaraoke.club)">
+                    <p className="text-xs text-zinc-500 mb-6 uppercase tracking-widest">Connect to your subdomain files storage</p>
                     <div className="bg-black p-8 rounded-[2rem] border border-zinc-800 overflow-x-auto relative mb-6">
                         <pre className="text-[10px] text-green-500 font-mono leading-tight">{phpSnippet}</pre>
                         <button onClick={() => { navigator.clipboard.writeText(phpSnippet); alert("Copied!"); }} className="absolute top-6 right-6 bg-zinc-800 hover:bg-zinc-700 px-5 py-2 rounded-xl text-[10px] font-black">COPY PHP</button>
                     </div>
-                    <Input label="MySQL Endpoint (londonkaraoke.club/db.php)" value={syncUrl} onChange={v => updateSyncUrl(v)} />
-                    <Input label="Admin Sync Password" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
+                    <Input label="PHP Sync URL (files.londonkaraoke.club/db.php)" value={syncUrl} onChange={v => updateSyncUrl(v)} />
+                    <Input label="Auth Key (Admin Password)" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
                 </SectionCard>
                 <SectionCard title="Firebase Persistence">
                     <Input label="Firebase URL (https://lkc-xxx.firebaseio.com/)" value={firebaseConfig.databaseURL} onChange={v => updateFirebaseConfig(prev => ({...prev, databaseURL: v}))} />

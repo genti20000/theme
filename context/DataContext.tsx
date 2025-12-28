@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
 // --- Types ---
@@ -166,7 +167,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "", subtitle: "", image: "" }, sections: [] }));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
-    const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', ''));
+    const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', 'https://files.londonkaraoke.club/db.php'));
     const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', { databaseURL: '', apiKey: '' }));
     const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready?", ctaText: "Book now.", ctaButtonText: "Book" }));
     const [isDataLoading, setIsDataLoading] = useState(false);
@@ -299,6 +300,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return [];
         } catch (e) { return []; }
     };
+
+    useEffect(() => {
+        loadFromHostinger();
+    }, []);
 
     return (
         <DataContext.Provider value={{
