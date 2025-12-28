@@ -263,12 +263,12 @@ const INITIAL_FAQ: FAQData = {
     heading: "Common Questions", 
     subtext: "Everything you need to know before you sing your heart out.", 
     items: [
-        { question: "Do you accept walk-ins?", answer: "No, we operate on a pre-booking basis only. Advance prebooking is required—no walk-ins allowed, ensuring your group enjoys an exclusive space." },
-        { question: "What are your opening hours?", answer: "We are open daily from 2pm until 3am, outlasting most competitors in the Soho area." },
-        { question: "Where are you located?", answer: "We are at the heart of London’s nightlife in Soho, steps from Oxford Street, Bond Street, Tottenham Court Road, and minutes from the West End." },
-        { question: "How many songs do you have?", answer: "We deliver 60,000+ songs through studio-quality sound equipment, with 400+ new songs added monthly via Daily Updates." },
-        { question: "What size groups can you host?", answer: "Our private spaces with dedicated private entrances host groups of 10 to 50+ for hen dos, birthdays, weddings, or corporate events." },
-        { question: "Can I customize the sound?", answer: "Yes! Guests use a Remote Controller via smartphones to add tracks, customize key and tempo, and even tweak vocals for lead or backup." }
+        { question: "Do you accept walk-ins?", answer: "No, we operate on a pre-booking basis only. Advance prebooking is required—no walk-ins allowed, ensuring your group of 10 to 50+ enjoys an exclusive, open space." },
+        { question: "What are your opening hours?", answer: "We are open daily from 2pm to 3am, hosting Soho’s late-night cast parties and celebrations." },
+        { question: "How many songs do you have?", answer: "We deliver 60,000+ songs through studio-quality sound equipment, updated daily with 400+ new tracks every month." },
+        { question: "What size groups can you accommodate?", answer: "Our private spaces with dedicated private entrances host groups of 10 to 50+ for hen dos, birthdays, weddings, or corporate events." },
+        { question: "Where are you located?", answer: "We are steps from Oxford Street, Bond Street, and Tottenham Court Road, at the heart of London’s Soho nightlife." },
+        { question: "How do I browse songs?", answer: "Guests use our Remote Controller via their smartphones to browse the 60,000+ song library and add tracks to the queue instantly." }
     ] 
 };
 
@@ -340,7 +340,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.5" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.6" 
     }, null, 2);
 
     const importDatabase = (json: any) => {
