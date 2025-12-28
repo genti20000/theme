@@ -63,6 +63,8 @@ export interface FAQData { heading: string; subtext: string; items: FAQItem[]; }
 export interface EventSection { id: string; title: string; subtitle: string; description: string; imageUrl: string; features: string[]; }
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
 
+export interface TermItem { title: string; content: string; }
+
 export interface FirebaseConfig { databaseURL: string; apiKey: string; }
 
 interface DataContextType {
@@ -96,6 +98,8 @@ interface DataContextType {
     updateFaqData: React.Dispatch<React.SetStateAction<FAQData>>;
     eventsData: EventsData;
     updateEventsData: React.Dispatch<React.SetStateAction<EventsData>>;
+    termsData: TermItem[];
+    updateTermsData: React.Dispatch<React.SetStateAction<TermItem[]>>;
     songs: Song[];
     updateSongs: React.Dispatch<React.SetStateAction<Song[]>>;
     adminPassword: string;
@@ -142,6 +146,11 @@ const INITIAL_DRINKS: DrinksData = {
     cocktailsData: [], winesData: []
 };
 
+const INITIAL_TERMS: TermItem[] = [
+    { title: "Age Restriction:", content: "– Our venue is strictly for guests aged 18 and over." },
+    { title: "Booking Times:", content: "– All guests must vacate the premises no later than closing time." }
+];
+
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -162,9 +171,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved", subtext: "", items: [] }));
-    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { heading: "", sections: [], footerTitle: "", footerText: "", footerHighlight: "" }));
-    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "", subtitle: "", image: "" }, sections: [] }));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved", subtext: "Reviews from around the web.", items: [] }));
+    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { heading: "Private Karaoke in Soho", sections: [], footerTitle: "Ready?", footerText: "Plan your night.", footerHighlight: "No chains, just LKC." }));
+    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Epic Events", subtitle: "Private bookings in Soho.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
+    const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', 'https://files.londonkaraoke.club/db.php'));
@@ -195,6 +205,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('testimonialsData', testimonialsData); }, [testimonialsData]);
     useEffect(() => { persist('infoSectionData', infoSectionData); }, [infoSectionData]);
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
+    useEffect(() => { persist('termsData', termsData); }, [termsData]);
     useEffect(() => { persist('songs', songs); }, [songs]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
     useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
@@ -203,7 +214,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, songs, adminPassword, version: "5.0" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.1" 
     }, null, 2);
 
     const importDatabase = (json: any) => {
@@ -223,6 +234,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
             if (c.infoSectionData) setInfoSectionData(c.infoSectionData);
             if (c.eventsData) setEventsData(c.eventsData);
+            if (c.termsData) setTermsData(c.termsData);
             if (c.songs) setSongs(c.songs);
             return true;
         } catch (e) { return false; }
@@ -314,7 +326,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
             blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
-            eventsData, updateEventsData: setEventsData, songs, updateSongs: setSongs,
+            eventsData, updateEventsData: setEventsData, termsData, updateTermsData: setTermsData,
+            songs, updateSongs: setSongs,
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             firebaseConfig, updateFirebaseConfig: setFirebaseConfig, isDataLoading,
             purgeCache: () => { localStorage.clear(); window.location.reload(); },
