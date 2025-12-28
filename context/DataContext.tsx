@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
 // --- Types ---
@@ -50,7 +51,6 @@ export interface TestimonialsData { heading: string; subtext: string; items: Tes
 
 export interface InfoSectionData {
     heading: string;
-    intro: string;
     sections: { title: string; content: string; color?: string; }[];
     footerTitle: string;
     footerText: string;
@@ -123,158 +123,32 @@ interface DataContextType {
 const INITIAL_SEO: HeaderData = { 
     logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png",
     siteTitle: "London Karaoke Club | Private Rooms Soho",
-    siteDescription: "Luxury private karaoke booths in London Soho. 60,000+ songs, cocktails and more.",
+    siteDescription: "Luxury private karaoke booths in London Soho. 80,000+ songs, cocktails and more.",
     faviconUrl: "/favicon.svg"
 };
 
 const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
-const INITIAL_HIGHLIGHTS: HighlightsData = { heading: "Get Loud.", subtext: "The ultimate private karaoke experience in London Soho. High-end systems, plush decor, and enough energy to power the city.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Soho Suites", "60,000+ Songs", "Premium Cocktail Bar", "Full Table Service"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
+const INITIAL_HIGHLIGHTS: HighlightsData = { heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs", "Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
 const INITIAL_FEATURES: FeaturesData = {
-    experience: { label: "The Experience", heading: "Your Private Stage", text: "We're not a box. We're a world. Every room at LKC is individually designed with top-tier sound and neon aesthetics to make every song feel like a concert.", image: "https://picsum.photos/seed/room/1200/800" },
-    occasions: { heading: "Every Occasion", text: "Whether it's a birthday, a corporate team build, or just a Tuesday night out, we have the space and the spirit.", items: [{title: "Hen & Stag Parties", text: "Prosecco packages, dedicated hosts, and your favorite anthems."}, {title: "Corporate Events", text: "Impress the team with something better than a pub quiz."}, {title: "Birthdays", text: "The perfect destination to celebrate another trip around the sun."}] },
-    grid: { heading: "The LKC Vibe", items: [{title: "Massive Library", description: "60,000+ songs in every language and genre.", image: "https://picsum.photos/seed/library/400/400"}, {title: "Neon Soho", description: "Vibrant lighting that follows your voice.", image: "https://picsum.photos/seed/neon/400/400"}, {title: "Signature Drinks", description: "Artisan cocktails delivered to your door.", image: "https://picsum.photos/seed/cocktail/400/400"}] }
+    experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
+    occasions: { heading: "Every Occasion", text: "Parties of all sizes.", items: [{title: "Hen Parties", text: "Bubbles and songs."}] },
+    grid: { heading: "Features", items: [{title: "Neon Lighting", description: "Vibrant vibes.", image: "https://picsum.photos/seed/neon/400/400"}] }
 };
-const INITIAL_VIBE: VibeData = { label: "The Vibe", heading: "Soho Nights", text: "When the sun goes down, the volume goes up. Join the energy of London's most iconic party district.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "SING IT LOUD", bottomText: "Open until 3AM daily for those who aren't ready to call it a night." };
-const INITIAL_STATS: BatteryData = { statPrefix: "Over", statNumber: "60K", statSuffix: "Songs", subText: "Updated daily with the latest chart-toppers." };
-const INITIAL_GALLERY: GalleryData = { heading: "Gallery", subtext: "Moments from the heart of Soho.", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'Karaoke Room 1'}] };
-
+const INITIAL_VIBE: VibeData = { label: "The Vibe", heading: "Soho Nights", text: "Join the energy.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Hard", bottomText: "Until 3AM." };
+const INITIAL_STATS: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." };
+const INITIAL_GALLERY: GalleryData = { heading: "Gallery", subtext: "Moments from Soho", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}] };
+const INITIAL_BLOG: BlogData = { heading: "LKC Stories", subtext: "News and events.", posts: [{id: '1', title: 'Welcome', date: '2024-01-01', excerpt: 'Site launched.', content: 'Welcome to LKC.', imageUrl: 'https://picsum.photos/seed/blog/800/600'}] };
+const INITIAL_FAQ: FAQData = { heading: "FAQ", subtext: "Questions?", items: [{question: "Where is it?", answer: "Soho, London."}] };
 const INITIAL_DRINKS: DrinksData = {
     headerImageUrl: "https://picsum.photos/seed/bar/1600/800",
-    packagesData: { 
-        title: "Drinks Packages", 
-        subtitle: "Pre-order for the best value and have them waiting in your room.", 
-        items: [
-            { name: "Bronze Package", price: "£150", description: "2 Bottles of Prosecco, 10 Beers or Ciders, 2 Sharing Platters" },
-            { name: "Silver Package", price: "£250", description: "1 Bottle of House Spirit (Vodka/Gin/Rum), Mixers, 10 Beers, 2 Sharing Platters" },
-            { name: "Gold Package", price: "£400", description: "1 Bottle of Premium Spirit (Grey Goose/Hendricks), Mixers, 2 Bottles of Champagne, 3 Sharing Platters" },
-            { name: "Diamond Package", price: "£600", description: "Magnum of Grey Goose, Unlimited Mixers, Magnum of Moët Champagne, extensive food platter selection" }
-        ], 
-        notes: ["* Service charge included in package prices", "* Pre-booking required 24hrs in advance"] 
-    },
-    cocktailsData: [
-        {
-            category: "Signatures",
-            items: [
-                { name: "Mic Drop", price: "12.50", description: "Vodka, passion fruit, vanilla, shot of prosecco on the side." },
-                { name: "Purple Rain", price: "11.50", description: "Gin, cherry brandy, blue curacao, lemon, soda." },
-                { name: "Bohemian Rhapsody", price: "12.00", description: "Rum, pineapple, coconut cream, dark rum float." },
-                { name: "Sweet Caroline", price: "11.50", description: "Pink gin, strawberries, lime, elderflower tonic." }
-            ]
-        },
-        {
-            category: "Classics",
-            items: [
-                { name: "Espresso Martini", price: "12.00", description: "Vodka, coffee liqueur, fresh espresso." },
-                { name: "Mojito", price: "11.00", description: "White rum, lime, mint, sugar, soda. (Also available in Strawberry/Passion Fruit)" },
-                { name: "Old Fashioned", price: "12.50", description: "Bourbon, sugar, bitters, orange twist." },
-                { name: "Margarita", price: "11.50", description: "Tequila, lime, triple sec, salt rim." }
-            ]
-        }
-    ],
-    winesData: [
-        {
-            category: "Wine & Bubbles",
-            items: [
-                { name: "House White/Red/Rose", price: { "175ml": "7.50", "250ml": "9.50", "Btl": "28.00" }, description: "Pinot Grigio / Merlot / Pinot Blush" },
-                { name: "Prosecco DOC", price: { "Btl": "38.00" }, description: "Extra Dry, Italy" },
-                { name: "Moët & Chandon Brut", price: { "Btl": "95.00" }, description: "Champagne, France" },
-                { name: "Veuve Clicquot Yellow Label", price: { "Btl": "110.00" }, description: "Champagne, France" },
-                { name: "Laurent-Perrier Rosé", price: { "Btl": "160.00" }, description: "Champagne, France" }
-            ]
-        }
-    ],
-    bottleServiceData: [
-        {
-            category: "Vodka",
-            items: [
-                { name: "Absolut Blue", price: "£140" },
-                { name: "Ciroc (Flavours)", price: "£170" },
-                { name: "Grey Goose", price: "£180" },
-                { name: "Belvedere", price: "£185" }
-            ]
-        },
-        {
-            category: "Gin",
-            items: [
-                { name: "Beefeater", price: "£140" },
-                { name: "Bombay Sapphire", price: "£150" },
-                { name: "Hendrick's", price: "£160" },
-                { name: "Tanqueray 10", price: "£175" }
-            ]
-        }
-    ],
-    byTheGlassData: [
-        {
-            category: "Beers & Ciders",
-            items: [
-                { name: "Asahi Super Dry", price: "6.00" },
-                { name: "Peroni Nastro Azzurro", price: "6.00" },
-                { name: "Camden Hells Lager", price: "6.50" },
-                { name: "Brewdog Punk IPA", price: "6.50" },
-                { name: "Old Mout Cider (Berries)", price: "6.50" }
-            ]
-        }
-    ],
-    shotsData: {
-        title: "Shots",
-        items: [
-            { name: "Tequila Rose", single: "5.00", double: "9.00" },
-            { name: "Jägermeister", single: "5.00", double: "9.00" },
-            { name: "Sambuca (White/Black)", single: "5.00", double: "9.00" },
-            { name: "Baby Guinness", single: "5.50", double: "10.00" }
-        ],
-        shooters: {
-            title: "Shooter Boards",
-            prices: "6 Shots for £25 | 12 Shots for £45",
-            items: [
-                { name: "Jammy Dodger", description: "Chambord, cream, sugar rim" },
-                { name: "Skittle Bomb", description: "Cointreau with Red Bull" }
-            ]
-        }
-    }
-};
-
-const INITIAL_INFO: InfoSectionData = {
-    heading: "Private Karaoke in Soho | London Karaoke Club",
-    intro: "Welcome to London Karaoke Club, Soho’s premier destination for private karaoke, open daily from 2pm to 3am. Steps from Oxford Street, Bond Street, Tottenham Court Road, and minutes from London Bridge, Victoria, Marylebone, and the West End, we’re at the heart of London’s nightlife.\n\nSay goodbye to chain karaoke’s claustrophobic, padded boxes. Our entire private spaces with dedicated private entrances host groups of 10 to 50+ for hen dos, birthdays, weddings, or corporate events, delivering 60,000+ songs through studio-quality sound equipment. Advance prebooking is essential—no walk-ins allowed. Prebook your private karaoke night and sing until 3am in Soho’s open, electric spaces!",
-    sections: [
-        { 
-            title: "No Boxes, Just Epic Sound", 
-            content: "We’re not a franchise. No imprisoned, padded rooms or lifeless playlists. Our entire private spaces are your personal club: velvet drapes, fairy lights, open layouts, and studio-quality sound equipment that delivers crystal-clear audio, outshining most London venues. With 60,000+ songs, guests use the Remote Controller to browse via smartphones and add tracks to the Queue. Customize with Custom Key & Tempo, tweak Customizable Vocals for lead or backup, and enjoy 400+ new songs monthly via Daily Updates. Explore our song catalogue for 10 to 50+ guests in a vibrant, unconfined space, secured by prebooking.", 
-            color: "pink-500" 
-        },
-        { 
-            title: "Soho’s Premier Locations", 
-            content: "Our venues are Soho’s pulse, surrounded by Mayfair, Marylebone, and the West End. Hidden in plain sight, our spaces open into electric, open areas with private entrances, perfect for groups of 10 to 50+. Open 2pm to 3am daily, we outlast competitors, hosting late-night cast parties, tour wrap-ups, or work celebrations. Prebook in advance—no walk-ins ensures your exclusive space. Our 5-star service delivers better value than pricy chains, and if you’re lost, we’ll guide you to your private entrance.", 
-            color: "white" 
-        },
-        { 
-            title: "Gourmet Treats, Vibrant Nights", 
-            content: "Indulge in delicious sharing platters, gourmet snacks, and reasonably priced cocktails, crafted for groups of 10 to 50+ at hen parties, birthdays, or corporate events. Our menu, paired with studio-quality sound in open spaces, elevates your late-night karaoke until 3am. See our event packages to plan a prebooked night that surpasses Soho’s boxed venues.", 
-            color: "white" 
-        }
-    ],
-    footerTitle: "Prebook Your Exclusive Space",
-    footerText: "Advance prebooking is required—no walk-ins allowed, ensuring your group of 10 to 50+ enjoys an exclusive, open space with a private entrance Soho venues. Use our instant online booking or WhatsApp for tailored planning. Open 2pm to 3am daily, we deliver flawless execution. Missing a song? Contact us to add it!",
-    footerHighlight: "Prebook Now | Plan via WhatsApp. No chains, no boxes—just your private, spectacular night in Soho."
-};
-
-const INITIAL_FAQ: FAQData = { 
-    heading: "Common Questions", 
-    subtext: "Everything you need to know before you sing your heart out.", 
-    items: [
-        { question: "Do you accept walk-ins?", answer: "No, we operate on a pre-booking basis only. Advance prebooking is required—no walk-ins allowed, ensuring your group of 10 to 50+ enjoys an exclusive, open space." },
-        { question: "What are your opening hours?", answer: "We are open daily from 2pm to 3am, hosting Soho’s late-night cast parties and celebrations." },
-        { question: "How many songs do you have?", answer: "We deliver 60,000+ songs through studio-quality sound equipment, updated daily with 400+ new tracks every month." },
-        { question: "What size groups can you accommodate?", answer: "Our private spaces with dedicated private entrances host groups of 10 to 50+ for hen dos, birthdays, weddings, or corporate events." },
-        { question: "Where are you located?", answer: "We are steps from Oxford Street, Bond Street, and Tottenham Court Road, at the heart of London’s Soho nightlife." },
-        { question: "How do I browse songs?", answer: "Guests use our Remote Controller via their smartphones to browse the 60,000+ song library and add tracks to the queue instantly." }
-    ] 
+    packagesData: { title: "Packages", subtitle: "Groups", items: [], notes: [] },
+    bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } },
+    cocktailsData: [], winesData: []
 };
 
 const INITIAL_TERMS: TermItem[] = [
-    { title: "Age Restriction:", content: "– Our venue is strictly for guests aged 18 and over. Valid physical ID is required for entry." },
-    { title: "Booking Times:", content: "– All guests must vacate the premises no later than closing time. Prebooking required 24hrs in advance for packages." }
+    { title: "Age Restriction:", content: "– Our venue is strictly for guests aged 18 and over." },
+    { title: "Booking Times:", content: "– All guests must vacate the premises no later than closing time." }
 ];
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -293,19 +167,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', INITIAL_VIBE));
     const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_STATS));
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY));
-    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', { heading: "LKC Stories", subtext: "News and events from Soho.", posts: [] }));
+    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG));
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
-    const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', [{category: "Sharing Platters", items: [{name: "Party Platter", description: "Mini sliders, wings, and fries.", price: "25.00"}]} ]));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved on Google", subtext: "Real reviews from our Soho regulars.", items: [{name: "Sarah W.", quote: "Best night in Soho! The cocktails are incredible.", avatar: "", rating: 5, date: "2 days ago"}] }));
-    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', INITIAL_INFO));
+    const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved", subtext: "Reviews from around the web.", items: [] }));
+    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { heading: "Private Karaoke in Soho", sections: [], footerTitle: "Ready?", footerText: "Plan your night.", footerHighlight: "No chains, just LKC." }));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Epic Events", subtitle: "Private bookings in Soho.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', 'https://files.londonkaraoke.club/db.php'));
     const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', { databaseURL: '', apiKey: '' }));
-    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready to sing?", ctaText: "Check availability and book your room online. Advance booking only.", ctaButtonText: "Book Now" }));
+    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready?", ctaText: "Book now.", ctaButtonText: "Book" }));
     const [isDataLoading, setIsDataLoading] = useState(false);
 
     useEffect(() => {
@@ -340,7 +214,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.6" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.1" 
     }, null, 2);
 
     const importDatabase = (json: any) => {

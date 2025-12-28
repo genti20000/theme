@@ -1,9 +1,51 @@
+
 import React, { useState } from 'react';
-import { useData } from '../context/DataContext';
 
 const FAQ: React.FC = () => {
-    const { faqData } = useData();
     const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+    const faqData = [
+        {
+            question: "What are the opening hours?",
+            answer: "We are open daily from 2pm to 3am. Perfect for afternoon warm-ups or late-night encores."
+        },
+        {
+            question: "Do I need to book in advance?",
+            answer: "Yes, pre-booking is essential to guarantee your private room. We do not accept walk-ins. You can check real-time availability and book instantly through our website."
+        },
+        {
+            question: "What is the cost of booking a karaoke room?",
+            answer: "Prices vary based on group size, day of the week, and booking duration (minimum 2 hours). Please check our booking system for exact pricing for your group."
+        },
+        {
+            question: "Is food and drink included?",
+            answer: "The booking fee covers exclusive use of the room. Food and drinks are ordered separately from our delicious menu. We also offer pre-booked drinks packages for better value."
+        },
+        {
+            question: "Can I bring my own food and drinks?",
+            answer: "No outside food or drinks are permitted. Don't worry, our bar is fully stocked with cocktails, beers, wines, and soft drinks, plus a great food menu!"
+        },
+        {
+            question: "Is there an age limit?",
+            answer: "Yes, we are a strictly 18+ venue. Valid photo ID (Passport or Driving License) is required for entry."
+        },
+        {
+            question: "Do you have a dress code?",
+            answer: "We love a bit of sparkle! The dress code is smart-casual, but feel free to glam up, wear costumes, or bring props. Just be fabulous."
+        },
+        {
+            question: "How many songs do you have?",
+            answer: "Our library boasts over 80,000 songs in multiple languages, updated monthly. From rock anthems to pop classics, we've got your jam."
+        },
+        {
+            question: "Can I extend my booking on the night?",
+            answer: "If there is no booking immediately after yours, we are happy to extend your session! Just ask a member of our team early on."
+        },
+        {
+            question: "How do I contact you?",
+            answer: "The fastest way to reach us is via the WhatsApp button on this screen. Alternatively, you can email us for corporate or large event enquiries."
+        }
+    ];
 
     const toggleFAQ = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
@@ -18,13 +60,13 @@ const FAQ: React.FC = () => {
       <div className="container mx-auto px-6 max-w-3xl relative z-10">
         <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 mb-6">
-                {faqData.heading}
+                Common Questions
             </h2>
-            <p className="text-gray-400 text-lg">{faqData.subtext}</p>
+            <p className="text-gray-400 text-lg">Everything you need to know before you sing your heart out.</p>
         </div>
         
         <div className="space-y-4">
-            {faqData.items.map((item, index) => (
+            {faqData.map((item, index) => (
                 <div 
                     key={index} 
                     className={`bg-zinc-900 border rounded-2xl overflow-hidden transition-all duration-300 ${
