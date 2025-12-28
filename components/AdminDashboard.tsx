@@ -1,6 +1,6 @@
 
-import React, { useState, useRef } from 'react';
-import { useData } from '../context/DataContext';
+import React, { useState, useRef, useEffect } from 'react';
+import { useData, DrinkCategory } from '../context/DataContext';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-sm">
@@ -15,14 +15,14 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ t
 const Input: React.FC<{ label: string; value: string; onChange: (v: string) => void; type?: string }> = ({ label, value, onChange, type = 'text' }) => (
   <div className="mb-6">
     <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-    <input type={type} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium" value={value || ''} onChange={(e) => onChange(e.target.value)} />
+    <input type={type} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium text-sm" value={value || ''} onChange={(e) => onChange(e.target.value)} />
   </div>
 );
 
 const TextArea: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
   <div className="mb-6">
     <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-    <textarea rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium leading-relaxed" value={value || ''} onChange={(e) => onChange(e.target.value)} />
+    <textarea rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium leading-relaxed text-sm" value={value || ''} onChange={(e) => onChange(e.target.value)} />
   </div>
 );
 
@@ -30,18 +30,80 @@ const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passInput, setPassInput] = useState('');
   const [tab, setTab] = useState('seo');
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [activeLibraryCallback, setActiveLibraryCallback] = useState<(url: string) => void>(() => {});
+  const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
+
   const { 
     isDataLoading, headerData, updateHeaderData, heroData, updateHeroData, highlightsData, updateHighlightsData,
     batteryData, updateBatteryData, galleryData, updateGalleryData, blogData, updateBlogData, 
     faqData, updateFaqData, songs, updateSongs, adminPassword, updateAdminPassword, syncUrl, updateSyncUrl,
-    firebaseConfig, updateFirebaseConfig, saveToHostinger, saveToFirebase, uploadFile, purgeCache,
+    firebaseConfig, updateFirebaseConfig, saveToHostinger, uploadFile, purgeCache,
     featuresData, updateFeaturesData, vibeData, updateVibeData, foodMenu, updateFoodMenu,
     drinksData, updateDrinksData, testimonialsData, updateTestimonialsData,
     infoSectionData, updateInfoSectionData, eventsData, updateEventsData,
-    termsData, updateTermsData
+    termsData, updateTermsData, fetchServerFiles
   } = useData();
 
-  const fileRef = useRef<HTMLInputElement>(null);
+  const batchFileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isLibraryOpen) {
+      fetchServerFiles().then(setStorageFiles);
+    }
+  }, [isLibraryOpen, fetchServerFiles]);
+
+  const MediaPicker: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploading(true);
+      const url = await uploadFile(file);
+      if (url) onChange(url);
+      setUploading(false);
+    };
+
+    const openLibrary = () => {
+      setActiveLibraryCallback(() => (url: string) => {
+        onChange(url);
+        setIsLibraryOpen(false);
+      });
+      setIsLibraryOpen(true);
+    };
+
+    const isVideo = value?.toLowerCase().match(/\.(mp4|webm|mov)$/);
+
+    return (
+      <div className="mb-6">
+        <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="w-full sm:w-32 h-32 bg-zinc-800 rounded-2xl border border-zinc-700 flex-shrink-0 overflow-hidden relative group">
+            {value ? (
+              isVideo ? (
+                <video src={value} className="w-full h-full object-cover" />
+              ) : (
+                <img src={value} className="w-full h-full object-cover" alt="Preview" />
+              )
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-zinc-600 text-[10px] uppercase font-bold px-2 text-center">No Media</div>
+            )}
+            {uploading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><div className="w-5 h-5 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>}
+          </div>
+          <div className="flex-1 space-y-2">
+            <input className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white outline-none focus:border-pink-500 transition-all font-medium text-xs" placeholder="URL Address" value={value || ''} onChange={(e) => onChange(e.target.value)} />
+            <div className="flex gap-2">
+              <button onClick={() => inputRef.current?.click()} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-black uppercase py-2.5 rounded-xl border border-zinc-700 transition-all">Upload Local</button>
+              <button onClick={openLibrary} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-black uppercase py-2.5 rounded-xl border border-zinc-700 transition-all">From Storage</button>
+            </div>
+            <input type="file" ref={inputRef} onChange={handleUpload} className="hidden" />
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const handleBatchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -90,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 } else {
     if (isset($_GET['list'])) {
-        $files = array_diff(scandir($upload_dir), ['.', '..']);
+        $files = is_dir($upload_dir) ? array_diff(scandir($upload_dir), ['.', '..']) : [];
         $result = [];
         foreach($files as $f) $result[] = ['name'=>$f, 'url'=>'https://'.$_SERVER['HTTP_HOST'].'/'.$upload_dir.$f];
         echo json_encode(['success'=>true, 'files'=>$result]);
@@ -104,6 +166,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>`;
 
+  const DrinkCategoryEditor = ({ title, data, setter }: { title: string, data: DrinkCategory[], setter: (val: DrinkCategory[]) => void }) => (
+    <div className="mb-10">
+        <h4 className="text-lg font-black text-pink-500 uppercase mb-4">{title}</h4>
+        {data.map((cat, ci) => (
+            <div key={ci} className="bg-zinc-800/30 p-4 rounded-2xl mb-4 border border-zinc-800">
+                <div className="flex gap-4 items-end mb-4">
+                    <Input label="Category" value={cat.category} onChange={v => {
+                        const next = [...data]; next[ci].category = v; setter(next);
+                    }} />
+                    <button onClick={() => setter(data.filter((_, idx) => idx !== ci))} className="mb-6 bg-red-900/20 text-red-500 p-3 rounded-xl">×</button>
+                </div>
+                {cat.items.map((item, ii) => (
+                    <div key={ii} className="grid grid-cols-12 gap-2 mb-2 items-center">
+                        <div className="col-span-4"><input className="w-full bg-zinc-900 p-2 rounded text-xs text-white" value={item.name} onChange={e => {
+                            const next = [...data]; next[ci].items[ii].name = e.target.value; setter(next);
+                        }} placeholder="Name" /></div>
+                        <div className="col-span-5"><input className="w-full bg-zinc-900 p-2 rounded text-xs text-white" value={item.description || ''} onChange={e => {
+                            const next = [...data]; next[ci].items[ii].description = e.target.value; setter(next);
+                        }} placeholder="Desc" /></div>
+                        <div className="col-span-2"><input className="w-full bg-zinc-900 p-2 rounded text-xs text-white" value={typeof item.price === 'object' ? JSON.stringify(item.price) : item.price} onChange={e => {
+                            const next = [...data];
+                            try {
+                                next[ci].items[ii].price = e.target.value.startsWith('{') ? JSON.parse(e.target.value) : e.target.value;
+                            } catch(err) { next[ci].items[ii].price = e.target.value; }
+                            setter(next);
+                        }} placeholder="Price" /></div>
+                        <button onClick={() => {
+                            const next = [...data]; next[ci].items = next[ci].items.filter((_, idx) => idx !== ii); setter(next);
+                        }} className="col-span-1 text-red-500">×</button>
+                    </div>
+                ))}
+                <button onClick={() => {
+                    const next = [...data]; next[ci].items.push({name: 'New Item', price: '0.00'}); setter(next);
+                }} className="text-[10px] font-black uppercase text-zinc-500 mt-2 hover:text-white">+ Add Item</button>
+            </div>
+        ))}
+        <button onClick={() => setter([...data, {category: 'New Cat', items: []}])} className="w-full py-2 border border-zinc-700 rounded-xl text-[10px] uppercase font-black text-zinc-500">+ Add Category</button>
+    </div>
+  );
+
   if (!isAuthenticated) return (
     <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white">
       <div className="bg-zinc-900 p-12 rounded-[3rem] border border-zinc-800 w-full max-w-md shadow-2xl">
@@ -116,10 +218,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20 font-sans">
+      {/* Media Library Modal */}
+      {isLibraryOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+          <div className="bg-zinc-900 w-full max-w-5xl h-[80vh] rounded-[3rem] border border-zinc-800 flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-8 border-b border-zinc-800 flex justify-between items-center">
+              <h3 className="text-2xl font-black uppercase tracking-tighter italic">LKC <span className="text-pink-500">Media Library</span></h3>
+              <button onClick={() => setIsLibraryOpen(false)} className="bg-zinc-800 p-3 rounded-full hover:bg-zinc-700 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              {storageFiles.map((file, idx) => (
+                <button 
+                  key={idx} 
+                  onClick={() => activeLibraryCallback(file.url)}
+                  className="aspect-square bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-pink-500 transition-all relative group shadow-lg"
+                >
+                  {file.url.toLowerCase().match(/\.(mp4|webm|mov)$/) ? (
+                    <video src={file.url} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={file.url} className="w-full h-full object-cover" alt="" />
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="bg-pink-500 text-white text-[10px] font-black uppercase px-4 py-2 rounded-full">Select</span>
+                  </div>
+                </button>
+              ))}
+              {storageFiles.length === 0 && <div className="col-span-full py-20 text-center text-zinc-500 font-bold uppercase tracking-widest text-sm">No assets found on server.</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800 sticky top-0 z-50 p-6 flex justify-between items-center px-10">
         <h2 className="text-2xl font-black uppercase tracking-tighter">London <span className="text-pink-500">Karaoke</span> Club</h2>
         <div className="flex gap-4">
-            <button onClick={saveToFirebase} disabled={isDataLoading} className="bg-orange-600 hover:bg-orange-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Firebase Sync</button>
             <button onClick={saveToHostinger} disabled={isDataLoading} className="bg-pink-600 hover:bg-pink-500 px-10 py-3 rounded-xl text-[12px] font-black uppercase tracking-widest animate-pulse shadow-xl">
                 {isDataLoading ? 'Syncing...' : 'Save All Changes'}
             </button>
@@ -127,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <div className="flex bg-zinc-900/50 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-8 sticky top-[88px] z-40 backdrop-blur-md">
-        {['seo', 'hero', 'about', 'features', 'vibe', 'stats', 'testimonials', 'food', 'drinks', 'events', 'faq', 'songs', 'blog', 'gallery', 'terms', 'config'].map(t => (
+        {['seo', 'hero', 'about', 'features', 'vibe', 'stats', 'food', 'drinks', 'events', 'blog', 'faq', 'info', 'gallery', 'terms', 'config'].map(t => (
             <button key={t} onClick={() => setTab(t)} className={`px-4 py-5 uppercase font-black text-[10px] tracking-widest transition-all relative flex-shrink-0 ${tab === t ? 'text-pink-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
                 {t}
                 {tab === t && <div className="absolute bottom-0 left-0 right-0 h-1 bg-pink-500"></div>}
@@ -140,8 +274,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <SectionCard title="Global Identity">
                 <Input label="Site Browser Title" value={headerData.siteTitle} onChange={v => updateHeaderData(prev => ({...prev, siteTitle: v}))} />
                 <TextArea label="SEO Meta Description" value={headerData.siteDescription} onChange={v => updateHeaderData(prev => ({...prev, siteDescription: v}))} />
-                <Input label="Logo SVG/PNG URL" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
-                <Input label="Favicon URL" value={headerData.faviconUrl} onChange={v => updateHeaderData(prev => ({...prev, faviconUrl: v}))} />
+                <MediaPicker label="Logo Media" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
+                <MediaPicker label="Favicon Media" value={headerData.faviconUrl} onChange={v => updateHeaderData(prev => ({...prev, faviconUrl: v}))} />
             </SectionCard>
         )}
 
@@ -151,17 +285,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <Input label="Hero Title" value={heroData.headingText} onChange={v => updateHeroData(prev => ({...prev, headingText: v}))} />
                 <TextArea label="Subheading" value={heroData.subText} onChange={v => updateHeroData(prev => ({...prev, subText: v}))} />
                 <div className="space-y-4">
-                    <label className="text-[11px] font-black text-zinc-500 uppercase">Slide Backgrounds (URLs)</label>
+                    <label className="text-[11px] font-black text-zinc-500 uppercase">Slide Backgrounds</label>
                     {heroData.slides.map((s, i) => (
-                        <div key={i} className="flex gap-4">
-                            <input className="flex-1 bg-zinc-800 border border-zinc-700 p-3 rounded-xl text-xs text-white" value={s} onChange={e => {
+                        <div key={i} className="bg-zinc-800/20 p-4 rounded-2xl border border-zinc-800">
+                            <MediaPicker label={`Slide ${i + 1}`} value={s} onChange={v => {
                                 updateHeroData(prev => {
                                   const next = [...prev.slides];
-                                  next[i] = e.target.value;
+                                  next[i] = v;
                                   return { ...prev, slides: next };
                                 });
                             }} />
-                            <button onClick={() => updateHeroData(prev => ({...prev, slides: prev.slides.filter((_, idx) => idx !== i)}))} className="bg-red-900/20 text-red-500 px-4 rounded-xl font-black">×</button>
+                            <button onClick={() => updateHeroData(prev => ({...prev, slides: prev.slides.filter((_, idx) => idx !== i)}))} className="text-red-500 text-[10px] font-black uppercase">Remove Slide</button>
                         </div>
                     ))}
                     <button onClick={() => updateHeroData(prev => ({...prev, slides: [...prev.slides, '']}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW SLIDE</button>
@@ -173,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <SectionCard title="The Soho Highlights">
                 <Input label="Main Heading" value={highlightsData.heading} onChange={v => updateHighlightsData(prev => ({...prev, heading: v}))} />
                 <TextArea label="Subtext" value={highlightsData.subtext} onChange={v => updateHighlightsData(prev => ({...prev, subtext: v}))} />
-                <Input label="Main Background Image" value={highlightsData.mainImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, mainImageUrl: v}))} />
+                <MediaPicker label="Main Section Image" value={highlightsData.mainImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, mainImageUrl: v}))} />
                 <Input label="Features Title" value={highlightsData.featureListTitle} onChange={v => updateHighlightsData(prev => ({...prev, featureListTitle: v}))} />
                 <div className="space-y-4">
                     <label className="text-[11px] font-black text-zinc-500 uppercase">Features List</label>
@@ -191,32 +325,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ))}
                     <button onClick={() => updateHighlightsData(prev => ({...prev, featureList: [...prev.featureList, '']}))} className="w-full py-2 bg-zinc-800 text-zinc-500 font-black rounded-xl text-[10px]">+ ADD FEATURE</button>
                 </div>
-                <Input label="Side Circle Image" value={highlightsData.sideImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, sideImageUrl: v}))} />
+                <MediaPicker label="Side Circle Media" value={highlightsData.sideImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, sideImageUrl: v}))} />
             </SectionCard>
         )}
 
         {tab === 'features' && (
             <div className="space-y-12">
                 <SectionCard title="The Experience (Top Section)">
-                    <Input label="Pink Label" value={featuresData.experience.label} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, label: v}}))} />
-                    <Input label="Main Heading" value={featuresData.experience.heading} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, heading: v}}))} />
-                    <TextArea label="Description" value={featuresData.experience.text} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, text: v}}))} />
-                    <Input label="Background Image" value={featuresData.experience.image} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, image: v}}))} />
+                    <Input label="Label" value={featuresData.experience.label} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, label: v}}))} />
+                    <Input label="Heading" value={featuresData.experience.heading} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, heading: v}}))} />
+                    <TextArea label="Text" value={featuresData.experience.text} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, text: v}}))} />
+                    <MediaPicker label="Section Media" value={featuresData.experience.image} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, image: v}}))} />
                 </SectionCard>
-                <SectionCard title="Occasions (The Three Cards)">
-                    <Input label="Section Heading" value={featuresData.occasions.heading} onChange={v => updateFeaturesData(prev => ({...prev, occasions: {...prev.occasions, heading: v}}))} />
-                    <TextArea label="Subtext" value={featuresData.occasions.text} onChange={v => updateFeaturesData(prev => ({...prev, occasions: {...prev.occasions, text: v}}))} />
-                    {featuresData.occasions.items.map((item, i) => (
-                        <div key={i} className="bg-zinc-800/50 p-6 rounded-2xl mb-4 border border-zinc-700">
-                             <Input label="Card Title" value={item.title} onChange={v => {
-                                 const next = [...featuresData.occasions.items];
-                                 next[i].title = v;
-                                 updateFeaturesData(prev => ({...prev, occasions: {...prev.occasions, items: next}}));
+                <SectionCard title="Feature Grid Items">
+                    {featuresData.grid.items.map((item, i) => (
+                        <div key={i} className="bg-zinc-800/30 p-6 rounded-2xl mb-4 border border-zinc-800">
+                             <Input label="Title" value={item.title} onChange={v => {
+                                 const next = [...featuresData.grid.items]; next[i].title = v; updateFeaturesData(prev => ({...prev, grid: {...prev.grid, items: next}}));
                              }} />
-                             <TextArea label="Card Content" value={item.text} onChange={v => {
-                                 const next = [...featuresData.occasions.items];
-                                 next[i].text = v;
-                                 updateFeaturesData(prev => ({...prev, occasions: {...prev.occasions, items: next}}));
+                             <MediaPicker label="Card Media" value={item.image} onChange={v => {
+                                 const next = [...featuresData.grid.items]; next[i].image = v; updateFeaturesData(prev => ({...prev, grid: {...prev.grid, items: next}}));
                              }} />
                         </div>
                     ))}
@@ -225,224 +353,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         )}
 
         {tab === 'vibe' && (
-            <SectionCard title="The Vibe (Fitness/Mood)">
-                <Input label="Purple Label" value={vibeData.label} onChange={v => updateVibeData(prev => ({...prev, label: v}))} />
+            <SectionCard title="The Vibe">
                 <Input label="Heading" value={vibeData.heading} onChange={v => updateVibeData(prev => ({...prev, heading: v}))} />
-                <TextArea label="Subtext" value={vibeData.text} onChange={v => updateVibeData(prev => ({...prev, text: v}))} />
-                <Input label="Upper Image 1" value={vibeData.image1} onChange={v => updateVibeData(prev => ({...prev, image1: v}))} />
-                <Input label="Upper Image 2" value={vibeData.image2} onChange={v => updateVibeData(prev => ({...prev, image2: v}))} />
-                <Input label="Video Background (Optional MP4)" value={vibeData.videoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, videoUrl: v}))} />
-                <Input label="Bottom Big Image" value={vibeData.bigImage} onChange={v => updateVibeData(prev => ({...prev, bigImage: v}))} />
-                <Input label="Bottom Big Heading" value={vibeData.bottomHeading} onChange={v => updateVibeData(prev => ({...prev, bottomHeading: v}))} />
-                <TextArea label="Bottom Big Text" value={vibeData.bottomText} onChange={v => updateVibeData(prev => ({...prev, bottomText: v}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'stats' && (
-            <SectionCard title="The Counter (Battery)">
-                <Input label="Stat Prefix" value={batteryData.statPrefix} onChange={v => updateBatteryData(prev => ({...prev, statPrefix: v}))} />
-                <Input label="Stat Number" value={batteryData.statNumber} onChange={v => updateBatteryData(prev => ({...prev, statNumber: v}))} />
-                <Input label="Stat Suffix" value={batteryData.statSuffix} onChange={v => updateBatteryData(prev => ({...prev, statSuffix: v}))} />
-                <TextArea label="Sub-text" value={batteryData.subText} onChange={v => updateBatteryData(prev => ({...prev, subText: v}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'testimonials' && (
-            <SectionCard title="Reviews Feed">
-                <Input label="Section Heading" value={testimonialsData.heading} onChange={v => updateTestimonialsData(prev => ({...prev, heading: v}))} />
-                <TextArea label="Sub-text" value={testimonialsData.subtext} onChange={v => updateTestimonialsData(prev => ({...prev, subtext: v}))} />
-                {testimonialsData.items.map((item, i) => (
-                    <div key={i} className="bg-zinc-800/50 p-6 rounded-2xl mb-4 border border-zinc-700">
-                        <Input label="Author Name" value={item.name} onChange={v => {
-                            const next = [...testimonialsData.items]; next[i].name = v;
-                            updateTestimonialsData(prev => ({...prev, items: next}));
-                        }} />
-                        <TextArea label="Quote" value={item.quote} onChange={v => {
-                            const next = [...testimonialsData.items]; next[i].quote = v;
-                            updateTestimonialsData(prev => ({...prev, items: next}));
-                        }} />
-                        <Input label="Avatar URL" value={item.avatar} onChange={v => {
-                            const next = [...testimonialsData.items]; next[i].avatar = v;
-                            updateTestimonialsData(prev => ({...prev, items: next}));
-                        }} />
-                        <button onClick={() => updateTestimonialsData(prev => ({...prev, items: prev.items.filter((_, idx) => idx !== i)}))} className="text-red-500 text-[10px] font-black uppercase">Remove Review</button>
-                    </div>
-                ))}
-                <button onClick={() => updateTestimonialsData(prev => ({...prev, items: [...prev.items, {name: 'New Star', quote: 'Epic night!', avatar: '', rating: 5}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl">+ ADD REVIEW</button>
-            </SectionCard>
-        )}
-
-        {tab === 'food' && (
-            <SectionCard title="Performance Fuel (Menu)">
-                {foodMenu.map((cat, ci) => (
-                    <div key={ci} className="mb-10 p-6 border border-zinc-800 rounded-3xl bg-zinc-900/50">
-                        <div className="flex gap-4 items-end mb-6">
-                            <Input label="Category Name" value={cat.category} onChange={v => {
-                                const next = [...foodMenu]; next[ci].category = v; updateFoodMenu(next);
-                            }} />
-                            <button onClick={() => updateFoodMenu(foodMenu.filter((_, idx) => idx !== ci))} className="mb-6 bg-red-900/20 text-red-500 p-3 rounded-xl">×</button>
-                        </div>
-                        <div className="space-y-4">
-                            {cat.items.map((item, ii) => (
-                                <div key={ii} className="grid grid-cols-12 gap-4 items-start">
-                                    <div className="col-span-4"><input className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" value={item.name} onChange={e => {
-                                        const next = [...foodMenu]; next[ci].items[ii].name = e.target.value; updateFoodMenu(next);
-                                    }} placeholder="Item Name" /></div>
-                                    <div className="col-span-6"><input className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" value={item.description} onChange={e => {
-                                        const next = [...foodMenu]; next[ci].items[ii].description = e.target.value; updateFoodMenu(next);
-                                    }} placeholder="Description" /></div>
-                                    <div className="col-span-1"><input className="w-full bg-zinc-800 border border-zinc-700 p-2 rounded text-xs" value={item.price} onChange={e => {
-                                        const next = [...foodMenu]; next[ci].items[ii].price = e.target.value; updateFoodMenu(next);
-                                    }} placeholder="£" /></div>
-                                    <div className="col-span-1"><button onClick={() => {
-                                        const next = [...foodMenu]; next[ci].items = next[ci].items.filter((_, idx) => idx !== ii); updateFoodMenu(next);
-                                    }} className="text-red-500 p-2">×</button></div>
-                                </div>
-                            ))}
-                            <button onClick={() => {
-                                const next = [...foodMenu]; next[ci].items.push({name: '', description: '', price: ''}); updateFoodMenu(next);
-                            }} className="w-full py-2 bg-zinc-800 text-[10px] font-bold rounded-lg">+ ADD ITEM TO {cat.category}</button>
-                        </div>
-                    </div>
-                ))}
-                <button onClick={() => updateFoodMenu([...foodMenu, {category: 'New Category', items: []}])} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl hover:border-pink-500 hover:text-pink-500">+ ADD NEW CATEGORY</button>
+                <MediaPicker label="Circle Image 1" value={vibeData.image1} onChange={v => updateVibeData(prev => ({...prev, image1: v}))} />
+                <MediaPicker label="Circle Image 2" value={vibeData.image2} onChange={v => updateVibeData(prev => ({...prev, image2: v}))} />
+                <MediaPicker label="Background Video (MP4)" value={vibeData.videoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, videoUrl: v}))} />
+                <MediaPicker label="Bottom Full Width Media" value={vibeData.bigImage} onChange={v => updateVibeData(prev => ({...prev, bigImage: v}))} />
             </SectionCard>
         )}
 
         {tab === 'drinks' && (
             <SectionCard title="Libation Library">
-                 <Input label="Hero Header Image" value={drinksData.headerImageUrl} onChange={v => updateDrinksData(prev => ({...prev, headerImageUrl: v}))} />
-                 <SectionCard title="Packages (The Gold Box)">
-                    <Input label="Title" value={drinksData.packagesData.title} onChange={v => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, title: v}}))} />
-                    <Input label="Subtitle" value={drinksData.packagesData.subtitle} onChange={v => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, subtitle: v}}))} />
-                    {drinksData.packagesData.items.map((pkg: any, i: number) => (
-                        <div key={i} className="mb-4 bg-zinc-800 p-4 rounded-xl">
-                            <Input label="Package Name" value={pkg.name} onChange={v => {
-                                const next = [...drinksData.packagesData.items]; next[i].name = v;
-                                updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}}));
-                            }} />
-                            <Input label="Price" value={pkg.price} onChange={v => {
-                                const next = [...drinksData.packagesData.items]; next[i].price = v;
-                                updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}}));
-                            }} />
-                            <TextArea label="Includes" value={pkg.description} onChange={v => {
-                                const next = [...drinksData.packagesData.items]; next[i].description = v;
-                                updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}}));
-                            }} />
-                        </div>
-                    ))}
-                 </SectionCard>
+                <MediaPicker label="Hero Bar Image" value={drinksData.headerImageUrl} onChange={v => updateDrinksData(prev => ({...prev, headerImageUrl: v}))} />
+                <DrinkCategoryEditor title="Cocktails" data={drinksData.cocktailsData} setter={val => updateDrinksData(prev => ({...prev, cocktailsData: val}))} />
+                <DrinkCategoryEditor title="Wines & Champagne" data={drinksData.winesData} setter={val => updateDrinksData(prev => ({...prev, winesData: val}))} />
+                <DrinkCategoryEditor title="Bottle Service" data={drinksData.bottleServiceData} setter={val => updateDrinksData(prev => ({...prev, bottleServiceData: val}))} />
             </SectionCard>
         )}
 
         {tab === 'events' && (
-            <SectionCard title="Event Templates">
-                <Input label="Hero Heading" value={eventsData.hero.title} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, title: v}}))} />
-                <Input label="Hero Subheading" value={eventsData.hero.subtitle} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, subtitle: v}}))} />
-                <Input label="Hero Image" value={eventsData.hero.image} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, image: v}}))} />
-                <div className="space-y-12 mt-12">
-                    {eventsData.sections.map((sec, i) => (
-                        <div key={sec.id} className="p-8 border border-zinc-800 rounded-[2.5rem] bg-zinc-900/50">
-                            <Input label="Section Title" value={sec.title} onChange={v => {
-                                const next = [...eventsData.sections]; next[i].title = v; updateEventsData(prev => ({...prev, sections: next}));
-                            }} />
-                            <Input label="Subtitle (Pink)" value={sec.subtitle} onChange={v => {
-                                const next = [...eventsData.sections]; next[i].subtitle = v; updateEventsData(prev => ({...prev, sections: next}));
-                            }} />
-                            <TextArea label="Full Description" value={sec.description} onChange={v => {
-                                const next = [...eventsData.sections]; next[i].description = v; updateEventsData(prev => ({...prev, sections: next}));
-                            }} />
-                            <Input label="Side Image URL" value={sec.imageUrl} onChange={v => {
-                                const next = [...eventsData.sections]; next[i].imageUrl = v; updateEventsData(prev => ({...prev, sections: next}));
-                            }} />
-                            <button onClick={() => updateEventsData(prev => ({...prev, sections: prev.sections.filter((_, idx) => idx !== i)}))} className="text-red-500 font-black uppercase text-[10px]">Delete Section</button>
-                        </div>
-                    ))}
-                    <button onClick={() => updateEventsData(prev => ({...prev, sections: [...prev.sections, {id: Date.now().toString(), title: 'New Event', subtitle: 'Celebrate', description: '', imageUrl: '', features: []}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl">+ ADD NEW EVENT SECTION</button>
-                </div>
+            <SectionCard title="Epic Events">
+                <MediaPicker label="Events Hero" value={eventsData.hero.image} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, image: v}}))} />
+                {eventsData.sections.map((sec, i) => (
+                    <div key={i} className="bg-zinc-800/30 p-6 rounded-2xl mb-4 border border-zinc-800">
+                        <Input label="Section Title" value={sec.title} onChange={v => {
+                            const next = [...eventsData.sections]; next[i].title = v; updateEventsData(prev => ({...prev, sections: next}));
+                        }} />
+                        <MediaPicker label="Section Media" value={sec.imageUrl} onChange={v => {
+                            const next = [...eventsData.sections]; next[i].imageUrl = v; updateEventsData(prev => ({...prev, sections: next}));
+                        }} />
+                    </div>
+                ))}
             </SectionCard>
         )}
 
-        {tab === 'terms' && (
-            <SectionCard title="The Small Print (Terms)">
-                {termsData.map((term, i) => (
-                    <div key={i} className="mb-6 p-6 bg-zinc-800 rounded-2xl border border-zinc-700">
-                        <Input label="Policy Title" value={term.title} onChange={v => {
-                            const next = [...termsData]; next[i].title = v; updateTermsData(next);
+        {tab === 'blog' && (
+            <SectionCard title="Blog Stories">
+                <Input label="Heading" value={blogData.heading} onChange={v => updateBlogData(prev => ({...prev, heading: v}))} />
+                {blogData.posts.map((post, i) => (
+                    <div key={i} className="bg-zinc-800/30 p-6 rounded-2xl mb-4 border border-zinc-800">
+                        <Input label="Post Title" value={post.title} onChange={v => {
+                            const next = [...blogData.posts]; next[i].title = v; updateBlogData(prev => ({...prev, posts: next}));
                         }} />
-                        <TextArea label="Policy Content" value={term.content} onChange={v => {
-                            const next = [...termsData]; next[i].content = v; updateTermsData(next);
+                        <MediaPicker label="Post Thumbnail" value={post.imageUrl} onChange={v => {
+                            const next = [...blogData.posts]; next[i].imageUrl = v; updateBlogData(prev => ({...prev, posts: next}));
                         }} />
-                        <button onClick={() => updateTermsData(termsData.filter((_, idx) => idx !== i))} className="text-red-500 font-black uppercase text-[10px]">Delete Policy</button>
                     </div>
                 ))}
-                <button onClick={() => updateTermsData([...termsData, {title: 'New Policy', content: ''}])} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl">+ ADD POLICY</button>
             </SectionCard>
         )}
 
         {tab === 'gallery' && (
             <SectionCard title="Visual Archive">
-                <Input label="Gallery Heading" value={galleryData.heading} onChange={v => updateGalleryData(prev => ({...prev, heading: v}))} />
-                <TextArea label="Subtext" value={galleryData.subtext} onChange={v => updateGalleryData(prev => ({...prev, subtext: v}))} />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
                     {galleryData.images.map((img, i) => (
-                        <div key={img.id} className="relative group aspect-square rounded-2xl overflow-hidden border border-zinc-800">
+                        <div key={img.id} className="relative group aspect-square rounded-2xl overflow-hidden border border-zinc-800 shadow-xl">
                             <img src={img.url} className="w-full h-full object-cover" alt="" />
                             <button onClick={() => updateGalleryData(prev => ({...prev, images: prev.images.filter((_, idx) => idx !== i)}))} className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                         </div>
                     ))}
-                    <div className="aspect-square border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center bg-zinc-900/50">
-                        <input type="file" multiple ref={fileRef} className="hidden" onChange={handleBatchUpload} />
-                        <button onClick={() => fileRef.current?.click()} className="text-[11px] font-black uppercase text-zinc-500 hover:text-pink-500 transition-colors">+ Upload Many</button>
+                    <div className="aspect-square border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center bg-zinc-900/50 hover:border-pink-500 group transition-all">
+                        <input type="file" multiple ref={batchFileRef} className="hidden" onChange={handleBatchUpload} />
+                        <button onClick={() => batchFileRef.current?.click()} className="text-[11px] font-black uppercase text-zinc-500 group-hover:text-pink-500 transition-colors">Batch Upload</button>
                     </div>
                 </div>
-            </SectionCard>
-        )}
-
-        {tab === 'songs' && (
-            <SectionCard title={`Library (${songs.length} Tracks)`}>
-                <div className="max-h-[600px] overflow-y-auto pr-4 space-y-3 mb-8 scrollbar-hide">
-                    {songs.slice(0, 100).map((s, i) => (
-                        <div key={i} className="flex gap-4 bg-zinc-800/20 p-3 rounded-xl border border-zinc-800 items-center">
-                            <input className="bg-transparent border-b border-zinc-700 flex-1 outline-none text-sm text-white" value={s.title} onChange={e => {
-                                updateSongs(prev => {
-                                    const next = [...prev];
-                                    next[i] = { ...next[i], title: e.target.value };
-                                    return next;
-                                });
-                            }} />
-                            <input className="bg-transparent border-b border-zinc-700 flex-1 outline-none text-sm text-zinc-400" value={s.artist} onChange={e => {
-                                updateSongs(prev => {
-                                    const next = [...prev];
-                                    next[i] = { ...next[i], artist: e.target.value };
-                                    return next;
-                                });
-                            }} />
-                            <button onClick={() => updateSongs(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500 px-2 font-black">×</button>
-                        </div>
-                    ))}
-                    <p className="text-[10px] text-zinc-600 text-center uppercase tracking-widest mt-4">Only showing first 100 for performance</p>
-                </div>
-                <button onClick={() => updateSongs(prev => [{id: Date.now().toString(), title: 'New Anthem', artist: 'LKC Star'}, ...prev])} className="w-full py-5 bg-pink-600/10 border border-pink-600 text-pink-500 rounded-2xl font-black uppercase tracking-widest hover:bg-pink-600 hover:text-white transition-all">+ Add New Entry</button>
             </SectionCard>
         )}
 
         {tab === 'config' && (
             <div className="space-y-12">
-                <SectionCard title="Subdomain Sync (files.londonkaraoke.club)">
-                    <p className="text-xs text-zinc-500 mb-6 uppercase tracking-widest">Connect to your subdomain files storage</p>
+                <SectionCard title="Storage Connectivity">
+                    <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Ensure your subdomain db.php script matches the snippet below for proper media handling.</p>
                     <div className="bg-black p-8 rounded-[2rem] border border-zinc-800 overflow-x-auto relative mb-6">
                         <pre className="text-[10px] text-green-500 font-mono leading-tight">{phpSnippet}</pre>
                         <button onClick={() => { navigator.clipboard.writeText(phpSnippet); alert("Copied!"); }} className="absolute top-6 right-6 bg-zinc-800 hover:bg-zinc-700 px-5 py-2 rounded-xl text-[10px] font-black">COPY PHP</button>
                     </div>
-                    <Input label="PHP Sync URL (files.londonkaraoke.club/db.php)" value={syncUrl} onChange={v => updateSyncUrl(v)} />
+                    <Input label="PHP Sync URL" value={syncUrl} onChange={v => updateSyncUrl(v)} />
                     <Input label="Auth Key (Admin Password)" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
                 </SectionCard>
-                <SectionCard title="Firebase Persistence">
-                    <Input label="Firebase URL (https://lkc-xxx.firebaseio.com/)" value={firebaseConfig.databaseURL} onChange={v => updateFirebaseConfig(prev => ({...prev, databaseURL: v}))} />
-                    <Input label="Secret Key (Auth)" value={firebaseConfig.apiKey} onChange={v => updateFirebaseConfig(prev => ({...prev, apiKey: v}))} type="password" />
-                </SectionCard>
-                <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600 text-red-500 rounded-2xl font-black uppercase tracking-widest">Purge Local Storage (Emergency Only)</button>
+                <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600 text-red-500 rounded-2xl font-black uppercase tracking-widest">Reset Local Cache</button>
             </div>
         )}
       </div>
