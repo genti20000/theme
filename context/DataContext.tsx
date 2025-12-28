@@ -1,10 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // --- Types ---
 export interface MenuItem { name: string; description: string; price: string; note?: string; }
 export interface MenuCategory { category: string; description?: string; items: MenuItem[]; }
-export interface DrinkItem { name: string; price: string | any; description?: string; note?: string; single?: string; double?: string; }
+export interface DrinkItem { name: string; price: any; description?: string; note?: string; single?: string; double?: string; }
 export interface DrinkCategory { category: string; items: DrinkItem[]; note?: string; }
 export interface DrinksData {
     headerImageUrl: string;
@@ -15,7 +14,7 @@ export interface DrinksData {
     cocktailsData: DrinkCategory[];
     winesData: DrinkCategory[];
 }
-export interface HeaderData { logoUrl: string; }
+export interface HeaderData { logoUrl: string; siteTitle: string; siteDescription: string; faviconUrl: string; }
 export interface HeroData { backgroundImageUrl: string; slides: string[]; badgeText: string; headingText: string; subText: string; buttonText: string; }
 export interface HighlightsData { heading: string; subtext: string; mainImageUrl: string; featureListTitle: string; featureList: string[]; sideImageUrl: string; }
 
@@ -40,138 +39,107 @@ export interface VibeData {
 export interface BatteryData { statPrefix: string; statNumber: string; statSuffix: string; subText: string; }
 export interface FooterData { ctaHeading: string; ctaText: string; ctaButtonText: string; }
 
-export interface GalleryData { 
-  heading: string; 
-  subtext: string; 
-  images: { id: string; url: string; caption: string; }[]; 
-  videos?: { id: string; url: string; thumbnail: string; title: string; }[]; 
-}
+export interface GalleryImage { id: string; url: string; caption: string; }
+export interface GalleryData { heading: string; subtext: string; images: GalleryImage[]; videos?: any[]; }
 
-export interface BlogPost {
-    id: string;
-    title: string;
-    date: string;
-    excerpt: string;
-    content: string;
-    imageUrl: string;
-}
-
-export interface BlogData {
-    heading: string;
-    subtext: string;
-    posts: BlogPost[];
-}
-
+export interface BlogPost { id: string; title: string; date: string; excerpt: string; content: string; imageUrl: string; }
+export interface BlogData { heading: string; subtext: string; posts: BlogPost[]; }
 export interface Song { id: string; title: string; artist: string; genre?: string; fileUrl?: string; }
-
 export interface TestimonialItem { quote: string; name: string; avatar: string; rating?: number; date?: string; }
 export interface TestimonialsData { heading: string; subtext: string; items: TestimonialItem[]; }
+
+export interface InfoSectionData {
+    heading: string;
+    sections: { title: string; content: string; color?: string; }[];
+    footerTitle: string;
+    footerText: string;
+    footerHighlight: string;
+}
+
+export interface FAQItem { question: string; answer: string; }
+export interface FAQData { heading: string; subtext: string; items: FAQItem[]; }
 
 export interface EventSection { id: string; title: string; subtitle: string; description: string; imageUrl: string; features: string[]; }
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
 
-export interface SupabaseConfig {
-    url: string;
-    anonKey: string;
-    bucket: string;
-}
-
-interface ServerFile { name: string; url: string; type: 'image' | 'video'; }
+export interface FirebaseConfig { databaseURL: string; apiKey: string; }
 
 interface DataContextType {
     foodMenu: MenuCategory[];
-    updateFoodMenu: (newMenu: MenuCategory[]) => void;
+    updateFoodMenu: React.Dispatch<React.SetStateAction<MenuCategory[]>>;
     drinksData: DrinksData;
-    updateDrinksData: (newData: DrinksData) => void;
+    updateDrinksData: React.Dispatch<React.SetStateAction<DrinksData>>;
     headerData: HeaderData;
-    updateHeaderData: (newData: HeaderData) => void;
+    updateHeaderData: React.Dispatch<React.SetStateAction<HeaderData>>;
     heroData: HeroData;
-    updateHeroData: (newData: HeroData) => void;
+    updateHeroData: React.Dispatch<React.SetStateAction<HeroData>>;
     highlightsData: HighlightsData;
-    updateHighlightsData: (newData: HighlightsData) => void;
+    updateHighlightsData: React.Dispatch<React.SetStateAction<HighlightsData>>;
     featuresData: FeaturesData;
-    updateFeaturesData: (newData: FeaturesData) => void;
+    updateFeaturesData: React.Dispatch<React.SetStateAction<FeaturesData>>;
     vibeData: VibeData;
-    updateVibeData: (newData: VibeData) => void;
+    updateVibeData: React.Dispatch<React.SetStateAction<VibeData>>;
     batteryData: BatteryData;
-    updateBatteryData: (newData: BatteryData) => void;
+    updateBatteryData: React.Dispatch<React.SetStateAction<BatteryData>>;
     footerData: FooterData;
-    updateFooterData: (newData: FooterData) => void;
+    updateFooterData: React.Dispatch<React.SetStateAction<FooterData>>;
     galleryData: GalleryData;
-    updateGalleryData: (newData: GalleryData) => void;
+    updateGalleryData: React.Dispatch<React.SetStateAction<GalleryData>>;
     blogData: BlogData;
-    updateBlogData: (newData: BlogData) => void;
+    updateBlogData: React.Dispatch<React.SetStateAction<BlogData>>;
     testimonialsData: TestimonialsData;
-    updateTestimonialsData: (newData: TestimonialsData) => void;
+    updateTestimonialsData: React.Dispatch<React.SetStateAction<TestimonialsData>>;
+    infoSectionData: InfoSectionData;
+    updateInfoSectionData: React.Dispatch<React.SetStateAction<InfoSectionData>>;
+    faqData: FAQData;
+    updateFaqData: React.Dispatch<React.SetStateAction<FAQData>>;
     eventsData: EventsData;
-    updateEventsData: (newData: EventsData) => void;
+    updateEventsData: React.Dispatch<React.SetStateAction<EventsData>>;
     songs: Song[];
-    updateSongs: (newSongs: Song[]) => void;
+    updateSongs: React.Dispatch<React.SetStateAction<Song[]>>;
     adminPassword: string;
-    updateAdminPassword: (newPass: string) => void;
+    updateAdminPassword: React.Dispatch<React.SetStateAction<string>>;
     syncUrl: string;
-    updateSyncUrl: (newUrl: string) => void;
-    config: SupabaseConfig;
-    updateConfig: (newData: SupabaseConfig) => void;
-    resetToDefaults: () => void;
+    updateSyncUrl: React.Dispatch<React.SetStateAction<string>>;
+    firebaseConfig: FirebaseConfig;
+    updateFirebaseConfig: React.Dispatch<React.SetStateAction<FirebaseConfig>>;
     purgeCache: () => void;
-    importDatabase: (json: string) => void;
+    importDatabase: (json: any) => boolean;
     exportDatabase: () => string;
     saveToHostinger: () => Promise<void>;
     loadFromHostinger: () => Promise<void>;
-    fetchServerFiles: () => Promise<ServerFile[]>;
+    saveToFirebase: () => Promise<void>;
+    loadFromFirebase: () => Promise<void>;
     uploadFile: (file: Blob | File) => Promise<string | null>;
-    saveAllToSupabase: () => Promise<void>;
+    fetchServerFiles: () => Promise<{name: string, url: string}[]>;
     isDataLoading: boolean;
 }
 
-const INITIAL_BLOG_DATA: BlogData = {
-    heading: "LKC Stories",
-    subtext: "Guides, events, and the electric vibe of Soho.",
-    posts: [
-        {
-            id: '1',
-            title: 'Welcome to the New LKC',
-            date: '2024-07-01',
-            excerpt: 'Check out our brand new digital experience.',
-            content: 'We are thrilled to launch our new site...',
-            imageUrl: 'https://picsum.photos/seed/lkc/800/600'
-        }
-    ]
+const INITIAL_SEO: HeaderData = { 
+    logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png",
+    siteTitle: "London Karaoke Club | Private Rooms Soho",
+    siteDescription: "Luxury private karaoke booths in London Soho. 80,000+ songs, cocktails and more.",
+    faviconUrl: "/favicon.svg"
 };
 
-const INITIAL_FOOD_MENU: MenuCategory[] = [{ category: "Small Plates", items: [{ name: "Crispy Calamari", description: "With lemon aioli", price: "9.50" }] }];
-const INITIAL_DRINKS_DATA: DrinksData = {
+const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
+const INITIAL_HIGHLIGHTS: HighlightsData = { heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs", "Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
+const INITIAL_FEATURES: FeaturesData = {
+    experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
+    occasions: { heading: "Every Occasion", text: "Parties of all sizes.", items: [{title: "Hen Parties", text: "Bubbles and songs."}] },
+    grid: { heading: "Features", items: [{title: "Neon Lighting", description: "Vibrant vibes.", image: "https://picsum.photos/seed/neon/400/400"}] }
+};
+const INITIAL_VIBE: VibeData = { label: "The Vibe", heading: "Soho Nights", text: "Join the energy.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Hard", bottomText: "Until 3AM." };
+const INITIAL_STATS: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." };
+const INITIAL_GALLERY: GalleryData = { heading: "Gallery", subtext: "Moments from Soho", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}] };
+const INITIAL_BLOG: BlogData = { heading: "LKC Stories", subtext: "News and events.", posts: [{id: '1', title: 'Welcome', date: '2024-01-01', excerpt: 'Site launched.', content: 'Welcome to LKC.', imageUrl: 'https://picsum.photos/seed/blog/800/600'}] };
+const INITIAL_FAQ: FAQData = { heading: "FAQ", subtext: "Questions?", items: [{question: "Where is it?", answer: "Soho, London."}] };
+const INITIAL_DRINKS: DrinksData = {
     headerImageUrl: "https://picsum.photos/seed/bar/1600/800",
-    packagesData: { title: "Packages", subtitle: "Pre-order", items: [], notes: [] },
-    bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "Shooters", prices: "", items: [] } },
+    packagesData: { title: "Packages", subtitle: "Groups", items: [], notes: [] },
+    bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } },
     cocktailsData: [], winesData: []
 };
-const INITIAL_HEADER_DATA: HeaderData = { logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png" };
-const INITIAL_HERO_DATA: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
-const INITIAL_HIGHLIGHTS_DATA: HighlightsData = { heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
-const INITIAL_FEATURES_DATA: FeaturesData = {
-    experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
-    occasions: { heading: "Every Occasion", text: "Parties of all sizes.", items: [] },
-    grid: { heading: "Features", items: [] }
-};
-const INITIAL_VIBE_DATA: VibeData = {
-    label: "The Vibe", heading: "Electric Soho Nights", text: "Join us for the most vibrant karaoke experience in London.",
-    image1: "https://picsum.photos/seed/vibe1/800/800", image2: "https://picsum.photos/seed/vibe2/800/800",
-    bigImage: "https://picsum.photos/seed/vibebig/1600/900", bottomHeading: "Party Hard", bottomText: "Until 3 AM every single night."
-};
-const INITIAL_BATTERY_DATA: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated monthly." };
-const INITIAL_FOOTER_DATA: FooterData = { ctaHeading: "Ready to sing?", ctaText: "Secure your room today.", ctaButtonText: "Book Now" };
-const INITIAL_GALLERY_DATA: GalleryData = { heading: "Moments", subtext: "LKC Gallery", images: [], videos: [] };
-const INITIAL_TESTIMONIALS_DATA: TestimonialsData = {
-    heading: "Loved by the Crowd", subtext: "What our stars have to say.",
-    items: [{ name: "Sarah J.", quote: "Best night out in Soho!", avatar: "", rating: 5, date: "a week ago" }]
-};
-const INITIAL_EVENTS_DATA: EventsData = { hero: { title: "Special Events", subtitle: "Celebrate in Style", image: "https://picsum.photos/seed/events/1600/900" }, sections: [] };
-const INITIAL_SONGS: Song[] = [{ id: '1', title: 'Bohemian Rhapsody', artist: 'Queen' }];
-const INITIAL_CONFIG: SupabaseConfig = { url: '', anonKey: '', bucket: 'public' };
-const INITIAL_ADMIN_PASS: string = 'admin123';
-const INITIAL_SYNC_URL: string = '';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -179,138 +147,109 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const init = <T,>(key: string, defaultVal: T): T => {
         const saved = localStorage.getItem(`lkc_${key}`);
         if (!saved) return defaultVal;
-        try {
-            const parsed = JSON.parse(saved);
-            if (typeof defaultVal === 'object' && defaultVal !== null && !Array.isArray(defaultVal)) return { ...defaultVal, ...parsed };
-            return parsed;
-        } catch (e) { return defaultVal; }
+        try { return JSON.parse(saved); } catch (e) { return defaultVal; }
     };
 
-    const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', INITIAL_FOOD_MENU));
-    const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS_DATA));
-    const [headerData, setHeaderData] = useState<HeaderData>(() => init('headerData', INITIAL_HEADER_DATA));
-    const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', INITIAL_HERO_DATA));
-    const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', INITIAL_HIGHLIGHTS_DATA));
-    const [featuresData, setFeaturesData] = useState<FeaturesData>(() => init('featuresData', INITIAL_FEATURES_DATA));
-    const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', INITIAL_VIBE_DATA));
-    const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_BATTERY_DATA));
-    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', INITIAL_FOOTER_DATA));
-    const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY_DATA));
-    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG_DATA));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', INITIAL_TESTIMONIALS_DATA));
-    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', INITIAL_EVENTS_DATA));
-    const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', INITIAL_ADMIN_PASS));
-    const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', INITIAL_SYNC_URL));
-    const [config, setConfig] = useState<SupabaseConfig>(() => init('config', INITIAL_CONFIG));
-    const [songs, setSongs] = useState<Song[]>(() => init('songs', INITIAL_SONGS));
-    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+    const [headerData, setHeaderData] = useState<HeaderData>(() => init('headerData', INITIAL_SEO));
+    const [heroData, setHeroData] = useState<HeroData>(() => init('heroData', INITIAL_HERO));
+    const [highlightsData, setHighlightsData] = useState<HighlightsData>(() => init('highlightsData', INITIAL_HIGHLIGHTS));
+    const [featuresData, setFeaturesData] = useState<FeaturesData>(() => init('featuresData', INITIAL_FEATURES));
+    const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', INITIAL_VIBE));
+    const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_STATS));
+    const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY));
+    const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG));
+    const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
+    const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
+    const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved", subtext: "", items: [] }));
+    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { heading: "", sections: [], footerTitle: "", footerText: "", footerHighlight: "" }));
+    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "", subtitle: "", image: "" }, sections: [] }));
+    const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
+    const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
+    const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', ''));
+    const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', { databaseURL: '', apiKey: '' }));
+    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready?", ctaText: "Book now.", ctaButtonText: "Book" }));
     const [isDataLoading, setIsDataLoading] = useState(false);
 
-    useEffect(() => { if (config.url && config.anonKey) setSupabase(createClient(config.url, config.anonKey)); }, [config.url, config.anonKey]);
+    useEffect(() => {
+        document.title = headerData.siteTitle;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', headerData.siteDescription);
+        const favicon = document.querySelector('link[rel="icon"]');
+        if (favicon) favicon.setAttribute('href', headerData.faviconUrl);
+    }, [headerData]);
 
     const persist = (key: string, data: any) => localStorage.setItem(`lkc_${key}`, JSON.stringify(data));
-
-    useEffect(() => { persist('foodMenu', foodMenu); }, [foodMenu]);
-    useEffect(() => { persist('drinksData', drinksData); }, [drinksData]);
     useEffect(() => { persist('headerData', headerData); }, [headerData]);
     useEffect(() => { persist('heroData', heroData); }, [heroData]);
     useEffect(() => { persist('highlightsData', highlightsData); }, [highlightsData]);
     useEffect(() => { persist('featuresData', featuresData); }, [featuresData]);
     useEffect(() => { persist('vibeData', vibeData); }, [vibeData]);
     useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
-    useEffect(() => { persist('footerData', footerData); }, [footerData]);
     useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
     useEffect(() => { persist('blogData', blogData); }, [blogData]);
+    useEffect(() => { persist('faqData', faqData); }, [faqData]);
+    useEffect(() => { persist('drinksData', drinksData); }, [drinksData]);
+    useEffect(() => { persist('foodMenu', foodMenu); }, [foodMenu]);
     useEffect(() => { persist('testimonialsData', testimonialsData); }, [testimonialsData]);
+    useEffect(() => { persist('infoSectionData', infoSectionData); }, [infoSectionData]);
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
+    useEffect(() => { persist('songs', songs); }, [songs]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
     useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
-    useEffect(() => { persist('config', config); }, [config]);
-    useEffect(() => { persist('songs', songs); }, [songs]);
+    useEffect(() => { persist('firebaseConfig', firebaseConfig); }, [firebaseConfig]);
 
-    const exportDatabase = () => JSON.stringify({ foodMenu, drinksData, headerData, heroData, highlightsData, featuresData, vibeData, batteryData, footerData, galleryData, blogData, testimonialsData, eventsData, songs, adminPassword, version: "2.2", exportedAt: new Date().toISOString() }, null, 2);
+    const exportDatabase = () => JSON.stringify({ 
+        headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
+        galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
+        infoSectionData, eventsData, songs, adminPassword, version: "5.0" 
+    }, null, 2);
 
-    const importDatabase = (json: string | any) => {
+    const importDatabase = (json: any) => {
         try {
             const c = typeof json === 'string' ? JSON.parse(json) : json;
-            if (c.foodMenu) setFoodMenu(c.foodMenu);
-            if (c.drinksData) setDrinksData(c.drinksData);
             if (c.headerData) setHeaderData(c.headerData);
             if (c.heroData) setHeroData(c.heroData);
             if (c.highlightsData) setHighlightsData(c.highlightsData);
             if (c.featuresData) setFeaturesData(c.featuresData);
             if (c.vibeData) setVibeData(c.vibeData);
             if (c.batteryData) setBatteryData(c.batteryData);
-            if (c.footerData) setFooterData(c.footerData);
             if (c.galleryData) setGalleryData(c.galleryData);
             if (c.blogData) setBlogData(c.blogData);
+            if (c.faqData) setFaqData(c.faqData);
+            if (c.drinksData) setDrinksData(c.drinksData);
+            if (c.foodMenu) setFoodMenu(c.foodMenu);
             if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
+            if (c.infoSectionData) setInfoSectionData(c.infoSectionData);
             if (c.eventsData) setEventsData(c.eventsData);
             if (c.songs) setSongs(c.songs);
-            if (c.adminPassword) setAdminPassword(c.adminPassword);
             return true;
         } catch (e) { return false; }
     };
 
-    const purgeCache = () => {
-        if (!confirm("This will delete all UNSAVED local changes on this device. Make sure you have clicked 'Save All Changes' first to sync to the server. Continue?")) return;
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('lkc_')) keysToRemove.push(key);
-        }
-        keysToRemove.forEach(k => localStorage.removeItem(k));
-        window.location.reload();
-    };
-
-    const fetchServerFiles = async (): Promise<ServerFile[]> => {
-        if (!syncUrl) return [];
-        try {
-            const response = await fetch(`${syncUrl}?list=1`, {
-                headers: { 'Authorization': `Bearer ${adminPassword}` }
-            });
-            const data = await response.json();
-            if (data.success) return data.files;
-            return [];
-        } catch (e) {
-            console.error("Failed to fetch server files", e);
-            return [];
-        }
-    };
-
-    const uploadFile = async (file: Blob | File): Promise<string | null> => {
-        if (!syncUrl) {
-            if (!supabase) return null;
-            const path = `uploads/${Date.now()}_${(file as File).name}`;
-            const { error } = await supabase.storage.from(config.bucket).upload(path, file, { upsert: true });
-            if (error) return null;
-            const { data: { publicUrl } } = supabase.storage.from(config.bucket).getPublicUrl(path);
-            return publicUrl;
-        }
-        
+    const saveToFirebase = async () => {
+        if (!firebaseConfig.databaseURL) return alert("Set Firebase URL first!");
         setIsDataLoading(true);
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-            const response = await fetch(syncUrl, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${adminPassword}` },
-                body: formData
-            });
-            const res = await response.json();
-            if (res.success) return res.url;
-            throw new Error(res.message);
-        } catch (e) {
-            console.error("Upload failed", e);
-            return null;
-        } finally { setIsDataLoading(false); }
+            const url = `${firebaseConfig.databaseURL.replace(/\/$/, '')}/site.json`;
+            const response = await fetch(url, { method: 'PUT', body: exportDatabase() });
+            if (response.ok) alert("Firebase Sync Successful!");
+        } catch (e) { alert("Firebase Error: " + e); } finally { setIsDataLoading(false); }
+    };
+
+    const loadFromFirebase = async () => {
+        if (!firebaseConfig.databaseURL) return;
+        setIsDataLoading(true);
+        try {
+            const url = `${firebaseConfig.databaseURL.replace(/\/$/, '')}/site.json`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data) importDatabase(data);
+        } catch (e) { console.error(e); } finally { setIsDataLoading(false); }
     };
 
     const saveToHostinger = async () => {
-        if (!syncUrl) {
-            alert("Set your Sync URL in the Config tab first!");
-            return;
-        }
+        if (!syncUrl) return alert("Set Sync URL (db.php) first!");
         setIsDataLoading(true);
         try {
             const response = await fetch(syncUrl, {
@@ -319,9 +258,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 body: exportDatabase()
             });
             const res = await response.json();
-            if (res.success) alert("SUCCESS: Changes Synced Globally! Your site is now updated on all devices.");
-            else alert("Error: " + res.message);
-        } catch (e) { alert("Connection failed. Check your Sync URL."); } finally { setIsDataLoading(false); }
+            if (res.success) alert("Hostinger Sync Successful!");
+        } catch (e) { alert("Hostinger Sync Error: " + e); } finally { setIsDataLoading(false); }
     };
 
     const loadFromHostinger = async () => {
@@ -334,14 +272,32 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } catch (e) { console.warn("Load failed."); } finally { setIsDataLoading(false); }
     };
 
-    const saveAllToSupabase = async () => {
-        if (!supabase) return;
+    const uploadFile = async (file: Blob | File): Promise<string | null> => {
+        if (!syncUrl) return null;
         setIsDataLoading(true);
         try {
-            const { error } = await supabase.from('site_settings').upsert({ id: 1, content: JSON.parse(exportDatabase()) });
-            if (error) throw error;
-            alert("Cloud Backup Successful!");
-        } catch (e) { alert("Supabase Save Error"); } finally { setIsDataLoading(false); }
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch(syncUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${adminPassword}` },
+                body: formData
+            });
+            const res = await response.json();
+            return res.success ? res.url : null;
+        } catch (e) { return null; } finally { setIsDataLoading(false); }
+    };
+
+    const fetchServerFiles = async (): Promise<{name: string, url: string}[]> => {
+        if (!syncUrl) return [];
+        try {
+            const response = await fetch(`${syncUrl}?list=1`, {
+                headers: { 'Authorization': `Bearer ${adminPassword}` }
+            });
+            const data = await response.json();
+            if (data.success) return data.files;
+            return [];
+        } catch (e) { return []; }
     };
 
     return (
@@ -352,11 +308,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             vibeData, updateVibeData: setVibeData, batteryData, updateBatteryData: setBatteryData,
             footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
             blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
-            eventsData, updateEventsData: setEventsData, adminPassword, updateAdminPassword: setAdminPassword,
-            syncUrl, updateSyncUrl: setSyncUrl, config, updateConfig: setConfig, songs, updateSongs: setSongs,
-            resetToDefaults: () => { localStorage.clear(); window.location.reload(); },
-            purgeCache, exportDatabase, importDatabase, saveToHostinger, loadFromHostinger, fetchServerFiles,
-            uploadFile, saveAllToSupabase, isDataLoading
+            infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
+            eventsData, updateEventsData: setEventsData, songs, updateSongs: setSongs,
+            adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
+            firebaseConfig, updateFirebaseConfig: setFirebaseConfig, isDataLoading,
+            purgeCache: () => { localStorage.clear(); window.location.reload(); },
+            importDatabase, exportDatabase, saveToHostinger, loadFromHostinger, saveToFirebase, loadFromFirebase, uploadFile,
+            fetchServerFiles
         }}>
             {children}
         </DataContext.Provider>

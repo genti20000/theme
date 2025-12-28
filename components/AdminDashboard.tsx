@@ -1,316 +1,224 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useData, Song, MenuCategory, MenuItem, DrinkCategory, EventSection, BlogPost } from '../context/DataContext';
+import React, { useState, useRef } from 'react';
+import { useData } from '../context/DataContext';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8 shadow-sm">
-    <h3 className="text-xl font-bold text-white mb-6 border-b border-zinc-800 pb-2 flex items-center gap-2">
-        <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-sm">
+    <h3 className="text-2xl font-black text-white mb-8 border-b border-zinc-800 pb-4 flex items-center gap-3 uppercase tracking-tighter">
+        <span className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></span>
         {title}
     </h3>
     {children}
   </div>
 );
 
-const InputGroup: React.FC<{ label: string; value: string; onChange: (val: string) => void; type?: string; placeholder?: string }> = ({ label, value, onChange, type = 'text', placeholder }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
-    <input 
-      type={type}
-      placeholder={placeholder}
-      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none focus:border-yellow-400 transition-colors"
-      value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
-    />
+const Input: React.FC<{ label: string; value: string; onChange: (v: string) => void; type?: string }> = ({ label, value, onChange, type = 'text' }) => (
+  <div className="mb-6">
+    <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
+    <input type={type} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium" value={value || ''} onChange={(e) => onChange(e.target.value)} />
   </div>
 );
 
-const TextAreaGroup: React.FC<{ label: string; value: string; onChange: (val: string) => void; placeholder?: string }> = ({ label, value, onChange, placeholder }) => (
-    <div className="mb-4">
-      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
-      <textarea 
-        placeholder={placeholder}
-        rows={3}
-        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white outline-none focus:border-yellow-400 transition-colors"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </div>
-  );
-
-const GoogleDriveModal: React.FC<{ onSelect: (url: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
-    const [driveLink, setDriveLink] = useState('');
-    const [error, setError] = useState('');
-
-    const handleImport = () => {
-        setError('');
-        const regExp = /(?:\/d\/|id=)([\w-]+)/;
-        const match = driveLink.match(regExp);
-        if (match && match[1]) {
-            const fileId = match[1];
-            const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-            onSelect(directUrl);
-        } else {
-            setError('Invalid Google Drive link. Please ensure it is a "Share" link.');
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-zinc-900 w-full max-w-md rounded-3xl border border-zinc-800 p-8 shadow-2xl animate-fade-in-up">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                        <svg className="w-6 h-6 text-green-500" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7.74 3.522l-.005.01L2.25 13.032l3.46 5.991 5.485-9.5H22.18l-3.465-6zM5.13 19.38l3.465 6h10.97l3.465-6zM12.01 10.82l-5.485 9.5 3.465 6 5.485-9.5z" />
-                        </svg>
-                        Google Drive
-                    </h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-                <p className="text-gray-400 text-sm mb-6">Paste the "Share" link. Ensure file access is <strong>"Anyone with the link"</strong>.</p>
-                <div className="space-y-4">
-                    <input type="text" placeholder="https://drive.google.com/file/d/..." className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-green-500 transition-all text-sm" value={driveLink} onChange={(e) => setDriveLink(e.target.value)} />
-                    {error && <p className="text-red-500 text-xs">{error}</p>}
-                    <button onClick={handleImport} className="w-full bg-green-600 hover:bg-green-500 text-white font-black py-3 rounded-xl transition-all uppercase tracking-widest text-xs">Import from Drive</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ImageUploader: React.FC<{ onUpload: (url: string) => void; label?: string; multiple?: boolean }> = ({ onUpload, label = "Upload New", multiple = false }) => {
-    const { uploadFile } = useData();
-    const [uploading, setUploading] = useState(false);
-    const fileRef = useRef<HTMLInputElement>(null);
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        setUploading(true);
-        for (let i = 0; i < files.length; i++) {
-            const url = await uploadFile(files[i]);
-            if (url) onUpload(url);
-        }
-        setUploading(false);
-    };
-
-    return (
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <button onClick={() => fileRef.current?.click()} className="bg-zinc-700 text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded text-white hover:bg-zinc-600 transition-colors">
-                {uploading ? '...' : label}
-            </button>
-            <input type="file" ref={fileRef} className="hidden" multiple={multiple} onChange={handleUpload} />
-        </div>
-    );
-};
+const TextArea: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
+  <div className="mb-6">
+    <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
+    <textarea rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium leading-relaxed" value={value || ''} onChange={(e) => onChange(e.target.value)} />
+  </div>
+);
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [loginError, setLoginError] = useState(false);
-  const [activeTab, setActiveTab] = useState('home');
+  const [passInput, setPassInput] = useState('');
+  const [tab, setTab] = useState('seo');
   const { 
-    isDataLoading, heroData, updateHeroData, highlightsData, updateHighlightsData,
-    batteryData, updateBatteryData, featuresData, updateFeaturesData, vibeData, updateVibeData,
-    testimonialsData, updateTestimonialsData, eventsData, updateEventsData, galleryData, updateGalleryData,
-    blogData, updateBlogData, songs, updateSongs, foodMenu, updateFoodMenu, drinksData, updateDrinksData,
-    adminPassword, updateAdminPassword, syncUrl, updateSyncUrl, saveToHostinger, loadFromHostinger, saveAllToSupabase, purgeCache
+    isDataLoading, headerData, updateHeaderData, heroData, updateHeroData, highlightsData, updateHighlightsData,
+    batteryData, updateBatteryData, galleryData, updateGalleryData, blogData, updateBlogData, 
+    faqData, updateFaqData, songs, updateSongs, adminPassword, updateAdminPassword, syncUrl, updateSyncUrl,
+    firebaseConfig, updateFirebaseConfig, saveToHostinger, saveToFirebase, uploadFile, purgeCache
   } = useData();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordInput === adminPassword) {
-      setIsAuthenticated(true);
-      setLoginError(false);
-      loadFromHostinger();
-    } else {
-      setLoginError(true);
-      setPasswordInput('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleBatchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    for (let i = 0; i < files.length; i++) {
+        const url = await uploadFile(files[i]);
+        if (url) {
+            updateGalleryData(prev => ({
+                ...prev,
+                images: [...prev.images, { id: Date.now().toString() + i, url, caption: 'LKC Soho' }]
+            }));
+        }
     }
   };
 
-  const phpCode = `<?php
-/**
- * LKC DATABASE BACKEND v3.0
- * Connecting to: u973281047_content_db
- */
+  const phpSnippet = `<?php
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
-
-// --- DATABASE CREDENTIALS ---
-$dbHost = 'localhost';
-$dbName = 'u973281047_content_db';
-$dbUser = 'u973281047_content_user';
-$dbPass = 'YOUR_DATABASE_PASSWORD_HERE'; // <--- UPDATE THIS
-$authPass = '${adminPassword}';
+$db_host = 'localhost';
+$db_name = 'u973281047_content_db';
+$db_user = 'u973281047_content_user';
+$db_pass = 'YOUR_DB_PASSWORD'; // Set this manually!
+$auth_key = '${adminPassword}';
 
 try {
-    $pdo = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8", $dbUser, $dbPass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    // Auto-create settings table if missing
-    $pdo->exec("CREATE TABLE IF NOT EXISTS site_settings (
-        id INT PRIMARY KEY DEFAULT 1,
-        content LONGTEXT NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )");
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'DB Connection Failed: ' . $e->getMessage()]);
-    exit;
-}
+    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8", $db_user, $db_pass);
+    $pdo->exec("CREATE TABLE IF NOT EXISTS lkc_settings (id INT PRIMARY KEY DEFAULT 1, data LONGTEXT)");
+} catch (PDOException $e) { die(json_encode(['success'=>false, 'error'=>$e->getMessage()])); }
 
 $headers = getallheaders();
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-
-if ($authHeader !== "Bearer " . $authPass) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
-}
+$auth = $headers['Authorization'] ?? '';
+if ($auth !== "Bearer $auth_key") { http_response_code(401); die(json_encode(['success'=>false])); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Handling JSON Database Sync
     $input = file_get_contents('php://input');
-    if ($input) {
-        $stmt = $pdo->prepare("INSERT INTO site_settings (id, content) VALUES (1, ?) ON DUPLICATE KEY UPDATE content = VALUES(content)");
-        if ($stmt->execute([$input])) {
-            
-            // --- OPTIONAL GIT PUSH INTEGRATION ---
-            // If you have git installed on server and initialized:
-            // shell_exec("git add . && git commit -m 'Site Update' && git push origin main");
-            
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Database Update Failed']);
-        }
+    if (isset($_FILES['file'])) {
+        $name = time().'_'.$_FILES['file']['name'];
+        move_uploaded_file($_FILES['file']['tmp_name'], 'uploads/'.$name);
+        echo json_encode(['success'=>true, 'url'=>'https://'.$_SERVER['HTTP_HOST'].'/uploads/'.$name]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO lkc_settings (id, data) VALUES (1, ?) ON DUPLICATE KEY UPDATE data = VALUES(data)");
+        $stmt->execute([$input]);
+        echo json_encode(['success'=>true]);
     }
 } else {
-    // Handling Data Fetch
-    $stmt = $pdo->query("SELECT content FROM site_settings WHERE id = 1");
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($row) {
-        header('Content-Type: application/json');
-        echo $row['content'];
-    } else {
-        echo json_encode(['error' => 'No data found']);
-    }
+    $stmt = $pdo->query("SELECT data FROM lkc_settings WHERE id = 1");
+    echo $stmt->fetchColumn() ?: json_encode(['error'=>'no data']);
 }
 ?>`;
 
   if (!isAuthenticated) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-white">
-      <form onSubmit={handleLogin} className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl">
-        <h2 className="text-2xl font-bold mb-6 text-center">LKC Admin</h2>
-        {loginError && <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-2 rounded-lg mb-4 text-sm text-center">Incorrect password.</div>}
-        <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-2">Password</label>
-          <input type="password" value={passwordInput} autoFocus onChange={e => setPasswordInput(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-3 rounded-lg outline-none focus:border-yellow-400 text-white" placeholder="••••••••" />
-        </div>
-        <button className="w-full bg-yellow-400 text-black font-bold py-3 rounded-lg hover:bg-yellow-300 transition-colors mb-4">Login</button>
-      </form>
+    <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white">
+      <div className="bg-zinc-900 p-12 rounded-[3rem] border border-zinc-800 w-full max-w-md shadow-2xl">
+        <h2 className="text-4xl font-black text-white mb-8 text-center uppercase tracking-tighter italic">LKC <span className="text-pink-500">CMS</span></h2>
+        <input type="password" value={passInput} autoFocus onChange={e => setPassInput(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-5 rounded-2xl outline-none focus:border-pink-500 text-white mb-6 text-center text-xl tracking-[0.5em]" placeholder="••••••••" />
+        <button onClick={() => passInput === adminPassword ? setIsAuthenticated(true) : alert("Invalid Pass")} className="w-full bg-pink-600 text-white font-black py-5 rounded-2xl hover:bg-pink-500 transition-all uppercase tracking-widest text-sm shadow-lg active:scale-95">Enter Control Room</button>
+      </div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20 font-sans">
-      <div className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 p-4 flex justify-between items-center px-8">
-        <h2 className="text-xl font-black uppercase tracking-tighter">LKC <span className="text-yellow-400">Control</span></h2>
+      <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800 sticky top-0 z-50 p-6 flex justify-between items-center px-10">
+        <h2 className="text-2xl font-black uppercase tracking-tighter">London <span className="text-pink-500">Karaoke</span> Club</h2>
         <div className="flex gap-4">
-            <button onClick={saveToHostinger} disabled={isDataLoading} className="bg-yellow-400 hover:bg-yellow-300 text-black px-8 py-3 rounded-full text-[12px] font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse active:scale-95">
-                {isDataLoading ? 'Syncing to MySQL...' : 'Save All Changes'}
+            <button onClick={saveToFirebase} disabled={isDataLoading} className="bg-orange-600 hover:bg-orange-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Firebase Sync</button>
+            <button onClick={saveToHostinger} disabled={isDataLoading} className="bg-pink-600 hover:bg-pink-500 px-10 py-3 rounded-xl text-[12px] font-black uppercase tracking-widest animate-pulse shadow-xl">
+                {isDataLoading ? 'Syncing...' : 'Save All Changes'}
             </button>
-            <button onClick={saveAllToSupabase} disabled={isDataLoading} className="bg-zinc-800 hover:bg-zinc-700 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase transition-all border border-zinc-700">Cloud Backup</button>
         </div>
       </div>
 
-      <div className="flex bg-zinc-900 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-4">
-        {['home', 'blog', 'gallery', 'config'].map(t => (
-            <button key={t} onClick={() => setActiveTab(t)} className={`px-6 py-4 capitalize font-bold text-xs tracking-widest transition-all ${activeTab === t ? 'text-yellow-400 border-b-2 border-yellow-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
-                {t.toUpperCase()}
+      <div className="flex bg-zinc-900/50 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-8 sticky top-[88px] z-40 backdrop-blur-md">
+        {['seo', 'hero', 'about', 'stats', 'gallery', 'blog', 'faq', 'songs', 'config'].map(t => (
+            <button key={t} onClick={() => setTab(t)} className={`px-8 py-5 uppercase font-black text-[11px] tracking-widest transition-all relative ${tab === t ? 'text-pink-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                {t}
+                {tab === t && <div className="absolute bottom-0 left-0 right-0 h-1 bg-pink-500"></div>}
             </button>
         ))}
       </div>
 
-      <div className="container mx-auto p-6 max-w-5xl">
-        
-        {activeTab === 'home' && (
-            <SectionCard title="Hero Slider">
-                <div className="space-y-4 mb-6">
-                    {(heroData.slides || []).map((slide, idx) => (
-                        <div key={idx} className="flex gap-4 items-center bg-zinc-800/50 p-4 rounded-xl border border-zinc-800">
-                            <img src={slide} className="w-20 h-20 object-cover rounded-lg" alt="" />
-                            <div className="flex-1">
-                                <InputGroup label={`Slide ${idx + 1}`} value={slide} onChange={v => {
-                                    const next = [...heroData.slides]; next[idx] = v; updateHeroData({...heroData, slides: next});
-                                }} />
-                            </div>
-                            <button onClick={() => updateHeroData({...heroData, slides: heroData.slides.filter((_, i) => i !== idx)})} className="text-red-500 p-2"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+      <div className="container mx-auto p-10 max-w-5xl">
+        {tab === 'seo' && (
+            <SectionCard title="Global Identity">
+                <Input label="Site Browser Title" value={headerData.siteTitle} onChange={v => updateHeaderData(prev => ({...prev, siteTitle: v}))} />
+                <TextArea label="SEO Meta Description" value={headerData.siteDescription} onChange={v => updateHeaderData(prev => ({...prev, siteDescription: v}))} />
+                <Input label="Logo SVG/PNG URL" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
+                <Input label="Favicon URL" value={headerData.faviconUrl} onChange={v => updateHeaderData(prev => ({...prev, faviconUrl: v}))} />
+            </SectionCard>
+        )}
+
+        {tab === 'hero' && (
+            <SectionCard title="Main Stage Hero">
+                <Input label="Festive Badge Text" value={heroData.badgeText} onChange={v => updateHeroData(prev => ({...prev, badgeText: v}))} />
+                <Input label="Hero Title" value={heroData.headingText} onChange={v => updateHeroData(prev => ({...prev, headingText: v}))} />
+                <TextArea label="Subheading" value={heroData.subText} onChange={v => updateHeroData(prev => ({...prev, subText: v}))} />
+                <div className="space-y-4">
+                    <label className="text-[11px] font-black text-zinc-500 uppercase">Slide Backgrounds (URLs)</label>
+                    {heroData.slides.map((s, i) => (
+                        <div key={i} className="flex gap-4">
+                            <input className="flex-1 bg-zinc-800 border border-zinc-700 p-3 rounded-xl text-xs text-white" value={s} onChange={e => {
+                                updateHeroData(prev => {
+                                  const next = [...prev.slides];
+                                  next[i] = e.target.value;
+                                  return { ...prev, slides: next };
+                                });
+                            }} />
+                            <button onClick={() => updateHeroData(prev => ({...prev, slides: prev.slides.filter((_, idx) => idx !== i)}))} className="bg-red-900/20 text-red-500 px-4 rounded-xl font-black">×</button>
                         </div>
                     ))}
-                    <button onClick={() => updateHeroData({...heroData, slides: [...(heroData.slides || []), '']})} className="w-full py-4 border-2 border-dashed border-zinc-800 rounded-xl text-zinc-600 font-bold">+ ADD NEW SLIDE</button>
+                    <button onClick={() => updateHeroData(prev => ({...prev, slides: [...prev.slides, '']}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW SLIDE</button>
                 </div>
             </SectionCard>
         )}
 
-        {activeTab === 'blog' && (
-            <SectionCard title="Manage Blog Posts">
-                <div className="space-y-6">
-                    {blogData.posts.map((post, idx) => (
-                        <div key={post.id} className="bg-zinc-800/50 p-6 rounded-xl border border-zinc-800 space-y-4">
-                            <InputGroup label="Title" value={post.title} onChange={v => { const next = [...blogData.posts]; next[idx].title = v; updateBlogData({...blogData, posts: next}); }} />
-                            <TextAreaGroup label="Content" value={post.content} onChange={v => { const next = [...blogData.posts]; next[idx].content = v; updateBlogData({...blogData, posts: next}); }} />
-                            <ImageUploader onUpload={url => { const next = [...blogData.posts]; next[idx].imageUrl = url; updateBlogData({...blogData, posts: next}); }} />
-                            <button onClick={() => updateBlogData({...blogData, posts: blogData.posts.filter((_, i) => i !== idx)})} className="text-red-500 text-xs font-black uppercase">Delete Post</button>
-                        </div>
-                    ))}
-                    <button onClick={() => updateBlogData({...blogData, posts: [...blogData.posts, {id: Date.now().toString(), title: 'New Post', date: new Date().toISOString().split('T')[0], excerpt: '', content: '', imageUrl: 'https://picsum.photos/800/600'}]})} className="w-full py-4 border-2 border-dashed border-zinc-800 rounded-xl text-zinc-500 font-bold hover:text-yellow-400">+ WRITE NEW POST</button>
-                </div>
-            </SectionCard>
-        )}
-
-        {activeTab === 'gallery' && (
-            <SectionCard title="Batch Gallery Upload">
-                <p className="text-xs text-gray-500 mb-6 uppercase tracking-widest">Connect to MySQL to save permanently.</p>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-8">
-                    {galleryData.images.map((img, idx) => (
-                        <div key={img.id} className="relative aspect-square border border-zinc-800 rounded-xl overflow-hidden group">
+        {tab === 'gallery' && (
+            <SectionCard title="Visual Archive">
+                <Input label="Gallery Heading" value={galleryData.heading} onChange={v => updateGalleryData(prev => ({...prev, heading: v}))} />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+                    {galleryData.images.map((img, i) => (
+                        <div key={img.id} className="relative group aspect-square rounded-2xl overflow-hidden border border-zinc-800">
                             <img src={img.url} className="w-full h-full object-cover" alt="" />
-                            <button onClick={() => updateGalleryData({...galleryData, images: galleryData.images.filter((_, i) => i !== idx)})} className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            <button onClick={() => updateGalleryData(prev => ({...prev, images: prev.images.filter((_, idx) => idx !== i)}))} className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                         </div>
                     ))}
-                    <div className="aspect-square border-2 border-dashed border-zinc-800 rounded-xl flex items-center justify-center bg-zinc-900/50">
-                        <ImageUploader multiple onUpload={url => updateGalleryData({...galleryData, images: [...galleryData.images, {id: Date.now().toString(), url, caption: ''}]})} label="+ Add Many" />
+                    <div className="aspect-square border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center bg-zinc-900/50">
+                        <input type="file" multiple ref={fileRef} className="hidden" onChange={handleBatchUpload} />
+                        <button onClick={() => fileRef.current?.click()} className="text-[11px] font-black uppercase text-zinc-500 hover:text-pink-500 transition-colors">+ Upload Many</button>
                     </div>
                 </div>
             </SectionCard>
         )}
 
-        {activeTab === 'config' && (
-            <div className="space-y-8">
-                <SectionCard title="MySQL & Git Connection Settings">
-                    <div className="space-y-4">
-                        <p className="text-xs text-gray-400 font-medium">Use the following PHP code in your <code>db.php</code> to connect to your Hostinger MySQL DB.</p>
-                        <div className="bg-black p-6 rounded-2xl border border-zinc-800 overflow-x-auto relative">
-                            <pre className="text-[10px] text-green-400 leading-tight font-mono">{phpCode}</pre>
-                            <button onClick={() => { navigator.clipboard.writeText(phpCode); alert("MySQL Backend PHP copied!"); }} className="absolute top-4 right-4 text-[10px] bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-white font-black uppercase">Copy MySQL PHP</button>
+        {tab === 'songs' && (
+            <SectionCard title={`Library (${songs.length} Tracks)`}>
+                <div className="max-h-[600px] overflow-y-auto pr-4 space-y-3 mb-8 scrollbar-hide">
+                    {songs.slice(0, 100).map((s, i) => (
+                        <div key={i} className="flex gap-4 bg-zinc-800/20 p-3 rounded-xl border border-zinc-800 items-center">
+                            <input className="bg-transparent border-b border-zinc-700 flex-1 outline-none text-sm text-white" value={s.title} onChange={e => {
+                                updateSongs(prev => {
+                                    const next = [...prev];
+                                    next[i] = { ...next[i], title: e.target.value };
+                                    return next;
+                                });
+                            }} />
+                            <input className="bg-transparent border-b border-zinc-700 flex-1 outline-none text-sm text-zinc-400" value={s.artist} onChange={e => {
+                                updateSongs(prev => {
+                                    const next = [...prev];
+                                    next[i] = { ...next[i], artist: e.target.value };
+                                    return next;
+                                });
+                            }} />
+                            <button onClick={() => updateSongs(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500 px-2 font-black">×</button>
                         </div>
-                        <InputGroup label="Endpoint (e.g. https://londonkaraoke.club/db.php)" value={syncUrl} onChange={v => updateSyncUrl(v)} />
-                        <InputGroup label="Access Key" value={adminPassword} onChange={v => updateAdminPassword(v)} />
+                    ))}
+                    <p className="text-[10px] text-zinc-600 text-center uppercase tracking-widest mt-4">Only showing first 100 for performance</p>
+                </div>
+                <button onClick={() => updateSongs(prev => [{id: Date.now().toString(), title: 'New Anthem', artist: 'LKC Star'}, ...prev])} className="w-full py-5 bg-pink-600/10 border border-pink-600 text-pink-500 rounded-2xl font-black uppercase tracking-widest hover:bg-pink-600 hover:text-white transition-all">+ Add New Entry</button>
+            </SectionCard>
+        )}
+
+        {tab === 'config' && (
+            <div className="space-y-12">
+                <SectionCard title="MySQL Sync (Hostinger)">
+                    <p className="text-xs text-zinc-500 mb-6 uppercase tracking-widest">Connect to your u973281047_content_db</p>
+                    <div className="bg-black p-8 rounded-[2rem] border border-zinc-800 overflow-x-auto relative mb-6">
+                        <pre className="text-[10px] text-green-500 font-mono leading-tight">{phpSnippet}</pre>
+                        <button onClick={() => { navigator.clipboard.writeText(phpSnippet); alert("Copied!"); }} className="absolute top-6 right-6 bg-zinc-800 hover:bg-zinc-700 px-5 py-2 rounded-xl text-[10px] font-black">COPY PHP</button>
                     </div>
+                    <Input label="MySQL Endpoint (londonkaraoke.club/db.php)" value={syncUrl} onChange={v => updateSyncUrl(v)} />
+                    <Input label="Admin Sync Password" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
                 </SectionCard>
-                <SectionCard title="Emergency Controls">
-                    <button onClick={purgeCache} className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all w-full md:w-auto shadow-lg">
-                        Purge Device Cache & Hard Reload
-                    </button>
+                <SectionCard title="Firebase Persistence">
+                    <Input label="Firebase URL (https://lkc-xxx.firebaseio.com/)" value={firebaseConfig.databaseURL} onChange={v => updateFirebaseConfig(prev => ({...prev, databaseURL: v}))} />
+                    <Input label="Secret Key (Auth)" value={firebaseConfig.apiKey} onChange={v => updateFirebaseConfig(prev => ({...prev, apiKey: v}))} type="password" />
                 </SectionCard>
+                <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600 text-red-500 rounded-2xl font-black uppercase tracking-widest">Purge Local Storage (Emergency Only)</button>
             </div>
         )}
-
       </div>
     </div>
   );
