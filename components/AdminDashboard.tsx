@@ -26,6 +26,13 @@ const TextArea: React.FC<{ label: string; value: string; onChange: (v: string) =
   </div>
 );
 
+const CodeArea: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
+    <div className="mb-6">
+      <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
+      <textarea rows={6} className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-green-500 font-mono outline-none focus:border-pink-500 transition-all text-xs leading-tight" value={value || ''} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passInput, setPassInput] = useState('');
@@ -166,6 +173,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>`;
 
+  const moveNavItem = (index: number, direction: 'up' | 'down') => {
+      const nextOrder = [...(headerData.navOrder || [])];
+      if (direction === 'up' && index > 0) {
+          [nextOrder[index], nextOrder[index - 1]] = [nextOrder[index - 1], nextOrder[index]];
+      } else if (direction === 'down' && index < nextOrder.length - 1) {
+          [nextOrder[index], nextOrder[index + 1]] = [nextOrder[index + 1], nextOrder[index]];
+      }
+      updateHeaderData(prev => ({...prev, navOrder: nextOrder}));
+  };
+
   const DrinkCategoryEditor = ({ title, data, setter }: { title: string, data: DrinkCategory[], setter: (val: DrinkCategory[]) => void }) => (
     <div className="mb-10">
         <h4 className="text-lg font-black text-pink-500 uppercase mb-4">{title}</h4>
@@ -261,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <div className="flex bg-zinc-900/50 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-8 sticky top-[88px] z-40 backdrop-blur-md">
-        {['seo', 'hero', 'about', 'features', 'vibe', 'stats', 'food', 'drinks', 'events', 'blog', 'faq', 'info', 'gallery', 'terms', 'config'].map(t => (
+        {['seo', 'nav', 'hero', 'about', 'features', 'vibe', 'stats', 'food', 'drinks', 'events', 'blog', 'faq', 'info', 'gallery', 'terms', 'config'].map(t => (
             <button key={t} onClick={() => setTab(t)} className={`px-4 py-5 uppercase font-black text-[10px] tracking-widest transition-all relative flex-shrink-0 ${tab === t ? 'text-pink-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
                 {t}
                 {tab === t && <div className="absolute bottom-0 left-0 right-0 h-1 bg-pink-500"></div>}
@@ -276,6 +293,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <TextArea label="SEO Meta Description" value={headerData.siteDescription} onChange={v => updateHeaderData(prev => ({...prev, siteDescription: v}))} />
                 <MediaPicker label="Logo Media" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
                 <MediaPicker label="Favicon Media" value={headerData.faviconUrl} onChange={v => updateHeaderData(prev => ({...prev, faviconUrl: v}))} />
+            </SectionCard>
+        )}
+
+        {tab === 'nav' && (
+            <SectionCard title="Header Navigation Order">
+                <p className="text-[10px] text-zinc-500 mb-8 uppercase tracking-widest">Reorder how links appear in the header "wings". The list is split automatically (left wing / right wing).</p>
+                <div className="space-y-3">
+                    {(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).map((item, idx) => (
+                        <div key={item} className="flex items-center justify-between bg-zinc-800 p-4 rounded-2xl border border-zinc-700">
+                            <span className="font-black uppercase text-xs tracking-widest text-zinc-300">{item}</span>
+                            <div className="flex gap-2">
+                                <button onClick={() => moveNavItem(idx, 'up')} className="bg-zinc-700 p-2 rounded-lg hover:bg-pink-500 transition-colors">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 15l7-7 7 7" /></svg>
+                                </button>
+                                <button onClick={() => moveNavItem(idx, 'down')} className="bg-zinc-700 p-2 rounded-lg hover:bg-pink-500 transition-colors">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </SectionCard>
         )}
 
@@ -373,48 +411,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </SectionCard>
         )}
 
-        {tab === 'drinks' && (
-            <SectionCard title="Libation Library">
-                <MediaPicker label="Hero Bar Image" value={drinksData.headerImageUrl} onChange={v => updateDrinksData(prev => ({...prev, headerImageUrl: v}))} />
-                <DrinkCategoryEditor title="Cocktails" data={drinksData.cocktailsData} setter={val => updateDrinksData(prev => ({...prev, cocktailsData: val}))} />
-                <DrinkCategoryEditor title="Wines & Champagne" data={drinksData.winesData} setter={val => updateDrinksData(prev => ({...prev, winesData: val}))} />
-                <DrinkCategoryEditor title="Bottle Service" data={drinksData.bottleServiceData} setter={val => updateDrinksData(prev => ({...prev, bottleServiceData: val}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'events' && (
-            <SectionCard title="Epic Events">
-                <MediaPicker label="Events Hero" value={eventsData.hero.image} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, image: v}}))} />
-                {eventsData.sections.map((sec, i) => (
-                    <div key={i} className="bg-zinc-800/30 p-6 rounded-2xl mb-4 border border-zinc-800">
-                        <Input label="Section Title" value={sec.title} onChange={v => {
-                            const next = [...eventsData.sections]; next[i].title = v; updateEventsData(prev => ({...prev, sections: next}));
-                        }} />
-                        <MediaPicker label="Section Media" value={sec.imageUrl} onChange={v => {
-                            const next = [...eventsData.sections]; next[i].imageUrl = v; updateEventsData(prev => ({...prev, sections: next}));
-                        }} />
-                    </div>
-                ))}
-            </SectionCard>
-        )}
-
-        {tab === 'blog' && (
-            <SectionCard title="Blog Stories">
-                <Input label="Heading" value={blogData.heading} onChange={v => updateBlogData(prev => ({...prev, heading: v}))} />
-                {blogData.posts.map((post, i) => (
-                    <div key={i} className="bg-zinc-800/30 p-6 rounded-2xl mb-4 border border-zinc-800">
-                        <Input label="Post Title" value={post.title} onChange={v => {
-                            const next = [...blogData.posts]; next[i].title = v; updateBlogData(prev => ({...prev, posts: next}));
-                        }} />
-                        <MediaPicker label="Post Thumbnail" value={post.imageUrl} onChange={v => {
-                            const next = [...blogData.posts]; next[i].imageUrl = v; updateBlogData(prev => ({...prev, posts: next}));
-                        }} />
-                    </div>
-                ))}
-            </SectionCard>
-        )}
-
         {tab === 'gallery' && (
+            <>
+            <SectionCard title="Gallery Options">
+                <div className="flex items-center gap-4">
+                    <input type="checkbox" checked={galleryData.showOnHome} onChange={e => updateGalleryData(prev => ({...prev, showOnHome: e.target.checked}))} className="w-5 h-5 accent-pink-500" />
+                    <label className="text-xs font-black uppercase tracking-widest text-zinc-300">Show Gallery Preview on Home Page</label>
+                </div>
+            </SectionCard>
             <SectionCard title="Visual Archive">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
                     {galleryData.images.map((img, i) => (
@@ -429,19 +433,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
             </SectionCard>
+            </>
         )}
 
         {tab === 'config' && (
             <div className="space-y-12">
-                <SectionCard title="Storage Connectivity">
+                <SectionCard title="Custom Scripts (Head/Body)">
+                    <CodeArea label="Header Scripts (Inside <head>)" value={headerData.customScripts?.header || ''} onChange={v => updateHeaderData(prev => ({...prev, customScripts: {...prev.customScripts, header: v}}))} />
+                    <CodeArea label="Footer Scripts (Before </body>)" value={headerData.customScripts?.footer || ''} onChange={v => updateHeaderData(prev => ({...prev, customScripts: {...prev.customScripts, footer: v}}))} />
+                </SectionCard>
+
+                <SectionCard title="Server PHP Snippet">
                     <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Ensure your subdomain db.php script matches the snippet below for proper media handling.</p>
                     <div className="bg-black p-8 rounded-[2rem] border border-zinc-800 overflow-x-auto relative mb-6">
                         <pre className="text-[10px] text-green-500 font-mono leading-tight">{phpSnippet}</pre>
                         <button onClick={() => { navigator.clipboard.writeText(phpSnippet); alert("Copied!"); }} className="absolute top-6 right-6 bg-zinc-800 hover:bg-zinc-700 px-5 py-2 rounded-xl text-[10px] font-black">COPY PHP</button>
                     </div>
+                </SectionCard>
+
+                <SectionCard title="Connectivity">
                     <Input label="PHP Sync URL" value={syncUrl} onChange={v => updateSyncUrl(v)} />
                     <Input label="Auth Key (Admin Password)" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
                 </SectionCard>
+
                 <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600 text-red-500 rounded-2xl font-black uppercase tracking-widest">Reset Local Cache</button>
             </div>
         )}

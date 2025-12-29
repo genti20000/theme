@@ -18,14 +18,46 @@ import Terms from './components/Terms';
 import Gallery from './components/Gallery';
 import SongLibrary from './components/SongLibrary';
 import EventsPage from './components/EventsPage';
-import { DataProvider } from './context/DataContext';
+import BlogPage from './components/BlogPage';
+import { DataProvider, useData } from './context/DataContext';
 
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events';
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
+
+const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
+  const { galleryData } = useData();
+
+  return (
+    <main>
+      {currentPage === 'home' && (
+        <>
+          <Hero />
+          <Highlights />
+          <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
+          <Features />
+          <Fitness />
+          <Battery />
+          <Testimonials />
+          <InfoSection />
+          <FAQ />
+          {galleryData.showOnHome && <div className="mt-20"><Gallery /></div>}
+        </>
+      )}
+      {currentPage === 'menu' && <Menu />}
+      {currentPage === 'drinks' && <DrinksMenu />}
+      {currentPage === 'gallery' && <Gallery />}
+      {currentPage === 'songs' && <SongLibrary />}
+      {currentPage === 'events' && <EventsPage />}
+      {currentPage === 'blog' && <BlogPage />}
+      {currentPage === 'admin' && <AdminDashboard />}
+      {currentPage === 'terms' && <Terms />}
+    </main>
+  );
+};
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
 
-  const navigateTo = (page: any) => {
+  const navigateTo = (page: Page) => {
     setCurrentPage(page);
     window.scrollTo(0, 0);
   };
@@ -33,34 +65,22 @@ const App: React.FC = () => {
   return (
     <DataProvider>
       <div className="bg-black text-white min-h-screen relative selection:bg-pink-500 selection:text-white">
-        {currentPage !== 'admin' && <Header onNavigate={navigateTo} />}
-        <main>
-          {currentPage === 'home' && (
-            <>
-              <Hero />
-              <Highlights />
-              <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
-              <Features />
-              <Fitness />
-              <Battery />
-              <Testimonials />
-              <InfoSection />
-              <FAQ />
-            </>
-          )}
-          {currentPage === 'menu' && <Menu />}
-          {currentPage === 'drinks' && <DrinksMenu />}
-          {currentPage === 'gallery' && <Gallery />}
-          {currentPage === 'songs' && <SongLibrary />}
-          {currentPage === 'events' && <EventsPage />}
-          {currentPage === 'admin' && <AdminDashboard />}
-          {currentPage === 'terms' && <Terms />}
-        </main>
-        {currentPage !== 'admin' && <Footer onNavigate={navigateTo} />}
-        {currentPage !== 'admin' && <WhatsAppButton />}
+        {/* We use a subcomponent to access the DataContext */}
+        <AppShell currentPage={currentPage} navigateTo={navigateTo} />
       </div>
     </DataProvider>
   );
 };
+
+const AppShell: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
+    return (
+        <>
+            {currentPage !== 'admin' && <Header onNavigate={navigateTo} />}
+            <MainContent currentPage={currentPage} navigateTo={navigateTo} />
+            {currentPage !== 'admin' && <Footer onNavigate={navigateTo} />}
+            {currentPage !== 'admin' && <WhatsAppButton />}
+        </>
+    );
+}
 
 export default App;

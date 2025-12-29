@@ -15,7 +15,7 @@ export interface DrinksData {
     cocktailsData: DrinkCategory[];
     winesData: DrinkCategory[];
 }
-export interface HeaderData { logoUrl: string; siteTitle: string; siteDescription: string; faviconUrl: string; }
+export interface HeaderData { logoUrl: string; siteTitle: string; siteDescription: string; faviconUrl: string; navOrder: string[]; customScripts?: { header?: string; footer?: string; } }
 export interface HeroData { backgroundImageUrl: string; slides: string[]; mobileSlides?: string[]; badgeText: string; headingText: string; subText: string; buttonText: string; }
 export interface HighlightsData { heading: string; subtext: string; mainImageUrl: string; mobileMainImageUrl?: string; featureListTitle: string; featureList: string[]; sideImageUrl: string; }
 
@@ -43,7 +43,7 @@ export interface BatteryData { statPrefix: string; statNumber: string; statSuffi
 export interface FooterData { ctaHeading: string; ctaText: string; ctaButtonText: string; }
 
 export interface GalleryImage { id: string; url: string; caption: string; }
-export interface GalleryData { heading: string; subtext: string; images: GalleryImage[]; videos?: any[]; }
+export interface GalleryData { heading: string; subtext: string; images: GalleryImage[]; videos?: any[]; showOnHome?: boolean; }
 
 export interface BlogPost { id: string; title: string; date: string; excerpt: string; content: string; imageUrl: string; }
 export interface BlogData { heading: string; subtext: string; posts: BlogPost[]; }
@@ -126,7 +126,9 @@ const INITIAL_SEO: HeaderData = {
     logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png",
     siteTitle: "London Karaoke Club | Private Rooms Soho",
     siteDescription: "Luxury private karaoke booths in London Soho. 80,000+ songs, cocktails and more.",
-    faviconUrl: "/favicon.svg"
+    faviconUrl: "/favicon.svg",
+    navOrder: ["menu", "gallery", "blog", "drinks", "events", "songs"],
+    customScripts: { header: "", footer: "" }
 };
 
 const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
@@ -138,7 +140,7 @@ const INITIAL_FEATURES: FeaturesData = {
 };
 const INITIAL_VIBE: VibeData = { label: "The Vibe", heading: "Soho Nights", text: "Join the energy.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Hard", bottomText: "Until 3AM." };
 const INITIAL_STATS: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." };
-const INITIAL_GALLERY: GalleryData = { heading: "Gallery", subtext: "Moments from Soho", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}] };
+const INITIAL_GALLERY: GalleryData = { heading: "Gallery", subtext: "Moments from Soho", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}], showOnHome: false };
 const INITIAL_BLOG: BlogData = { heading: "LKC Stories", subtext: "News and events.", posts: [{id: '1', title: 'Welcome', date: '2024-01-01', excerpt: 'Site launched.', content: 'Welcome to LKC.', imageUrl: 'https://picsum.photos/seed/blog/800/600'}] };
 const INITIAL_FAQ: FAQData = { heading: "FAQ", subtext: "Questions?", items: [{question: "Where is it?", answer: "Soho, London."}] };
 const INITIAL_DRINKS: DrinksData = {
@@ -216,7 +218,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.7" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.8" 
     }, null, 2);
 
     const importDatabase = (json: any) => {

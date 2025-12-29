@@ -23,7 +23,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-
 const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerData } = useData();
@@ -35,15 +34,21 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     setIsMenuOpen(false);
   }
 
-  const handleScrollToFAQ = () => {
-    onNavigate('home');
-    setIsMenuOpen(false);
-    setTimeout(() => {
-        const faqSection = document.getElementById('faq');
-        if (faqSection) {
-            faqSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, 100);
+  const navLinks = headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"];
+  const half = Math.ceil(navLinks.length / 2);
+  const leftLinks = navLinks.slice(0, half);
+  const rightLinks = navLinks.slice(half);
+
+  const getLabel = (key: string) => {
+      switch(key) {
+          case 'menu': return 'FOOD MENU';
+          case 'gallery': return 'GALLERY';
+          case 'blog': return 'BLOG';
+          case 'drinks': return 'DRINKS';
+          case 'events': return 'EVENTS';
+          case 'songs': return 'SONGS';
+          default: return key.toUpperCase();
+      }
   };
 
   return (
@@ -63,10 +68,6 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         }
         .animate-wing-left { animation: wing-enter-left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         .animate-wing-right { animation: wing-enter-right 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .animate-item-stagger-1 { animation: item-slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards; opacity: 0; }
-        .animate-item-stagger-2 { animation: item-slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s forwards; opacity: 0; }
-        .animate-item-stagger-3 { animation: item-slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards; opacity: 0; }
-        .animate-item-stagger-4 { animation: item-slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s forwards; opacity: 0; }
       `}</style>
       <div className="container mx-auto px-4 py-4 grid grid-cols-[1fr_auto_1fr] items-center">
         <div className="flex justify-start items-center">
@@ -94,15 +95,15 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-500" onClick={() => setIsMenuOpen(false)}></div>
             <div className="relative w-full px-4 pt-8 flex justify-between gap-4 pointer-events-none">
                 <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
-                    <button onClick={() => handleMobileNav('menu')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-stagger-1">FOOD MENU</button>
-                    <button onClick={() => handleMobileNav('gallery')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-stagger-2">GALLERY</button>
-                    <button onClick={() => handleMobileNav('blog')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-stagger-3">BLOG</button>
+                    {leftLinks.map((link, idx) => (
+                        <button key={link} onClick={() => handleMobileNav(link as any)} style={{animationDelay: `${0.3 + idx*0.1}s`}} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards">{getLabel(link)}</button>
+                    ))}
                 </div>
                 <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
-                    <button onClick={() => handleMobileNav('drinks')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-stagger-1">DRINKS</button>
-                    <button onClick={() => handleMobileNav('events')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-stagger-2">EVENTS</button>
-                    <button onClick={() => handleMobileNav('songs')} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-stagger-3">SONGS</button>
-                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl md:text-3xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors animate-item-stagger-4">BOOK NOW</a>
+                    {rightLinks.map((link, idx) => (
+                        <button key={link} onClick={() => handleMobileNav(link as any)} style={{animationDelay: `${0.3 + idx*0.1}s`}} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards">{getLabel(link)}</button>
+                    ))}
+                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl md:text-3xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards" style={{animationDelay: `${0.3 + rightLinks.length*0.1}s`}}>BOOK NOW</a>
                 </div>
             </div>
             <div className="absolute top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-white animate-pulse"></div>
