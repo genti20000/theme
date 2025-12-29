@@ -33,16 +33,17 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     setIsMenuOpen(false);
   };
 
-  // Define the master set of links
-  const defaultLinks = ["home", "menu", "drinks", "gallery", "songs", "events", "blog", "imageEditor"];
+  // Define the master set of links - Removed imageEditor, added admin
+  const defaultLinks = ["home", "menu", "drinks", "gallery", "songs", "events", "blog", "admin"];
   
   // Clean navigation data
   const rawLinks = (headerData.navOrder && headerData.navOrder.length > 0) 
     ? headerData.navOrder 
     : defaultLinks;
 
-  const navLinks = Array.from(new Set(["home", ...rawLinks, "imageEditor"]))
-    .filter(link => link && typeof link === 'string' && link.trim() !== "");
+  // Replaced "imageEditor" with "admin" in the primary nav set
+  const navLinks = Array.from(new Set(["home", ...rawLinks, "admin"]))
+    .filter(link => link && typeof link === 'string' && link.trim() !== "" && link !== "imageEditor");
 
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = navLinks.slice(0, half);
@@ -57,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           case 'drinks': return 'DRINKS';
           case 'events': return 'EVENTS';
           case 'songs': return 'SONG LIST';
-          case 'imageeditor': return 'AI STUDIO';
+          case 'admin': return 'MENU MANAGEMENT'; // Label updated from Admin to Menu Management
           default: return key.toUpperCase();
       }
   };
