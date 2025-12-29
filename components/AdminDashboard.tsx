@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useData, DrinkCategory, MenuCategory } from '../context/DataContext';
+import ImageOptimizer, { PresetType, optimizeImage } from './ImageOptimizer';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode; enabled?: boolean; onToggle?: (v: boolean) => void }> = ({ title, children, enabled, onToggle }) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-sm">
@@ -68,7 +69,7 @@ const AdminDashboard: React.FC = () => {
     featuresData, updateFeaturesData, vibeData, updateVibeData, foodMenu, updateFoodMenu,
     drinksData, updateDrinksData, testimonialsData, updateTestimonialsData,
     infoSectionData, updateInfoSectionData, eventsData, updateEventsData,
-    termsData, updateTermsData, fetchServerFiles
+    termsData, updateTermsData, fetchServerFiles, optimizationSettings, updateOptimizationSettings
   } = useData();
 
   const batchFileRef = useRef<HTMLInputElement>(null);
@@ -79,17 +80,28 @@ const AdminDashboard: React.FC = () => {
     }
   }, [isLibraryOpen, fetchServerFiles]);
 
-  const MediaPicker: React.FC<{ label: string; value: string; onChange: (v: string) => void; horizontal?: boolean }> = ({ label, value, onChange, horizontal }) => {
+  const MediaPicker: React.FC<{ label: string; value: string; onChange: (v: string) => void; horizontal?: boolean; preset?: PresetType }> = ({ label, value, onChange, horizontal, preset = 'general' }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [optimizerFile, setOptimizerFile] = useState<File | null>(null);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      setUploading(true);
-      const url = await uploadFile(file);
-      if (url) onChange(url);
-      setUploading(false);
+
+      if (optimizationSettings.enabled && file.type.startsWith('image/')) {
+        setOptimizerFile(file);
+      } else {
+        await processAndUpload(file);
+      }
+    };
+
+    const processAndUpload = async (file: File | Blob) => {
+        setUploading(true);
+        const url = await uploadFile(file);
+        if (url) onChange(url);
+        setUploading(false);
+        setOptimizerFile(null);
     };
 
     const openLibrary = () => {
@@ -129,6 +141,24 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        {optimizerFile && (
+            <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
+                <div className="max-w-md w-full">
+                    <ImageOptimizer 
+                        file={optimizerFile} 
+                        preset={preset}
+                        quality={optimizationSettings.quality}
+                        maxWidths={{
+                            hero: optimizationSettings.maxHeroWidth,
+                            gallery: optimizationSettings.maxGalleryWidth,
+                            general: optimizationSettings.maxGeneralWidth
+                        }}
+                        onOptimized={(res) => processAndUpload(res.blob)}
+                        onCancel={() => processAndUpload(optimizerFile)}
+                    />
+                </div>
+            </div>
+        )}
       </div>
     );
   };
@@ -191,7 +221,27 @@ const AdminDashboard: React.FC = () => {
     const files = e.target.files;
     if (!files) return;
     for (let i = 0; i < files.length; i++) {
-        const url = await uploadFile(files[i]);
+        let fileToUpload: File | Blob = files[i];
+        
+        if (optimizationSettings.enabled && fileToUpload.type.startsWith('image/')) {
+            try {
+                const opt = await optimizeImage(
+                    files[i], 
+                    optimizationSettings.quality / 100, 
+                    'gallery', 
+                    {
+                        hero: optimizationSettings.maxHeroWidth,
+                        gallery: optimizationSettings.maxGalleryWidth,
+                        general: optimizationSettings.maxGeneralWidth
+                    }
+                );
+                fileToUpload = opt.blob;
+            } catch (err) {
+                console.warn("Optimization failed for batch item, using original", err);
+            }
+        }
+
+        const url = await uploadFile(fileToUpload);
         if (url) {
             updateGalleryData(prev => ({
                 ...prev,
@@ -306,7 +356,7 @@ const AdminDashboard: React.FC = () => {
                             </div>
                             
                             <div className="grid md:grid-cols-2 gap-12">
-                              <MediaPicker label="Desktop Asset (16:9)" value={s} onChange={v => {
+                              <MediaPicker preset="hero" label="Desktop Asset (16:9)" value={s} onChange={v => {
                                   updateHeroData(prev => {
                                     const next = [...prev.slides];
                                     next[i] = v;
@@ -376,8 +426,54 @@ const AdminDashboard: React.FC = () => {
             </SectionCard>
         )}
 
+        {tab === 'gallery' && (
+             <SectionCard title="Media Gallery Management">
+                <div className="mb-10 bg-black/40 p-8 rounded-[3rem] border border-zinc-800 border-dashed text-center">
+                    <input type="file" ref={batchFileRef} multiple accept="image/*" onChange={handleBatchUpload} className="hidden" />
+                    <button onClick={() => batchFileRef.current?.click()} className="bg-pink-600 hover:bg-pink-500 text-white font-black uppercase tracking-widest text-[11px] py-4 px-12 rounded-full transition-all shadow-lg active:scale-95">
+                         {isDataLoading ? 'Processing Batch...' : 'Batch Upload Optimized Images'}
+                    </button>
+                    <p className="mt-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black">Upload multiple files to the Soho server. Automatically optimizes if enabled.</p>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {galleryData.images.map((img, idx) => (
+                        <div key={img.id} className="relative aspect-square bg-zinc-800 rounded-2xl overflow-hidden border border-zinc-700 group">
+                            <img src={img.url} className="w-full h-full object-cover" alt="" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
+                                <button onClick={() => updateGalleryData(prev => ({...prev, images: prev.images.filter(i => i.id !== img.id)}))} className="bg-red-600 text-white font-black uppercase text-[10px] px-4 py-2 rounded-full">Delete</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </SectionCard>
+        )}
+
         {tab === 'config' && (
             <div className="space-y-12">
+                <SectionCard title="Image Optimization Engine">
+                    <Toggle label="Auto-Optimize Uploads" checked={optimizationSettings.enabled} onChange={v => updateOptimizationSettings(prev => ({...prev, enabled: v}))} />
+                    <div className="mt-8 space-y-6">
+                        <div>
+                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">Compression Quality: {optimizationSettings.quality}%</label>
+                            <input 
+                                type="range" 
+                                min="10" 
+                                max="100" 
+                                value={optimizationSettings.quality} 
+                                onChange={e => updateOptimizationSettings(prev => ({...prev, quality: parseInt(e.target.value)}))}
+                                className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <Input label="Max Hero Width" value={optimizationSettings.maxHeroWidth.toString()} onChange={v => updateOptimizationSettings(prev => ({...prev, maxHeroWidth: parseInt(v) || 1920}))} />
+                            <Input label="Max Gallery Width" value={optimizationSettings.maxGalleryWidth.toString()} onChange={v => updateOptimizationSettings(prev => ({...prev, maxGalleryWidth: parseInt(v) || 800}))} />
+                            <Input label="Max General Width" value={optimizationSettings.maxGeneralWidth.toString()} onChange={v => updateOptimizationSettings(prev => ({...prev, maxGeneralWidth: parseInt(v) || 1200}))} />
+                        </div>
+                        <p className="text-[10px] text-zinc-600 uppercase font-black leading-relaxed">Optimization targets: Under 300KB for standard photos, under 500KB for hero backgrounds. WebP format enforced.</p>
+                    </div>
+                </SectionCard>
+
                 <SectionCard title="Developer & Script Injection">
                     <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Paste third-party scripts here (Analytics, Facebook Pixel, Custom CSS, etc.)</p>
                     <CodeArea label="Header Scripts (<head>)" value={headerData.customScripts?.header || ''} onChange={v => updateHeaderData(prev => ({...prev, customScripts: {...prev.customScripts, header: v}}))} />

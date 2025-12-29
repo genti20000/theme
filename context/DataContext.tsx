@@ -72,6 +72,14 @@ export interface TermItem { title: string; content: string; }
 
 export interface FirebaseConfig { databaseURL: string; apiKey: string; }
 
+export interface OptimizationSettings {
+    enabled: boolean;
+    quality: number;
+    maxHeroWidth: number;
+    maxGalleryWidth: number;
+    maxGeneralWidth: number;
+}
+
 interface DataContextType {
     foodMenu: MenuCategory[];
     updateFoodMenu: React.Dispatch<React.SetStateAction<MenuCategory[]>>;
@@ -107,6 +115,8 @@ interface DataContextType {
     updateTermsData: React.Dispatch<React.SetStateAction<TermItem[]>>;
     songs: Song[];
     updateSongs: React.Dispatch<React.SetStateAction<Song[]>>;
+    optimizationSettings: OptimizationSettings;
+    updateOptimizationSettings: React.Dispatch<React.SetStateAction<OptimizationSettings>>;
     adminPassword: string;
     updateAdminPassword: React.Dispatch<React.SetStateAction<string>>;
     syncUrl: string;
@@ -132,6 +142,14 @@ const INITIAL_SEO: HeaderData = {
     faviconUrl: "/favicon.svg",
     navOrder: ["menu", "gallery", "blog", "drinks", "events", "songs"],
     customScripts: { header: "", footer: "" }
+};
+
+const INITIAL_OPTIMIZATION: OptimizationSettings = {
+    enabled: true,
+    quality: 85,
+    maxHeroWidth: 1920,
+    maxGalleryWidth: 800,
+    maxGeneralWidth: 1200
 };
 
 const INITIAL_FOOD: MenuCategory[] = [
@@ -233,6 +251,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Epic Events", subtitle: "Private bookings in Soho.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
+    const [optimizationSettings, setOptimizationSettings] = useState<OptimizationSettings>(() => init('optimizationSettings', INITIAL_OPTIMIZATION));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', 'https://files.londonkaraoke.club/db.php'));
     const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', { databaseURL: '', apiKey: '' }));
@@ -264,6 +283,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
     useEffect(() => { persist('termsData', termsData); }, [termsData]);
     useEffect(() => { persist('songs', songs); }, [songs]);
+    useEffect(() => { persist('optimizationSettings', optimizationSettings); }, [optimizationSettings]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
     useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
     useEffect(() => { persist('firebaseConfig', firebaseConfig); }, [firebaseConfig]);
@@ -271,7 +291,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.9" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, optimizationSettings, version: "6.0" 
     }, null, 2);
 
     const importDatabase = (json: any) => {
@@ -293,6 +313,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.eventsData) setEventsData(c.eventsData);
             if (c.termsData) setTermsData(c.termsData);
             if (c.songs) setSongs(c.songs);
+            if (c.optimizationSettings) setOptimizationSettings(c.optimizationSettings);
             return true;
         } catch (e) { return false; }
     };
@@ -385,6 +406,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
             eventsData, updateEventsData: setEventsData, termsData, updateTermsData: setTermsData,
             songs, updateSongs: setSongs,
+            optimizationSettings, updateOptimizationSettings: setOptimizationSettings,
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             firebaseConfig, updateFirebaseConfig: setFirebaseConfig, isDataLoading,
             purgeCache: () => { localStorage.clear(); window.location.reload(); },
