@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useData, DrinkCategory, MenuCategory } from '../context/DataContext';
+import { useData, DrinkCategory, MenuCategory, BlogPost } from '../context/DataContext';
 import ImageOptimizer, { PresetType, optimizeImage } from './ImageOptimizer';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode; enabled?: boolean; onToggle?: (v: boolean) => void }> = ({ title, children, enabled, onToggle }) => (
@@ -160,6 +160,79 @@ const AdminDashboard: React.FC = () => {
             </div>
         )}
       </div>
+    );
+  };
+
+  const BlogCMS: React.FC = () => {
+    const addPost = () => {
+        const newPost: BlogPost = {
+            id: Date.now().toString(),
+            title: "New Soho Story",
+            date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+            excerpt: "A new night to remember at LKC...",
+            content: "Start writing your story here...",
+            imageUrl: "https://picsum.photos/seed/newblog/800/600"
+        };
+        updateBlogData(prev => ({ ...prev, posts: [newPost, ...prev.posts] }));
+    };
+
+    const updatePost = (id: string, updates: Partial<BlogPost>) => {
+        updateBlogData(prev => ({
+            ...prev,
+            posts: prev.posts.map(p => p.id === id ? { ...p, ...updates } : p)
+        }));
+    };
+
+    const deletePost = (id: string) => {
+        if (confirm("Permanently delete this story?")) {
+            updateBlogData(prev => ({ ...prev, posts: prev.posts.filter(p => p.id !== id) }));
+        }
+    };
+
+    return (
+        <div className="space-y-12">
+            <SectionCard title="Blog Headers">
+                <Input label="Main Heading" value={blogData.heading} onChange={v => updateBlogData(prev => ({ ...prev, heading: v }))} />
+                <TextArea label="Subtext" value={blogData.subtext} onChange={v => updateBlogData(prev => ({ ...prev, subtext: v }))} />
+            </SectionCard>
+
+            <div className="flex justify-between items-center px-4">
+                <h4 className="text-xl font-black uppercase italic tracking-tighter">Stories List</h4>
+                <button onClick={addPost} className="bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-black uppercase px-6 py-3 rounded-xl transition-all shadow-lg">+ New Post</button>
+            </div>
+
+            <div className="space-y-8">
+                {blogData.posts.map((post) => (
+                    <div key={post.id} className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] p-8 relative overflow-hidden group">
+                        <div className="absolute top-8 right-8 z-10">
+                            <button onClick={() => deletePost(post.id)} className="bg-red-500/10 text-red-500 p-3 rounded-full hover:bg-red-500 hover:text-white transition-all">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                            <div className="space-y-6">
+                                <Input label="Post Title" value={post.title} onChange={v => updatePost(post.id, { title: v })} />
+                                <Input label="Display Date" value={post.date} onChange={v => updatePost(post.id, { date: v })} />
+                                <MediaPicker label="Feature Image" value={post.imageUrl} onChange={v => updatePost(post.id, { imageUrl: v })} />
+                            </div>
+                            <div className="space-y-6">
+                                <TextArea label="Excerpt (Feed Summary)" value={post.excerpt} onChange={v => updatePost(post.id, { excerpt: v })} />
+                                <div className="mb-6">
+                                    <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">Full Content</label>
+                                    <textarea 
+                                        rows={12} 
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium leading-relaxed text-sm" 
+                                        value={post.content} 
+                                        onChange={(e) => updatePost(post.id, { content: e.target.value })} 
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
   };
 
@@ -447,6 +520,10 @@ const AdminDashboard: React.FC = () => {
                     ))}
                 </div>
             </SectionCard>
+        )}
+
+        {tab === 'blog' && (
+            <BlogCMS />
         )}
 
         {tab === 'config' && (
