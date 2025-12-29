@@ -21,7 +21,12 @@ const Highlights: React.FC = () => {
           <img 
             src={highlightsData.mainImageUrl} 
             alt="Friends singing karaoke" 
-            className="w-full h-full object-cover"
+            className="hidden md:block w-full h-full object-cover"
+          />
+          <img 
+            src={highlightsData.mobileMainImageUrl || highlightsData.mainImageUrl} 
+            alt="Friends singing karaoke" 
+            className="md:hidden block w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/10"></div>
       </div>

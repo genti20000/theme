@@ -288,17 +288,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label className="text-[11px] font-black text-zinc-500 uppercase">Slide Backgrounds</label>
                     {heroData.slides.map((s, i) => (
                         <div key={i} className="bg-zinc-800/20 p-4 rounded-2xl border border-zinc-800">
-                            <MediaPicker label={`Slide ${i + 1}`} value={s} onChange={v => {
+                            <MediaPicker label={`Slide ${i + 1} (Desktop)`} value={s} onChange={v => {
                                 updateHeroData(prev => {
                                   const next = [...prev.slides];
                                   next[i] = v;
                                   return { ...prev, slides: next };
                                 });
                             }} />
-                            <button onClick={() => updateHeroData(prev => ({...prev, slides: prev.slides.filter((_, idx) => idx !== i)}))} className="text-red-500 text-[10px] font-black uppercase">Remove Slide</button>
+                            <MediaPicker label={`Slide ${i + 1} (Mobile Version)`} value={heroData.mobileSlides?.[i] || ''} onChange={v => {
+                                updateHeroData(prev => {
+                                    const next = [...(prev.mobileSlides || [])];
+                                    next[i] = v;
+                                    return {...prev, mobileSlides: next};
+                                });
+                            }} />
+                            <button onClick={() => updateHeroData(prev => ({...prev, slides: prev.slides.filter((_, idx) => idx !== i), mobileSlides: prev.mobileSlides?.filter((_, idx) => idx !== i)}))} className="text-red-500 text-[10px] font-black uppercase">Remove Slide</button>
                         </div>
                     ))}
-                    <button onClick={() => updateHeroData(prev => ({...prev, slides: [...prev.slides, '']}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW SLIDE</button>
+                    <button onClick={() => updateHeroData(prev => ({...prev, slides: [...prev.slides, ''], mobileSlides: [...(prev.mobileSlides || []), '']}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW SLIDE</button>
                 </div>
             </SectionCard>
         )}
@@ -307,7 +314,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <SectionCard title="The Soho Highlights">
                 <Input label="Main Heading" value={highlightsData.heading} onChange={v => updateHighlightsData(prev => ({...prev, heading: v}))} />
                 <TextArea label="Subtext" value={highlightsData.subtext} onChange={v => updateHighlightsData(prev => ({...prev, subtext: v}))} />
-                <MediaPicker label="Main Section Image" value={highlightsData.mainImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, mainImageUrl: v}))} />
+                <MediaPicker label="Main Section Image (Desktop)" value={highlightsData.mainImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, mainImageUrl: v}))} />
+                <MediaPicker label="Main Section Image (Mobile Version)" value={highlightsData.mobileMainImageUrl || ''} onChange={v => updateHighlightsData(prev => ({...prev, mobileMainImageUrl: v}))} />
                 <Input label="Features Title" value={highlightsData.featureListTitle} onChange={v => updateHighlightsData(prev => ({...prev, featureListTitle: v}))} />
                 <div className="space-y-4">
                     <label className="text-[11px] font-black text-zinc-500 uppercase">Features List</label>
@@ -335,7 +343,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <Input label="Label" value={featuresData.experience.label} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, label: v}}))} />
                     <Input label="Heading" value={featuresData.experience.heading} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, heading: v}}))} />
                     <TextArea label="Text" value={featuresData.experience.text} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, text: v}}))} />
-                    <MediaPicker label="Section Media" value={featuresData.experience.image} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, image: v}}))} />
+                    <MediaPicker label="Section Media (Desktop)" value={featuresData.experience.image} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, image: v}}))} />
+                    <MediaPicker label="Section Media (Mobile Version)" value={featuresData.experience.mobileImage || ''} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, mobileImage: v}}))} />
                 </SectionCard>
                 <SectionCard title="Feature Grid Items">
                     {featuresData.grid.items.map((item, i) => (
@@ -357,8 +366,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <Input label="Heading" value={vibeData.heading} onChange={v => updateVibeData(prev => ({...prev, heading: v}))} />
                 <MediaPicker label="Circle Image 1" value={vibeData.image1} onChange={v => updateVibeData(prev => ({...prev, image1: v}))} />
                 <MediaPicker label="Circle Image 2" value={vibeData.image2} onChange={v => updateVibeData(prev => ({...prev, image2: v}))} />
-                <MediaPicker label="Background Video (MP4)" value={vibeData.videoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, videoUrl: v}))} />
-                <MediaPicker label="Bottom Full Width Media" value={vibeData.bigImage} onChange={v => updateVibeData(prev => ({...prev, bigImage: v}))} />
+                <MediaPicker label="Background Video (Desktop MP4)" value={vibeData.videoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, videoUrl: v}))} />
+                <MediaPicker label="Background Video (Mobile Version)" value={vibeData.mobileVideoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, mobileVideoUrl: v}))} />
+                <MediaPicker label="Bottom Full Width Media (Desktop)" value={vibeData.bigImage} onChange={v => updateVibeData(prev => ({...prev, bigImage: v}))} />
+                <MediaPicker label="Bottom Full Width Media (Mobile Version)" value={vibeData.mobileBigImage || ''} onChange={v => updateVibeData(prev => ({...prev, mobileBigImage: v}))} />
             </SectionCard>
         )}
 

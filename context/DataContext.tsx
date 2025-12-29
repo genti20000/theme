@@ -16,11 +16,11 @@ export interface DrinksData {
     winesData: DrinkCategory[];
 }
 export interface HeaderData { logoUrl: string; siteTitle: string; siteDescription: string; faviconUrl: string; }
-export interface HeroData { backgroundImageUrl: string; slides: string[]; badgeText: string; headingText: string; subText: string; buttonText: string; }
-export interface HighlightsData { heading: string; subtext: string; mainImageUrl: string; featureListTitle: string; featureList: string[]; sideImageUrl: string; }
+export interface HeroData { backgroundImageUrl: string; slides: string[]; mobileSlides?: string[]; badgeText: string; headingText: string; subText: string; buttonText: string; }
+export interface HighlightsData { heading: string; subtext: string; mainImageUrl: string; mobileMainImageUrl?: string; featureListTitle: string; featureList: string[]; sideImageUrl: string; }
 
 export interface FeaturesData {
-    experience: { label: string; heading: string; text: string; image: string; };
+    experience: { label: string; heading: string; text: string; image: string; mobileImage?: string; };
     occasions: { heading: string; text: string; items: { title: string; text: string; }[]; };
     grid: { heading: string; items: { title: string; description: string; image: string; }[]; };
 }
@@ -32,7 +32,9 @@ export interface VibeData {
     image1: string;
     image2: string;
     videoUrl?: string;
+    mobileVideoUrl?: string;
     bigImage: string;
+    mobileBigImage?: string;
     bottomHeading: string;
     bottomText: string;
 }
@@ -127,7 +129,7 @@ const INITIAL_SEO: HeaderData = {
     faviconUrl: "/favicon.svg"
 };
 
-const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
+const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
 const INITIAL_HIGHLIGHTS: HighlightsData = { heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs", "Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
 const INITIAL_FEATURES: FeaturesData = {
     experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
@@ -214,7 +216,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.1" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.7" 
     }, null, 2);
 
     const importDatabase = (json: any) => {

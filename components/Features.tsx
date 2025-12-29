@@ -19,7 +19,12 @@ const Features: React.FC = () => {
             <img 
                 src={experience?.image} 
                 alt="Interior of a stylish karaoke room" 
-                className="w-full h-full object-cover md:opacity-40"
+                className="hidden md:block w-full h-full object-cover md:opacity-40"
+            />
+            <img 
+                src={experience?.mobileImage || experience?.image} 
+                alt="Interior of a stylish karaoke room" 
+                className="md:hidden block w-full h-full object-cover md:opacity-40"
             />
             <div className="hidden md:block absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black"></div>
           </div>

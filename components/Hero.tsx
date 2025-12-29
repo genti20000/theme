@@ -45,7 +45,7 @@ const Hero: React.FC = () => {
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  const isVideo = (url: string) => url.toLowerCase().match(/\.(mp4|webm|mov)$/);
+  const isVideo = (url: string) => url?.toLowerCase().match(/\.(mp4|webm|mov)$/);
 
   return (
     <section className="relative h-[90vh] md:h-screen flex flex-col items-center justify-end pb-12 md:pb-24 text-center text-white overflow-hidden bg-black" aria-label="Welcome">
@@ -68,24 +68,25 @@ const Hero: React.FC = () => {
       >
         {slides.map((slide, index) => {
              const active = index === currentSlide;
+             const mobileSlide = heroData.mobileSlides?.[index] || slide;
              return (
                 <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${active ? 'opacity-100' : 'opacity-0'}`}>
-                    {isVideo(slide) ? (
-                        <video
-                            src={slide}
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            className="w-full h-full object-cover animate-zoom-slow"
-                        />
-                    ) : (
-                        <img 
-                            src={slide}
-                            alt=""
-                            className="w-full h-full object-cover object-center animate-zoom-slow"
-                        />
-                    )}
+                    {/* Desktop Version */}
+                    <div className="hidden md:block w-full h-full">
+                        {isVideo(slide) ? (
+                            <video src={slide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
+                        ) : (
+                            <img src={slide} alt="" className="w-full h-full object-cover object-center animate-zoom-slow" />
+                        )}
+                    </div>
+                    {/* Mobile Version */}
+                    <div className="md:hidden block w-full h-full">
+                         {isVideo(mobileSlide) ? (
+                            <video src={mobileSlide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
+                        ) : (
+                            <img src={mobileSlide} alt="" className="w-full h-full object-cover object-center animate-zoom-slow" />
+                        )}
+                    </div>
                 </div>
              );
         })}

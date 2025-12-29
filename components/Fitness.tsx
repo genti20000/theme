@@ -19,14 +19,18 @@ const Fitness: React.FC = () => {
         </div>
         <div className="relative aspect-[2.35/1] max-w-6xl mx-auto">
             {vibeData.videoUrl ? (
-                <video 
-                    src={vibeData.videoUrl} 
-                    autoPlay 
-                    muted 
-                    loop 
-                    playsInline 
-                    className="w-full h-full object-cover rounded-3xl border-[4px] border-zinc-800 shadow-2xl"
-                />
+                <>
+                    <video 
+                        src={vibeData.videoUrl} 
+                        autoPlay muted loop playsInline 
+                        className="hidden md:block w-full h-full object-cover rounded-3xl border-[4px] border-zinc-800 shadow-2xl"
+                    />
+                    <video 
+                        src={vibeData.mobileVideoUrl || vibeData.videoUrl} 
+                        autoPlay muted loop playsInline 
+                        className="md:hidden block w-full h-full object-cover rounded-3xl border-[4px] border-zinc-800 shadow-2xl"
+                    />
+                </>
             ) : (
                 <>
                     <img src={vibeData.image1} alt="Vibe Image 1" className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full object-cover rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl"/>
@@ -44,7 +48,12 @@ const Fitness: React.FC = () => {
                 <img 
                     src={vibeData.bigImage} 
                     alt="Party Atmosphere" 
-                    className="w-full h-full object-cover md:opacity-60"
+                    className="hidden md:block w-full h-full object-cover md:opacity-60"
+                />
+                <img 
+                    src={vibeData.mobileBigImage || vibeData.bigImage} 
+                    alt="Party Atmosphere" 
+                    className="md:hidden block w-full h-full object-cover md:opacity-60"
                 />
                 <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent"></div>
             </div>
