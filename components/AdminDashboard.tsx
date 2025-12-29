@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useData, DrinkCategory, MenuCategory, BlogPost } from '../context/DataContext';
 import ImageOptimizer, { PresetType, optimizeImage } from './ImageOptimizer';
+import { GoogleGenAI } from "@google/genai";
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode; enabled?: boolean; onToggle?: (v: boolean) => void }> = ({ title, children, enabled, onToggle }) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-sm">
@@ -60,16 +61,17 @@ const AdminDashboard: React.FC = () => {
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [activeLibraryCallback, setActiveLibraryCallback] = useState<(url: string) => void>(() => {});
   const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [groundingSources, setGroundingSources] = useState<{title: string, uri: string}[]>([]);
+  const [aiStep, setAiStep] = useState<string>('');
 
   const { 
     isDataLoading, headerData, updateHeaderData, heroData, updateHeroData, highlightsData, updateHighlightsData,
     batteryData, updateBatteryData, galleryData, updateGalleryData, blogData, updateBlogData, 
     faqData, updateFaqData, songs, updateSongs, adminPassword, updateAdminPassword, syncUrl, updateSyncUrl,
-    firebaseConfig, updateFirebaseConfig, saveToHostinger, uploadFile, purgeCache,
-    featuresData, updateFeaturesData, vibeData, updateVibeData, foodMenu, updateFoodMenu,
-    drinksData, updateDrinksData, testimonialsData, updateTestimonialsData,
-    infoSectionData, updateInfoSectionData, eventsData, updateEventsData,
-    termsData, updateTermsData, fetchServerFiles, optimizationSettings, updateOptimizationSettings
+    saveToHostinger, uploadFile, purgeCache,
+    foodMenu, updateFoodMenu,
+    fetchServerFiles, optimizationSettings, updateOptimizationSettings
   } = useData();
 
   const batchFileRef = useRef<HTMLInputElement>(null);
@@ -79,6 +81,77 @@ const AdminDashboard: React.FC = () => {
       fetchServerFiles().then(setStorageFiles);
     }
   }, [isLibraryOpen, fetchServerFiles]);
+
+  const handleAiSeoOptimize = async (mode: 'fast' | 'trend' | 'deep') => {
+    setAiLoading(true);
+    setGroundingSources([]);
+    
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      
+      let model = 'gemini-2.5-flash-lite-latest';
+      let config: any = { responseMimeType: "application/json" };
+      let prompt = `Analyze the current Soho karaoke club scene. Propose a JSON site title (max 60 chars) and meta description (max 160 chars) for "London Karaoke Club". 
+                   Context: "${highlightsData.subtext}". 
+                   Return format: {"title": "...", "description": "..."}`;
+
+      if (mode === 'fast') {
+        setAiStep('Initiating low-latency response...');
+        model = 'gemini-2.5-flash-lite-latest';
+      } else if (mode === 'trend') {
+        setAiStep('Searching Google for latest Soho trends...');
+        model = 'gemini-3-flash-preview';
+        config.tools = [{ googleSearch: {} }];
+        prompt = `Search for the most trending nightlife and karaoke keywords in London Soho for 2024/2025. 
+                 Based on the search results, suggest a highly optimized site title and meta description for "London Karaoke Club". 
+                 Return format: {"title": "...", "description": "..."}`;
+      } else if (mode === 'deep') {
+        setAiStep('Engaging Deep Thinking mode for strategic analysis...');
+        model = 'gemini-3-pro-preview';
+        config.thinkingConfig = { thinkingBudget: 32768 };
+        prompt = `As a world-class SEO strategist, perform a deep analysis of "London Karaoke Club" brand positioning. 
+                 Consider psychological hooks for party groups, Soho's competitive landscape, and premium service delivery. 
+                 Think through the optimal metadata strategy, then provide a JSON object with "title" and "description".`;
+      }
+
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config,
+      });
+
+      const text = response.text;
+      if (text) {
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        const result = JSON.parse(cleaned);
+        updateHeaderData(prev => ({
+          ...prev,
+          siteTitle: result.title || prev.siteTitle,
+          siteDescription: result.description || prev.siteDescription
+        }));
+      }
+
+      // Extract grounding sources if trend mode used Search
+      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+      if (chunks) {
+        const sources = chunks
+          .filter((chunk: any) => chunk.web)
+          .map((chunk: any) => ({
+            title: chunk.web.title || 'Market Source',
+            uri: chunk.web.uri
+          }));
+        setGroundingSources(sources);
+      }
+      setAiStep('Optimization complete!');
+      setTimeout(() => setAiStep(''), 3000);
+    } catch (e) {
+      console.error("AI SEO Error:", e);
+      alert("AI task failed. Ensure your API key is valid and you are using a supported model.");
+      setAiStep('Error encountered.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const MediaPicker: React.FC<{ label: string; value: string; onChange: (v: string) => void; horizontal?: boolean; preset?: PresetType }> = ({ label, value, onChange, horizontal, preset = 'general' }) => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -163,167 +236,6 @@ const AdminDashboard: React.FC = () => {
     );
   };
 
-  const BlogCMS: React.FC = () => {
-    const addPost = () => {
-        const newPost: BlogPost = {
-            id: Date.now().toString(),
-            title: "New Soho Story",
-            date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-            excerpt: "A new night to remember at LKC...",
-            content: "Start writing your story here...",
-            imageUrl: "https://picsum.photos/seed/newblog/800/600"
-        };
-        updateBlogData(prev => ({ ...prev, posts: [newPost, ...prev.posts] }));
-    };
-
-    const updatePost = (id: string, updates: Partial<BlogPost>) => {
-        updateBlogData(prev => ({
-            ...prev,
-            posts: prev.posts.map(p => p.id === id ? { ...p, ...updates } : p)
-        }));
-    };
-
-    const deletePost = (id: string) => {
-        if (confirm("Permanently delete this story?")) {
-            updateBlogData(prev => ({ ...prev, posts: prev.posts.filter(p => p.id !== id) }));
-        }
-    };
-
-    return (
-        <div className="space-y-12">
-            <SectionCard title="Blog Headers">
-                <Input label="Main Heading" value={blogData.heading} onChange={v => updateBlogData(prev => ({ ...prev, heading: v }))} />
-                <TextArea label="Subtext" value={blogData.subtext} onChange={v => updateBlogData(prev => ({ ...prev, subtext: v }))} />
-            </SectionCard>
-
-            <div className="flex justify-between items-center px-4">
-                <h4 className="text-xl font-black uppercase italic tracking-tighter">Stories List</h4>
-                <button onClick={addPost} className="bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-black uppercase px-6 py-3 rounded-xl transition-all shadow-lg">+ New Post</button>
-            </div>
-
-            <div className="space-y-8">
-                {blogData.posts.map((post) => (
-                    <div key={post.id} className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] p-8 relative overflow-hidden group">
-                        <div className="absolute top-8 right-8 z-10">
-                            <button onClick={() => deletePost(post.id)} className="bg-red-500/10 text-red-500 p-3 rounded-full hover:bg-red-500 hover:text-white transition-all">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                            <div className="space-y-6">
-                                <Input label="Post Title" value={post.title} onChange={v => updatePost(post.id, { title: v })} />
-                                <Input label="Display Date" value={post.date} onChange={v => updatePost(post.id, { date: v })} />
-                                <MediaPicker label="Feature Image" value={post.imageUrl} onChange={v => updatePost(post.id, { imageUrl: v })} />
-                            </div>
-                            <div className="space-y-6">
-                                <TextArea label="Excerpt (Feed Summary)" value={post.excerpt} onChange={v => updatePost(post.id, { excerpt: v })} />
-                                <div className="mb-6">
-                                    <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">Full Content</label>
-                                    <textarea 
-                                        rows={12} 
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium leading-relaxed text-sm" 
-                                        value={post.content} 
-                                        onChange={(e) => updatePost(post.id, { content: e.target.value })} 
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-  };
-
-  const FoodCategoryEditor = ({ data, setter }: { data: MenuCategory[], setter: (val: MenuCategory[]) => void }) => (
-    <div className="space-y-6">
-        {data.map((cat, ci) => (
-            <div key={ci} className="bg-zinc-800/30 p-6 rounded-3xl mb-4 border border-zinc-800">
-                <div className="flex gap-4 items-end mb-6">
-                    <div className="flex-grow">
-                        <Input label="Category Name" value={cat.category} onChange={v => {
-                            const next = [...data]; next[ci].category = v; setter(next);
-                        }} />
-                    </div>
-                    <button onClick={() => setter(data.filter((_, idx) => idx !== ci))} className="mb-6 bg-red-900/20 text-red-500 p-3 rounded-xl hover:bg-red-500 hover:text-white transition-all">×</button>
-                </div>
-                <div className="space-y-3">
-                    {cat.items.map((item, ii) => (
-                        <div key={ii} className="bg-black/20 p-4 rounded-2xl border border-zinc-800/50">
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                                <div className="md:col-span-4">
-                                    <input className="w-full bg-zinc-900 border border-zinc-700 p-2.5 rounded-xl text-xs text-white outline-none focus:border-pink-500" value={item.name} onChange={e => {
-                                        const next = [...data]; next[ci].items[ii].name = e.target.value; setter(next);
-                                    }} placeholder="Item Name" />
-                                </div>
-                                <div className="md:col-span-5">
-                                    <input className="w-full bg-zinc-900 border border-zinc-700 p-2.5 rounded-xl text-xs text-zinc-400 outline-none focus:border-pink-500" value={item.description} onChange={e => {
-                                        const next = [...data]; next[ci].items[ii].description = e.target.value; setter(next);
-                                    }} placeholder="Description" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <input className="w-full bg-zinc-900 border border-zinc-700 p-2.5 rounded-xl text-xs text-white font-bold outline-none focus:border-pink-500" value={item.price} onChange={e => {
-                                        const next = [...data]; next[ci].items[ii].price = e.target.value; setter(next);
-                                    }} placeholder="Price" />
-                                </div>
-                                <div className="md:col-span-1 text-right">
-                                    <button onClick={() => {
-                                        const next = [...data]; next[ci].items = next[ci].items.filter((_, idx) => idx !== ii); setter(next);
-                                    }} className="text-red-500 hover:scale-125 transition-transform text-xl">×</button>
-                                </div>
-                            </div>
-                            <div className="mt-2">
-                                <input className="w-full bg-transparent p-1 rounded text-[10px] text-yellow-500/60 outline-none border-b border-zinc-800" value={item.note || ''} onChange={e => {
-                                    const next = [...data]; next[ci].items[ii].note = e.target.value; setter(next);
-                                }} placeholder="Dietary Note (V, VG, GF, etc)" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <button onClick={() => {
-                    const next = [...data]; next[ci].items.push({name: 'New Bite', price: '12', description: 'Freshly prepared for you.'}); setter(next);
-                }} className="text-[10px] font-black uppercase text-pink-500 mt-6 hover:text-white transition-colors">+ Add Item to {cat.category}</button>
-            </div>
-        ))}
-        <button onClick={() => setter([...data, {category: 'New Section', items: []}])} className="w-full py-4 border-2 border-dashed border-zinc-800 rounded-3xl text-[11px] uppercase font-black text-zinc-500 hover:border-pink-500 hover:text-pink-500 transition-all">+ Add New Menu Category</button>
-    </div>
-  );
-
-  const handleBatchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    for (let i = 0; i < files.length; i++) {
-        let fileToUpload: File | Blob = files[i];
-        
-        if (optimizationSettings.enabled && fileToUpload.type.startsWith('image/')) {
-            try {
-                const opt = await optimizeImage(
-                    files[i], 
-                    optimizationSettings.quality / 100, 
-                    'gallery', 
-                    {
-                        hero: optimizationSettings.maxHeroWidth,
-                        gallery: optimizationSettings.maxGalleryWidth,
-                        general: optimizationSettings.maxGeneralWidth
-                    }
-                );
-                fileToUpload = opt.blob;
-            } catch (err) {
-                console.warn("Optimization failed for batch item, using original", err);
-            }
-        }
-
-        const url = await uploadFile(fileToUpload);
-        if (url) {
-            updateGalleryData(prev => ({
-                ...prev,
-                images: [...prev.images, { id: Date.now().toString() + i, url, caption: 'LKC Soho' }]
-            }));
-        }
-    }
-  };
-
   const moveNavItem = (index: number, direction: 'up' | 'down') => {
       const nextOrder = [...(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"])];
       if (direction === 'up' && index > 0) {
@@ -387,7 +299,6 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </button>
               ))}
-              {storageFiles.length === 0 && <div className="col-span-full py-20 text-center text-zinc-500 font-bold uppercase tracking-widest text-sm">No assets found on server.</div>}
             </div>
           </div>
         </div>
@@ -405,10 +316,7 @@ const AdminDashboard: React.FC = () => {
       <div className="flex bg-zinc-900/50 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-8 sticky top-[88px] z-40 backdrop-blur-md">
         {[
           {id: 'hero', icon: '⚡'}, {id: 'nav', icon: '🔗'}, {id: 'seo', icon: '🌍'}, 
-          {id: 'food', icon: '🍔'}, {id: 'drinks', icon: '🍹'}, 
-          {id: 'about', icon: '🎭'}, {id: 'features', icon: '✨'}, {id: 'vibe', icon: '🔥'}, 
-          {id: 'gallery', icon: '📸'}, {id: 'blog', icon: '✍️'}, {id: 'faq', icon: '❓'}, 
-          {id: 'config', icon: '⚙️'}
+          {id: 'food', icon: '🍔'}, {id: 'config', icon: '⚙️'}
         ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} className={`px-5 py-5 uppercase font-black text-[10px] tracking-widest transition-all relative flex-shrink-0 flex items-center gap-2 ${tab === t.id ? 'text-pink-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
                 <span>{t.icon}</span>
@@ -421,58 +329,25 @@ const AdminDashboard: React.FC = () => {
       <div className="container mx-auto p-10 max-w-5xl">
         {tab === 'hero' && (
             <SectionCard title="Hero & Stage Settings">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 bg-black/20 p-6 rounded-[2rem] border border-zinc-800">
-                  <Toggle label="Festive Badge" checked={heroData.showBadge !== false} onChange={v => updateHeroData(prev => ({...prev, showBadge: v}))} />
-                  <Toggle label="CTA Buttons" checked={heroData.showButtons !== false} onChange={v => updateHeroData(prev => ({...prev, showButtons: v}))} />
-                </div>
-                
-                <div className="mb-10">
-                  <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Text & Content</h4>
-                  <Input label="Badge Text (Empty to hide automatically)" value={heroData.badgeText} onChange={v => updateHeroData(prev => ({...prev, badgeText: v}))} />
-                  <Input label="Main Heading" value={heroData.headingText} onChange={v => updateHeroData(prev => ({...prev, headingText: v}))} />
-                  <TextArea label="Subheading Description" value={heroData.subText} onChange={v => updateHeroData(prev => ({...prev, subText: v}))} />
-                </div>
-
-                <div className="space-y-12">
-                    <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Visual Slides & Assets</h4>
+                <Toggle label="Festive Badge" checked={heroData.showBadge !== false} onChange={v => updateHeroData(prev => ({...prev, showBadge: v}))} />
+                <Input label="Main Heading" value={heroData.headingText} onChange={v => updateHeroData(prev => ({...prev, headingText: v}))} />
+                <TextArea label="Subheading Description" value={heroData.subText} onChange={v => updateHeroData(prev => ({...prev, subText: v}))} />
+                <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Visual Slides</h4>
                     {heroData.slides.map((s, i) => (
-                        <div key={i} className="bg-zinc-800/20 p-8 rounded-[2.5rem] border border-zinc-800 shadow-inner">
-                            <div className="flex justify-between items-center mb-6">
-                              <span className="text-xs font-black text-zinc-400">SLIDE {i + 1}</span>
-                              <button onClick={() => updateHeroData(prev => ({...prev, slides: prev.slides.filter((_, idx) => idx !== i), mobileSlides: prev.mobileSlides?.filter((_, idx) => idx !== i)}))} className="text-red-500 text-[10px] font-black uppercase hover:text-red-400">Delete Slide</button>
-                            </div>
-                            
-                            <div className="grid md:grid-cols-2 gap-12">
-                              <MediaPicker preset="hero" label="Desktop Asset (16:9)" value={s} onChange={v => {
-                                  updateHeroData(prev => {
-                                    const next = [...prev.slides];
-                                    next[i] = v;
-                                    return { ...prev, slides: next };
-                                  });
-                              }} />
-                              
-                              <div className="border-l border-zinc-800 pl-0 md:pl-12">
-                                <MediaPicker label="Mobile Asset (9:16)" value={heroData.mobileSlides?.[i] || ''} onChange={v => {
-                                    updateHeroData(prev => {
-                                        const next = [...(prev.mobileSlides || [])];
-                                        next[i] = v;
-                                        return {...prev, mobileSlides: next};
-                                    });
-                                }} />
-                              </div>
-                            </div>
+                        <div key={i} className="bg-zinc-800/20 p-6 rounded-2xl border border-zinc-800 flex gap-4">
+                             <MediaPicker label={`Slide ${i+1}`} value={s} onChange={v => {
+                                 const next = [...heroData.slides]; next[i] = v; updateHeroData(prev => ({...prev, slides: next}));
+                             }} />
                         </div>
                     ))}
-                    <button onClick={() => updateHeroData(prev => ({...prev, slides: [...prev.slides, ''], mobileSlides: [...(prev.mobileSlides || []), '']}))} className="w-full py-6 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-[2.5rem] hover:border-pink-500 hover:text-pink-500 transition-all flex items-center justify-center gap-2">
-                      <span className="text-lg">+</span> ADD NEW SLIDE PAIR
-                    </button>
                 </div>
             </SectionCard>
         )}
 
         {tab === 'nav' && (
             <SectionCard title="Navigation Bar Order">
-                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Drag/Sort logic: Items listed here appear in the fly menu and desktop nav. Removing an item hides it from the user-facing menu.</p>
+                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Drag/Sort remove logic: Items listed here appear in the fly menu. Use the arrows to reorder.</p>
                 
                 <div className="space-y-3 mb-8">
                     {(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).map((link, idx) => (
@@ -485,9 +360,6 @@ const AdminDashboard: React.FC = () => {
                             </div>
                         </div>
                     ))}
-                    {(headerData.navOrder || []).length === 0 && (
-                        <div className="text-center py-8 border-2 border-dashed border-zinc-800 rounded-2xl text-zinc-600 text-[10px] uppercase font-black">No active menu items</div>
-                    )}
                 </div>
 
                 <div className="pt-6 border-t border-zinc-800">
@@ -497,111 +369,132 @@ const AdminDashboard: React.FC = () => {
                             <button 
                                 key={page} 
                                 onClick={() => addNavItem(page)}
-                                className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                                className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 + {page}
                             </button>
                         ))}
-                        {["menu", "gallery", "blog", "drinks", "events", "songs"].filter(p => !(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).includes(p)).length === 0 && (
-                            <p className="text-[10px] text-zinc-700 uppercase italic">All available pages are in the menu.</p>
-                        )}
                     </div>
                 </div>
             </SectionCard>
         )}
 
         {tab === 'seo' && (
-            <SectionCard title="Search Engine & Identity">
-                <Input label="Site Title" value={headerData.siteTitle} onChange={v => updateHeaderData(prev => ({...prev, siteTitle: v}))} />
-                <TextArea label="Site Description (Meta)" value={headerData.siteDescription} onChange={v => updateHeaderData(prev => ({...prev, siteDescription: v}))} />
-                <MediaPicker label="Site Logo (SVG Recommended)" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
-                <Input label="Favicon URL" value={headerData.faviconUrl} onChange={v => updateHeaderData(prev => ({...prev, faviconUrl: v}))} />
-            </SectionCard>
+            <div className="space-y-12">
+                <SectionCard title="Search Engine Identity">
+                    <Input label="Site Title" value={headerData.siteTitle} onChange={v => updateHeaderData(prev => ({...prev, siteTitle: v}))} />
+                    <TextArea label="Site Description (Meta)" value={headerData.siteDescription} onChange={v => updateHeaderData(prev => ({...prev, siteDescription: v}))} />
+                    <MediaPicker label="Logo URL" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
+                </SectionCard>
+
+                <SectionCard title="AI Intelligence SEO Suite">
+                    <div className="bg-black/30 p-8 rounded-[2.5rem] border border-zinc-800">
+                        <div className="mb-8 text-center">
+                            <h4 className="text-xl font-black uppercase italic tracking-tighter mb-2">Automated SEO Optimization</h4>
+                            <p className="text-[11px] text-zinc-500 uppercase tracking-widest">Choose an intelligence mode to update your site metadata.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Mode 1: Fast AI (Flash Lite) */}
+                            <button 
+                                onClick={() => handleAiSeoOptimize('fast')}
+                                disabled={aiLoading}
+                                className="flex flex-col items-center p-6 bg-zinc-800/50 rounded-3xl border border-zinc-700 hover:border-blue-500 transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 text-blue-400 group-hover:scale-110 transition-transform">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                </div>
+                                <span className="text-sm font-black uppercase tracking-tighter italic text-white mb-1">Lightning Optimize</span>
+                                <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Fast • Low Latency</span>
+                            </button>
+
+                            {/* Mode 2: Trend Grounding (Flash + Search) */}
+                            <button 
+                                onClick={() => handleAiSeoOptimize('trend')}
+                                disabled={aiLoading}
+                                className="flex flex-col items-center p-6 bg-zinc-800/50 rounded-3xl border border-zinc-700 hover:border-green-500 transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 text-green-400 group-hover:scale-110 transition-transform">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                </div>
+                                <span className="text-sm font-black uppercase tracking-tighter italic text-white mb-1">Trend-Pulse SEO</span>
+                                <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Search Grounded • Market Aware</span>
+                            </button>
+
+                            {/* Mode 3: Deep Strategic (Pro + Thinking) */}
+                            <button 
+                                onClick={() => handleAiSeoOptimize('deep')}
+                                disabled={aiLoading}
+                                className="flex flex-col items-center p-6 bg-zinc-800/50 rounded-3xl border border-zinc-700 hover:border-purple-500 transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-4 text-purple-400 group-hover:scale-110 transition-transform">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                                </div>
+                                <span className="text-sm font-black uppercase tracking-tighter italic text-white mb-1">Strategic Deep-Dive</span>
+                                <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Thoughtful Reasoning • High IQ</span>
+                            </button>
+                        </div>
+
+                        {aiStep && (
+                            <div className="mt-8 flex items-center justify-center gap-4 py-4 px-6 bg-zinc-900 rounded-2xl border border-zinc-800 animate-pulse">
+                                <div className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{aiStep}</span>
+                            </div>
+                        )}
+
+                        {groundingSources.length > 0 && (
+                            <div className="mt-8 pt-8 border-t border-zinc-800">
+                                <h5 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Verification Sources (Grounded in Web Data)</h5>
+                                <div className="flex flex-wrap gap-2">
+                                    {groundingSources.map((source, idx) => (
+                                        <a key={idx} href={source.uri} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-zinc-800/80 rounded-lg text-[9px] text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors border border-zinc-700">
+                                            {source.title} ↗
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </SectionCard>
+            </div>
         )}
 
         {tab === 'food' && (
-            <SectionCard title="Gourmet Food Menu">
-                <FoodCategoryEditor data={foodMenu} setter={updateFoodMenu} />
-            </SectionCard>
-        )}
-
-        {tab === 'about' && (
-            <SectionCard title="Soho Highlights" enabled={highlightsData.enabled} onToggle={v => updateHighlightsData(prev => ({...prev, enabled: v}))}>
-                <Input label="Section Heading" value={highlightsData.heading} onChange={v => updateHighlightsData(prev => ({...prev, heading: v}))} />
-                <TextArea label="Introduction Text" value={highlightsData.subtext} onChange={v => updateHighlightsData(prev => ({...prev, subtext: v}))} />
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
-                  <MediaPicker label="Desktop Image" value={highlightsData.mainImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, mainImageUrl: v}))} />
-                  <MediaPicker label="Mobile Image" value={highlightsData.mobileMainImageUrl || ''} onChange={v => updateHighlightsData(prev => ({...prev, mobileMainImageUrl: v}))} />
-                </div>
-            </SectionCard>
-        )}
-
-        {tab === 'gallery' && (
-             <SectionCard title="Media Gallery Management">
-                <div className="mb-10 bg-black/40 p-8 rounded-[3rem] border border-zinc-800 border-dashed text-center">
-                    <input type="file" ref={batchFileRef} multiple accept="image/*" onChange={handleBatchUpload} className="hidden" />
-                    <button onClick={() => batchFileRef.current?.click()} className="bg-pink-600 hover:bg-pink-500 text-white font-black uppercase tracking-widest text-[11px] py-4 px-12 rounded-full transition-all shadow-lg active:scale-95">
-                         {isDataLoading ? 'Processing Batch...' : 'Batch Upload Optimized Images'}
-                    </button>
-                    <p className="mt-4 text-[10px] text-zinc-600 uppercase tracking-widest font-black">Upload multiple files to the Soho server. Automatically optimizes if enabled.</p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {galleryData.images.map((img, idx) => (
-                        <div key={img.id} className="relative aspect-square bg-zinc-800 rounded-2xl overflow-hidden border border-zinc-700 group">
-                            <img src={img.url} className="w-full h-full object-cover" alt="" />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
-                                <button onClick={() => updateGalleryData(prev => ({...prev, images: prev.images.filter(i => i.id !== img.id)}))} className="bg-red-600 text-white font-black uppercase text-[10px] px-4 py-2 rounded-full">Delete</button>
-                            </div>
+            <SectionCard title="Food Menu Editor">
+                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Modify your gourmet bites and platters here.</p>
+                {foodMenu.map((cat, ci) => (
+                    <div key={ci} className="mb-8 p-6 bg-zinc-800/30 rounded-3xl border border-zinc-800">
+                        <Input label="Category" value={cat.category} onChange={v => {
+                            const next = [...foodMenu]; next[ci].category = v; updateFoodMenu(next);
+                        }} />
+                        <div className="space-y-4">
+                            {cat.items.map((item, ii) => (
+                                <div key={ii} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-4 bg-black/20 rounded-xl">
+                                    <input className="bg-transparent border-b border-zinc-700 text-sm outline-none p-1" value={item.name} onChange={e => {
+                                        const next = [...foodMenu]; next[ci].items[ii].name = e.target.value; updateFoodMenu(next);
+                                    }} placeholder="Name" />
+                                    <input className="bg-transparent border-b border-zinc-700 text-sm outline-none p-1" value={item.price} onChange={e => {
+                                        const next = [...foodMenu]; next[ci].items[ii].price = e.target.value; updateFoodMenu(next);
+                                    }} placeholder="Price" />
+                                    <input className="bg-transparent border-b border-zinc-700 text-xs text-zinc-500 outline-none p-1" value={item.description} onChange={e => {
+                                        const next = [...foodMenu]; next[ci].items[ii].description = e.target.value; updateFoodMenu(next);
+                                    }} placeholder="Description" />
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </SectionCard>
-        )}
-
-        {tab === 'blog' && (
-            <BlogCMS />
         )}
 
         {tab === 'config' && (
             <div className="space-y-12">
                 <SectionCard title="Image Optimization Engine">
                     <Toggle label="Auto-Optimize Uploads" checked={optimizationSettings.enabled} onChange={v => updateOptimizationSettings(prev => ({...prev, enabled: v}))} />
-                    <div className="mt-8 space-y-6">
-                        <div>
-                            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">Compression Quality: {optimizationSettings.quality}%</label>
-                            <input 
-                                type="range" 
-                                min="10" 
-                                max="100" 
-                                value={optimizationSettings.quality} 
-                                onChange={e => updateOptimizationSettings(prev => ({...prev, quality: parseInt(e.target.value)}))}
-                                className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-pink-500"
-                            />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <Input label="Max Hero Width" value={optimizationSettings.maxHeroWidth.toString()} onChange={v => updateOptimizationSettings(prev => ({...prev, maxHeroWidth: parseInt(v) || 1920}))} />
-                            <Input label="Max Gallery Width" value={optimizationSettings.maxGalleryWidth.toString()} onChange={v => updateOptimizationSettings(prev => ({...prev, maxGalleryWidth: parseInt(v) || 800}))} />
-                            <Input label="Max General Width" value={optimizationSettings.maxGeneralWidth.toString()} onChange={v => updateOptimizationSettings(prev => ({...prev, maxGeneralWidth: parseInt(v) || 1200}))} />
-                        </div>
-                        <p className="text-[10px] text-zinc-600 uppercase font-black leading-relaxed">Optimization targets: Under 300KB for standard photos, under 500KB for hero backgrounds. WebP format enforced.</p>
-                    </div>
+                    <Input label="PHP Sync Endpoint" value={syncUrl} onChange={v => updateSyncUrl(v)} />
+                    <Input label="Auth Key" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
                 </SectionCard>
-
-                <SectionCard title="Developer & Script Injection">
-                    <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Paste third-party scripts here (Analytics, Facebook Pixel, Custom CSS, etc.)</p>
-                    <CodeArea label="Header Scripts (<head>)" value={headerData.customScripts?.header || ''} onChange={v => updateHeaderData(prev => ({...prev, customScripts: {...prev.customScripts, header: v}}))} />
-                    <CodeArea label="Footer Scripts (Before </body>)" value={headerData.customScripts?.footer || ''} onChange={v => updateHeaderData(prev => ({...prev, customScripts: {...prev.customScripts, footer: v}}))} />
-                </SectionCard>
-
-                <SectionCard title="CMS Security & API">
-                    <Input label="PHP Endpoint URL" value={syncUrl} onChange={v => updateSyncUrl(v)} />
-                    <Input label="Auth Secret (CMS Password)" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
-                </SectionCard>
-
-                <div className="flex flex-col gap-4">
-                  <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600/30 text-red-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-red-600 hover:text-white transition-all">Destroy Local Cache</button>
-                </div>
+                <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600/30 text-red-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-red-600 hover:text-white transition-all">Destroy Local Cache</button>
             </div>
         )}
       </div>
