@@ -16,16 +16,18 @@ export interface DrinksData {
     winesData: DrinkCategory[];
 }
 export interface HeaderData { logoUrl: string; siteTitle: string; siteDescription: string; faviconUrl: string; navOrder: string[]; customScripts?: { header?: string; footer?: string; } }
-export interface HeroData { backgroundImageUrl: string; slides: string[]; mobileSlides?: string[]; badgeText: string; headingText: string; subText: string; buttonText: string; }
-export interface HighlightsData { heading: string; subtext: string; mainImageUrl: string; mobileMainImageUrl?: string; featureListTitle: string; featureList: string[]; sideImageUrl: string; }
+export interface HeroData { backgroundImageUrl: string; slides: string[]; mobileSlides?: string[]; badgeText: string; headingText: string; subText: string; buttonText: string; showBadge?: boolean; showButtons?: boolean; }
+export interface HighlightsData { enabled?: boolean; heading: string; subtext: string; mainImageUrl: string; mobileMainImageUrl?: string; featureListTitle: string; featureList: string[]; sideImageUrl: string; }
 
 export interface FeaturesData {
+    enabled?: boolean;
     experience: { label: string; heading: string; text: string; image: string; mobileImage?: string; };
     occasions: { heading: string; text: string; items: { title: string; text: string; }[]; };
     grid: { heading: string; items: { title: string; description: string; image: string; }[]; };
 }
 
 export interface VibeData {
+    enabled?: boolean;
     label: string;
     heading: string;
     text: string;
@@ -39,7 +41,7 @@ export interface VibeData {
     bottomText: string;
 }
 
-export interface BatteryData { statPrefix: string; statNumber: string; statSuffix: string; subText: string; }
+export interface BatteryData { enabled?: boolean; statPrefix: string; statNumber: string; statSuffix: string; subText: string; }
 export interface FooterData { ctaHeading: string; ctaText: string; ctaButtonText: string; }
 
 export interface GalleryImage { id: string; url: string; caption: string; }
@@ -49,9 +51,10 @@ export interface BlogPost { id: string; title: string; date: string; excerpt: st
 export interface BlogData { heading: string; subtext: string; posts: BlogPost[]; }
 export interface Song { id: string; title: string; artist: string; genre?: string; fileUrl?: string; }
 export interface TestimonialItem { quote: string; name: string; avatar: string; rating?: number; date?: string; }
-export interface TestimonialsData { heading: string; subtext: string; items: TestimonialItem[]; }
+export interface TestimonialsData { enabled?: boolean; heading: string; subtext: string; items: TestimonialItem[]; }
 
 export interface InfoSectionData {
+    enabled?: boolean;
     heading: string;
     sections: { title: string; content: string; color?: string; }[];
     footerTitle: string;
@@ -60,7 +63,7 @@ export interface InfoSectionData {
 }
 
 export interface FAQItem { question: string; answer: string; }
-export interface FAQData { heading: string; subtext: string; items: FAQItem[]; }
+export interface FAQData { enabled?: boolean; heading: string; subtext: string; items: FAQItem[]; }
 
 export interface EventSection { id: string; title: string; subtitle: string; description: string; imageUrl: string; features: string[]; }
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
@@ -131,18 +134,19 @@ const INITIAL_SEO: HeaderData = {
     customScripts: { header: "", footer: "" }
 };
 
-const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now" };
-const INITIAL_HIGHLIGHTS: HighlightsData = { heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs", "Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
+const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now", showBadge: true, showButtons: true };
+const INITIAL_HIGHLIGHTS: HighlightsData = { enabled: true, heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs", "Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
 const INITIAL_FEATURES: FeaturesData = {
+    enabled: true,
     experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
     occasions: { heading: "Every Occasion", text: "Parties of all sizes.", items: [{title: "Hen Parties", text: "Bubbles and songs."}] },
     grid: { heading: "Features", items: [{title: "Neon Lighting", description: "Vibrant vibes.", image: "https://picsum.photos/seed/neon/400/400"}] }
 };
-const INITIAL_VIBE: VibeData = { label: "The Vibe", heading: "Soho Nights", text: "Join the energy.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Hard", bottomText: "Until 3AM." };
-const INITIAL_STATS: BatteryData = { statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." };
+const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nights", text: "Join the energy.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Hard", bottomText: "Until 3AM." };
+const INITIAL_STATS: BatteryData = { enabled: true, statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." };
 const INITIAL_GALLERY: GalleryData = { heading: "Gallery", subtext: "Moments from Soho", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}], showOnHome: false };
 const INITIAL_BLOG: BlogData = { heading: "LKC Stories", subtext: "News and events.", posts: [{id: '1', title: 'Welcome', date: '2024-01-01', excerpt: 'Site launched.', content: 'Welcome to LKC.', imageUrl: 'https://picsum.photos/seed/blog/800/600'}] };
-const INITIAL_FAQ: FAQData = { heading: "FAQ", subtext: "Questions?", items: [{question: "Where is it?", answer: "Soho, London."}] };
+const INITIAL_FAQ: FAQData = { enabled: true, heading: "FAQ", subtext: "Questions?", items: [{question: "Where is it?", answer: "Soho, London."}] };
 const INITIAL_DRINKS: DrinksData = {
     headerImageUrl: "https://picsum.photos/seed/bar/1600/800",
     packagesData: { title: "Packages", subtitle: "Groups", items: [], notes: [] },
@@ -175,8 +179,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { heading: "Loved", subtext: "Reviews from around the web.", items: [] }));
-    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { heading: "Private Karaoke in Soho", sections: [], footerTitle: "Ready?", footerText: "Plan your night.", footerHighlight: "No chains, just LKC." }));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { enabled: true, heading: "Loved", subtext: "Reviews from around the web.", items: [] }));
+    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { enabled: true, heading: "Private Karaoke in Soho", sections: [], footerTitle: "Ready?", footerText: "Plan your night.", footerHighlight: "No chains, just LKC." }));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Epic Events", subtitle: "Private bookings in Soho.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
@@ -218,7 +222,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.8" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.9" 
     }, null, 2);
 
     const importDatabase = (json: any) => {

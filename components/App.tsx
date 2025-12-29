@@ -19,26 +19,29 @@ import Gallery from './components/Gallery';
 import SongLibrary from './components/SongLibrary';
 import EventsPage from './components/EventsPage';
 import BlogPage from './components/BlogPage';
-import { DataProvider, useData } from './context/DataContext';
+import { DataProvider, useData } from '../context/DataContext';
 
 type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
-  const { galleryData } = useData();
+  const { 
+    galleryData, highlightsData, featuresData, vibeData, batteryData, 
+    testimonialsData, infoSectionData, faqData 
+  } = useData();
 
   return (
     <main>
       {currentPage === 'home' && (
         <>
           <Hero />
-          <Highlights />
+          {highlightsData.enabled !== false && <Highlights />}
           <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
-          <Features />
-          <Fitness />
-          <Battery />
-          <Testimonials />
-          <InfoSection />
-          <FAQ />
+          {featuresData.enabled !== false && <Features />}
+          {vibeData.enabled !== false && <Fitness />}
+          {batteryData.enabled !== false && <Battery />}
+          {testimonialsData.enabled !== false && <Testimonials />}
+          {infoSectionData.enabled !== false && <InfoSection />}
+          {faqData.enabled !== false && <FAQ />}
           {galleryData.showOnHome && <div className="mt-20"><Gallery /></div>}
         </>
       )}

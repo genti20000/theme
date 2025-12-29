@@ -2,14 +2,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useData, DrinkCategory } from '../context/DataContext';
 
-const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+const SectionCard: React.FC<{ title: string; children: React.ReactNode; enabled?: boolean; onToggle?: (v: boolean) => void }> = ({ title, children, enabled, onToggle }) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-sm">
-    <h3 className="text-2xl font-black text-white mb-8 border-b border-zinc-800 pb-4 flex items-center gap-3 uppercase tracking-tighter">
-        <span className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></span>
-        {title}
-    </h3>
-    {children}
+    <div className="flex justify-between items-center mb-8 border-b border-zinc-800 pb-4">
+      <h3 className="text-2xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
+          <span className={`w-3 h-3 ${enabled !== false ? 'bg-pink-500 animate-pulse' : 'bg-zinc-600'} rounded-full`}></span>
+          {title}
+      </h3>
+      {onToggle && (
+        <Toggle label="Enabled" checked={enabled !== false} onChange={onToggle} />
+      )}
+    </div>
+    <div className={enabled === false ? 'opacity-40 grayscale pointer-events-none' : ''}>
+      {children}
+    </div>
   </div>
+);
+
+const Toggle: React.FC<{ label: string; checked: boolean; onChange: (v: boolean) => void }> = ({ label, checked, onChange }) => (
+  <label className="flex items-center gap-3 cursor-pointer group">
+    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">{label}</span>
+    <div 
+      onClick={() => onChange(!checked)}
+      className={`w-12 h-6 rounded-full relative transition-all duration-300 ${checked ? 'bg-pink-600 shadow-[0_0_10px_rgba(219,39,119,0.4)]' : 'bg-zinc-800'}`}
+    >
+      <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${checked ? 'left-7' : 'left-1'}`} />
+    </div>
+  </label>
 );
 
 const Input: React.FC<{ label: string; value: string; onChange: (v: string) => void; type?: string }> = ({ label, value, onChange, type = 'text' }) => (
@@ -319,6 +338,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         {tab === 'hero' && (
             <SectionCard title="Main Stage Hero">
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <Toggle label="Show Festive Badge" checked={heroData.showBadge !== false} onChange={v => updateHeroData(prev => ({...prev, showBadge: v}))} />
+                  <Toggle label="Show Action Buttons" checked={heroData.showButtons !== false} onChange={v => updateHeroData(prev => ({...prev, showButtons: v}))} />
+                </div>
                 <Input label="Festive Badge Text" value={heroData.badgeText} onChange={v => updateHeroData(prev => ({...prev, badgeText: v}))} />
                 <Input label="Hero Title" value={heroData.headingText} onChange={v => updateHeroData(prev => ({...prev, headingText: v}))} />
                 <TextArea label="Subheading" value={heroData.subText} onChange={v => updateHeroData(prev => ({...prev, subText: v}))} />
@@ -349,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         )}
 
         {tab === 'about' && (
-            <SectionCard title="The Soho Highlights">
+            <SectionCard title="The Soho Highlights" enabled={highlightsData.enabled} onToggle={v => updateHighlightsData(prev => ({...prev, enabled: v}))}>
                 <Input label="Main Heading" value={highlightsData.heading} onChange={v => updateHighlightsData(prev => ({...prev, heading: v}))} />
                 <TextArea label="Subtext" value={highlightsData.subtext} onChange={v => updateHighlightsData(prev => ({...prev, subtext: v}))} />
                 <MediaPicker label="Main Section Image (Desktop)" value={highlightsData.mainImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, mainImageUrl: v}))} />
@@ -377,7 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         {tab === 'features' && (
             <div className="space-y-12">
-                <SectionCard title="The Experience (Top Section)">
+                <SectionCard title="The Experience" enabled={featuresData.enabled} onToggle={v => updateFeaturesData(prev => ({...prev, enabled: v}))}>
                     <Input label="Label" value={featuresData.experience.label} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, label: v}}))} />
                     <Input label="Heading" value={featuresData.experience.heading} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, heading: v}}))} />
                     <TextArea label="Text" value={featuresData.experience.text} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, text: v}}))} />
@@ -400,7 +423,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         )}
 
         {tab === 'vibe' && (
-            <SectionCard title="The Vibe">
+            <SectionCard title="The Vibe" enabled={vibeData.enabled} onToggle={v => updateVibeData(prev => ({...prev, enabled: v}))}>
                 <Input label="Heading" value={vibeData.heading} onChange={v => updateVibeData(prev => ({...prev, heading: v}))} />
                 <MediaPicker label="Circle Image 1" value={vibeData.image1} onChange={v => updateVibeData(prev => ({...prev, image1: v}))} />
                 <MediaPicker label="Circle Image 2" value={vibeData.image2} onChange={v => updateVibeData(prev => ({...prev, image2: v}))} />
@@ -408,6 +431,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <MediaPicker label="Background Video (Mobile Version)" value={vibeData.mobileVideoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, mobileVideoUrl: v}))} />
                 <MediaPicker label="Bottom Full Width Media (Desktop)" value={vibeData.bigImage} onChange={v => updateVibeData(prev => ({...prev, bigImage: v}))} />
                 <MediaPicker label="Bottom Full Width Media (Mobile Version)" value={vibeData.mobileBigImage || ''} onChange={v => updateVibeData(prev => ({...prev, mobileBigImage: v}))} />
+            </SectionCard>
+        )}
+
+        {tab === 'stats' && (
+            <SectionCard title="LKC Statistics" enabled={batteryData.enabled} onToggle={v => updateBatteryData(prev => ({...prev, enabled: v}))}>
+                <Input label="Prefix (e.g. Over)" value={batteryData.statPrefix} onChange={v => updateBatteryData(prev => ({...prev, statPrefix: v}))} />
+                <Input label="Number (e.g. 80K)" value={batteryData.statNumber} onChange={v => updateBatteryData(prev => ({...prev, statNumber: v}))} />
+                <Input label="Suffix (e.g. Songs)" value={batteryData.statSuffix} onChange={v => updateBatteryData(prev => ({...prev, statSuffix: v}))} />
+                <Input label="Subtext" value={batteryData.subText} onChange={v => updateBatteryData(prev => ({...prev, subText: v}))} />
+            </SectionCard>
+        )}
+
+        {tab === 'faq' && (
+            <SectionCard title="Frequently Asked Questions" enabled={faqData.enabled} onToggle={v => updateFaqData(prev => ({...prev, enabled: v}))}>
+                <Input label="Heading" value={faqData.heading} onChange={v => updateFaqData(prev => ({...prev, heading: v}))} />
+                <TextArea label="Subtext" value={faqData.subtext} onChange={v => updateFaqData(prev => ({...prev, subtext: v}))} />
+                {faqData.items.map((item, idx) => (
+                    <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl mb-4">
+                        <Input label="Question" value={item.question} onChange={v => {
+                            const next = [...faqData.items]; next[idx].question = v; updateFaqData(prev => ({...prev, items: next}));
+                        }} />
+                        <TextArea label="Answer" value={item.answer} onChange={v => {
+                            const next = [...faqData.items]; next[idx].answer = v; updateFaqData(prev => ({...prev, items: next}));
+                        }} />
+                    </div>
+                ))}
             </SectionCard>
         )}
 
