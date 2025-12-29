@@ -19,9 +19,12 @@ import Gallery from './components/Gallery';
 import SongLibrary from './components/SongLibrary';
 import EventsPage from './components/EventsPage';
 import BlogPage from './components/BlogPage';
+// Add missing ImageEditor import
+import ImageEditor from './components/ImageEditor';
 import { DataProvider, useData } from '../context/DataContext';
 
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
+// Added 'imageEditor' to the Page type to match navigation components
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'imageEditor';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 
@@ -51,6 +54,8 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'songs' && <SongLibrary />}
       {currentPage === 'events' && <EventsPage />}
       {currentPage === 'blog' && <BlogPage />}
+      {/* Added ImageEditor to main content rendering */}
+      {currentPage === 'imageEditor' && <ImageEditor />}
       {currentPage === 'admin' && <AdminDashboard />}
       {currentPage === 'terms' && <Terms />}
     </main>
