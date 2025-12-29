@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 
@@ -6,6 +7,7 @@ const Gallery: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const images = galleryData.images || [];
 
@@ -22,6 +24,15 @@ const Gallery: React.FC = () => {
     }
   }, [viewMode, images.length]);
 
+  // Lock scroll when lightbox is open
+  useEffect(() => {
+    if (lightboxIndex !== null) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [lightboxIndex]);
+
   if (isDataLoading && images.length === 0) {
       return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white">
@@ -30,6 +41,16 @@ const Gallery: React.FC = () => {
         </div>
       );
   }
+
+  const closeLightbox = () => setLightboxIndex(null);
+  const nextLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex(prev => (prev !== null ? (prev + 1) % images.length : null));
+  };
+  const prevLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex(prev => (prev !== null ? (prev - 1 + images.length) % images.length : null));
+  };
 
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-24 relative select-none">
@@ -49,6 +70,47 @@ const Gallery: React.FC = () => {
           animation: shimmer 1.5s infinite;
         }
       `}</style>
+
+      {/* Lightbox Modal */}
+      {lightboxIndex !== null && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-12 animate-fade-in"
+          onClick={closeLightbox}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white bg-zinc-800/50 p-3 rounded-full hover:bg-zinc-700 transition-colors z-[110]"
+            onClick={closeLightbox}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+          
+          <button 
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-zinc-800/30 p-4 rounded-full hover:bg-pink-600 transition-all hidden md:block"
+            onClick={prevLightbox}
+          >
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <button 
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-zinc-800/30 p-4 rounded-full hover:bg-pink-600 transition-all hidden md:block"
+            onClick={nextLightbox}
+          >
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+          </button>
+
+          <div className="relative max-w-5xl w-full max-h-[85vh] flex flex-col items-center">
+            <img 
+              src={images[lightboxIndex].url} 
+              alt="" 
+              className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(236,72,153,0.3)]"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="mt-6 text-center">
+              <p className="text-white font-black uppercase tracking-widest text-sm mb-1">{images[lightboxIndex].caption || 'LKC Soho'}</p>
+              <p className="text-zinc-500 text-xs font-bold">{lightboxIndex + 1} / {images.length}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -71,12 +133,13 @@ const Gallery: React.FC = () => {
         </div>
 
         {viewMode === 'grid' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-6">
                 {images.map((img, idx) => (
                     <div 
                         key={img.id} 
-                        className="relative aspect-square rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 animate-gallery-item group shadow-2xl"
-                        style={{ animationDelay: `${idx * 0.1}s` }}
+                        onClick={() => setLightboxIndex(idx)}
+                        className="relative aspect-square rounded-xl md:rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 animate-gallery-item group shadow-2xl cursor-pointer"
+                        style={{ animationDelay: `${idx * 0.05}s` }}
                     >
                         {!loadedImages[img.id] && <div className="absolute inset-0 shimmer-placeholder"></div>}
                         <img 
@@ -86,8 +149,8 @@ const Gallery: React.FC = () => {
                             onLoad={() => handleImageLoad(img.id)}
                             className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${loadedImages[img.id] ? 'opacity-100' : 'opacity-0'}`} 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-6 flex items-end pointer-events-none">
-                            <p className="text-white font-bold text-sm tracking-wide uppercase">{img.caption || "London Karaoke Club"}</p>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2 md:p-6 flex items-end pointer-events-none">
+                            <p className="text-white font-bold text-[8px] md:text-sm tracking-wide uppercase truncate">{img.caption || "London Karaoke Club"}</p>
                         </div>
                     </div>
                 ))}
