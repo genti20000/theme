@@ -11,7 +11,6 @@ const MenuIcon = () => (
     <rect x="3" y="6" width="18" height="2" rx="1" />
     <rect x="3" y="11" width="18" height="2" rx="1" />
     <rect x="3" y="16" width="12" height="2" rx="1" />
-    <path d="M19 6V16C19 17.6569 17.6569 19 16 19C14.3431 19 13 17.6569 13 16C13 14.3431 14.3431 13 16 13C16.8284 13 17.58 13.3358 18.1213 13.8787L19 13V6H3" fill="none" />
     <circle cx="16" cy="17" r="3" />
     <rect x="18" y="5" width="2" height="12" />
   </svg>
@@ -34,15 +33,14 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     setIsMenuOpen(false);
   };
 
-  // 1. Define hardcoded "Source of Truth" links to ensure the menu is NEVER empty
+  // Define the master set of links
   const defaultLinks = ["home", "menu", "drinks", "gallery", "songs", "events", "blog", "imageEditor"];
   
-  // 2. Merge CMS links with defaults, ensuring no duplicates and filtering out empty strings
+  // Clean navigation data
   const rawLinks = (headerData.navOrder && headerData.navOrder.length > 0) 
     ? headerData.navOrder 
     : defaultLinks;
 
-  // Filter out any broken data and ensure essential pages are present
   const navLinks = Array.from(new Set(["home", ...rawLinks, "imageEditor"]))
     .filter(link => link && typeof link === 'string' && link.trim() !== "");
 
@@ -92,27 +90,13 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             </a>
         </div>
 
-        {/* Center: Branding & Desktop Nav */}
-        <div className="flex items-center gap-4 md:gap-12">
-            {/* Desktop Left */}
-            <nav className="hidden xl:flex items-center gap-8">
-                {leftLinks.map(link => (
-                    <button key={link} onClick={() => onNavigate(link as any)} className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 hover:text-white transition-all hover:scale-110">{getLabel(link)}</button>
-                ))}
-            </nav>
-
+        {/* Center: Branding Only */}
+        <div className="flex items-center">
             <button onClick={() => handleNav('home')} className="focus:outline-none z-10 transition-all duration-500 hover:scale-110 hover:rotate-3">
                 <div className="w-16 h-16 md:w-24 md:h-24 relative flex items-center justify-center">
                     <img src={headerData.logoUrl} alt="LKC Logo" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.8)]" />
                 </div>
             </button>
-
-            {/* Desktop Right */}
-            <nav className="hidden xl:flex items-center gap-8">
-                {rightLinks.map(link => (
-                    <button key={link} onClick={() => onNavigate(link as any)} className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 hover:text-white transition-all hover:scale-110">{getLabel(link)}</button>
-                ))}
-            </nav>
         </div>
 
         {/* Right: Burger */}
@@ -129,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* FLY OUT MENU OVERLAY */}
+      {/* FLY OUT MENU OVERLAY - Now the ONLY way to navigate */}
       {isMenuOpen && (
         <div className="fixed inset-0 top-[70px] md:top-[100px] w-full h-screen z-[999] overflow-hidden">
             {/* Blackout Backdrop */}
