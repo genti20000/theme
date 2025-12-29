@@ -325,13 +325,27 @@ const AdminDashboard: React.FC = () => {
   };
 
   const moveNavItem = (index: number, direction: 'up' | 'down') => {
-      const nextOrder = [...(headerData.navOrder || [])];
+      const nextOrder = [...(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"])];
       if (direction === 'up' && index > 0) {
           [nextOrder[index], nextOrder[index - 1]] = [nextOrder[index - 1], nextOrder[index]];
       } else if (direction === 'down' && index < nextOrder.length - 1) {
           [nextOrder[index], nextOrder[index + 1]] = [nextOrder[index + 1], nextOrder[index]];
       }
       updateHeaderData(prev => ({...prev, navOrder: nextOrder}));
+  };
+
+  const removeNavItem = (index: number) => {
+      const nextOrder = [...(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"])];
+      nextOrder.splice(index, 1);
+      updateHeaderData(prev => ({...prev, navOrder: nextOrder}));
+  };
+
+  const addNavItem = (link: string) => {
+      const nextOrder = [...(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"])];
+      if (!nextOrder.includes(link)) {
+          nextOrder.push(link);
+          updateHeaderData(prev => ({...prev, navOrder: nextOrder}));
+      }
   };
 
   if (!isAuthenticated) return (
@@ -458,17 +472,40 @@ const AdminDashboard: React.FC = () => {
 
         {tab === 'nav' && (
             <SectionCard title="Navigation Bar Order">
-                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Drag/Sort logic: Items listed here appear in the fly menu and desktop nav.</p>
-                <div className="space-y-2">
+                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Drag/Sort logic: Items listed here appear in the fly menu and desktop nav. Removing an item hides it from the user-facing menu.</p>
+                
+                <div className="space-y-3 mb-8">
                     {(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).map((link, idx) => (
-                        <div key={link} className="flex items-center justify-between bg-zinc-800/50 p-4 rounded-xl border border-zinc-800">
-                            <span className="text-xs font-black uppercase tracking-widest">{link}</span>
+                        <div key={link} className="flex items-center justify-between bg-zinc-800/50 p-4 rounded-2xl border border-zinc-800 group hover:border-zinc-700 transition-colors">
+                            <span className="text-xs font-black uppercase tracking-widest text-zinc-200">{link}</span>
                             <div className="flex gap-2">
-                                <button onClick={() => moveNavItem(idx, 'up')} className="bg-zinc-900 p-2 rounded hover:bg-zinc-700 transition-colors">↑</button>
-                                <button onClick={() => moveNavItem(idx, 'down')} className="bg-zinc-900 p-2 rounded hover:bg-zinc-700 transition-colors">↓</button>
+                                <button onClick={() => moveNavItem(idx, 'up')} className="bg-zinc-900 p-2.5 rounded-xl hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-white" title="Move Up">↑</button>
+                                <button onClick={() => moveNavItem(idx, 'down')} className="bg-zinc-900 p-2.5 rounded-xl hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-white" title="Move Down">↓</button>
+                                <button onClick={() => removeNavItem(idx)} className="bg-zinc-900 p-2.5 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-colors text-zinc-500 border border-transparent hover:border-red-500/20" title="Remove from Menu">×</button>
                             </div>
                         </div>
                     ))}
+                    {(headerData.navOrder || []).length === 0 && (
+                        <div className="text-center py-8 border-2 border-dashed border-zinc-800 rounded-2xl text-zinc-600 text-[10px] uppercase font-black">No active menu items</div>
+                    )}
+                </div>
+
+                <div className="pt-6 border-t border-zinc-800">
+                    <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Add to Menu</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {["menu", "gallery", "blog", "drinks", "events", "songs"].filter(p => !(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).includes(p)).map(page => (
+                            <button 
+                                key={page} 
+                                onClick={() => addNavItem(page)}
+                                className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                            >
+                                + {page}
+                            </button>
+                        ))}
+                        {["menu", "gallery", "blog", "drinks", "events", "songs"].filter(p => !(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).includes(p)).length === 0 && (
+                            <p className="text-[10px] text-zinc-700 uppercase italic">All available pages are in the menu.</p>
+                        )}
+                    </div>
                 </div>
             </SectionCard>
         )}
