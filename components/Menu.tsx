@@ -11,12 +11,7 @@ const Menu: React.FC = () => {
   return (
     <section id="food-menu" className="py-16 md:py-32 bg-zinc-950">
       <div className="container mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-20">
-          <h3 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500 uppercase italic tracking-tighter">Fuel Your Performance</h3>
-          <p className="text-lg md:text-xl text-gray-400 mt-6 leading-relaxed font-light">
-            Hand-picked bites and sharing platters designed to keep the energy high and the vocals soaring.
-          </p>
-        </div>
+        {/* Header section removed as per user request */}
 
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-16">
           {foodMenu.map((category) => (

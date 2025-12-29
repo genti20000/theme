@@ -267,10 +267,11 @@ const AdminDashboard: React.FC = () => {
 
       <div className="flex bg-zinc-900/50 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-8 sticky top-[88px] z-40 backdrop-blur-md">
         {[
-          {id: 'hero', icon: '⚡'}, {id: 'food', icon: '🍔'}, {id: 'drinks', icon: '🍹'}, 
+          {id: 'hero', icon: '⚡'}, {id: 'nav', icon: '🔗'}, {id: 'seo', icon: '🌍'}, 
+          {id: 'food', icon: '🍔'}, {id: 'drinks', icon: '🍹'}, 
           {id: 'about', icon: '🎭'}, {id: 'features', icon: '✨'}, {id: 'vibe', icon: '🔥'}, 
           {id: 'gallery', icon: '📸'}, {id: 'blog', icon: '✍️'}, {id: 'faq', icon: '❓'}, 
-          {id: 'nav', icon: '🔗'}, {id: 'seo', icon: '🌍'}, {id: 'config', icon: '⚙️'}
+          {id: 'config', icon: '⚙️'}
         ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} className={`px-5 py-5 uppercase font-black text-[10px] tracking-widest transition-all relative flex-shrink-0 flex items-center gap-2 ${tab === t.id ? 'text-pink-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
                 <span>{t.icon}</span>
@@ -329,6 +330,32 @@ const AdminDashboard: React.FC = () => {
                       <span className="text-lg">+</span> ADD NEW SLIDE PAIR
                     </button>
                 </div>
+            </SectionCard>
+        )}
+
+        {tab === 'nav' && (
+            <SectionCard title="Navigation Bar Order">
+                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Drag/Sort logic: Items listed here appear in the fly menu and desktop nav.</p>
+                <div className="space-y-2">
+                    {(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).map((link, idx) => (
+                        <div key={link} className="flex items-center justify-between bg-zinc-800/50 p-4 rounded-xl border border-zinc-800">
+                            <span className="text-xs font-black uppercase tracking-widest">{link}</span>
+                            <div className="flex gap-2">
+                                <button onClick={() => moveNavItem(idx, 'up')} className="bg-zinc-900 p-2 rounded hover:bg-zinc-700 transition-colors">↑</button>
+                                <button onClick={() => moveNavItem(idx, 'down')} className="bg-zinc-900 p-2 rounded hover:bg-zinc-700 transition-colors">↓</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </SectionCard>
+        )}
+
+        {tab === 'seo' && (
+            <SectionCard title="Search Engine & Identity">
+                <Input label="Site Title" value={headerData.siteTitle} onChange={v => updateHeaderData(prev => ({...prev, siteTitle: v}))} />
+                <TextArea label="Site Description (Meta)" value={headerData.siteDescription} onChange={v => updateHeaderData(prev => ({...prev, siteDescription: v}))} />
+                <MediaPicker label="Site Logo (SVG Recommended)" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
+                <Input label="Favicon URL" value={headerData.faviconUrl} onChange={v => updateHeaderData(prev => ({...prev, faviconUrl: v}))} />
             </SectionCard>
         )}
 
