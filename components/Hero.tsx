@@ -2,12 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 
-// Christmas Icons
-const SnowflakeIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17 12L21.41 16.41L20 17.83L16.17 14H14V16.17L17.83 20L16.41 21.41L12 17L7.59 21.41L6.17 20L10 16.17V14H7.83L4 17.83L2.59 16.41L7 12L2.59 7.59L4 6.17L7.83 10H10V7.83L6.17 4L7.59 2.59L12 7L16.41 2.59L17.83 4L14 7.83V10H16.17L20 6.17L21.41 7.59L17 12Z"/></svg>
-);
-
-const snowflakes = Array.from({ length: 50 }).map((_, i) => {
+const snowflakes = Array.from({ length: 40 }).map((_, i) => {
     const size = Math.random() * 8 + 4;
     const duration = Math.random() * 5 + 5;
     const delay = Math.random() * -10;
@@ -47,8 +42,8 @@ const Hero: React.FC = () => {
 
   const isVideo = (url: string) => url?.toLowerCase().match(/\.(mp4|webm|mov)$/);
 
-  // Defaults for visibility if not set
-  const showBadge = heroData.showBadge !== false;
+  // Stricter visibility logic: toggle must be on AND text must exist
+  const showBadge = heroData.showBadge !== false && heroData.badgeText && heroData.badgeText.trim() !== "";
   const showButtons = heroData.showButtons !== false;
 
   return (
@@ -61,21 +56,21 @@ const Hero: React.FC = () => {
         }
         @keyframes zoom-slow {
             0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
+            100% { transform: scale(1.15); }
         }
         .animate-zoom-slow { animation: zoom-slow 20s ease-in-out infinite alternate; }
       `}</style>
       
       <div 
-        className="absolute w-full h-[140%] -top-[20%] left-0 z-0 will-change-transform motion-reduce:transform-none" 
-        style={{ transform: `translateY(${scrollY * 0.25}px)` }}
+        className="absolute w-full h-[140%] -top-[20%] left-0 z-0 will-change-transform" 
+        style={{ transform: `translateY(${scrollY * 0.2}px)` }}
       >
         {slides.map((slide, index) => {
              const active = index === currentSlide;
              const mobileSlide = heroData.mobileSlides?.[index] || slide;
              return (
-                <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${active ? 'opacity-100' : 'opacity-0'}`}>
-                    {/* Desktop Version */}
+                <div key={index} className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${active ? 'opacity-100' : 'opacity-0'}`}>
+                    {/* Desktop Background Layer */}
                     <div className="hidden md:block w-full h-full">
                         {isVideo(slide) ? (
                             <video src={slide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
@@ -83,7 +78,7 @@ const Hero: React.FC = () => {
                             <img src={slide} alt="" className="w-full h-full object-cover object-center animate-zoom-slow" />
                         )}
                     </div>
-                    {/* Mobile Version */}
+                    {/* Dedicated Mobile Background Layer */}
                     <div className="md:hidden block w-full h-full">
                          {isVideo(mobileSlide) ? (
                             <video src={mobileSlide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
@@ -104,27 +99,34 @@ const Hero: React.FC = () => {
       </div>
 
       <div className="relative z-10 p-6 max-w-5xl mx-auto">
-        {showBadge && heroData.badgeText && (
-          <div className="mb-4 inline-block">
-            <span className="py-1 px-4 rounded-full bg-red-600/80 backdrop-blur-sm border border-red-400 text-white text-xs md:text-sm font-bold tracking-wider uppercase animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)]">
-              🎄 {heroData.badgeText} 🎄
+        {showBadge && (
+          <div className="mb-6 inline-block transform hover:scale-110 transition-transform duration-300">
+            <span className="py-2 px-6 rounded-full bg-red-600/90 backdrop-blur-md border border-white/20 text-white text-xs md:text-sm font-black tracking-widest uppercase animate-pulse shadow-[0_0_20px_rgba(220,38,38,0.8)] flex items-center gap-2">
+              <span className="text-lg">🎄</span>
+              {heroData.badgeText}
+              <span className="text-lg">🎄</span>
             </span>
           </div>
         )}
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-white via-red-200 to-green-100 drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
+        
+        <h1 className="text-4xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-r from-white via-red-200 to-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] uppercase italic">
           {heroData.headingText}
         </h1>
-        <p className="mt-6 text-base md:text-xl max-w-2xl mx-auto text-gray-200 font-medium drop-shadow-md">
+        
+        <p className="mt-6 text-base md:text-2xl max-w-2xl mx-auto text-gray-200 font-light drop-shadow-md tracking-tight leading-relaxed">
           {heroData.subText}
         </p>
         
         {showButtons && (
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-lg font-bold py-3 px-10 rounded-full border-2 border-white transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.6)]">
+          <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto bg-red-600 hover:bg-white hover:text-red-600 text-white text-lg font-black py-4 px-12 rounded-full border-2 border-white transition-all transform hover:-translate-y-1 shadow-[0_10px_40px_rgba(220,38,38,0.5)] uppercase tracking-widest">
               {heroData.buttonText}
               </a>
-              <button onClick={() => window.scrollTo({top: window.innerHeight, behavior: 'smooth'})} className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-bold py-3 px-10 rounded-full border border-white/20 transition-all">
-                  Explore LKC
+              <button 
+                onClick={() => window.scrollTo({top: window.innerHeight, behavior: 'smooth'})} 
+                className="w-full sm:w-auto bg-white/10 backdrop-blur-xl hover:bg-white hover:text-black text-white font-black py-4 px-12 rounded-full border border-white/20 transition-all uppercase tracking-widest text-sm"
+              >
+                  Discover Vibe
               </button>
           </div>
         )}
