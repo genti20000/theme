@@ -72,14 +72,6 @@ export interface TermItem { title: string; content: string; }
 
 export interface FirebaseConfig { databaseURL: string; apiKey: string; }
 
-export interface OptimizationSettings {
-    enabled: boolean;
-    quality: number;
-    maxHeroWidth: number;
-    maxGalleryWidth: number;
-    maxGeneralWidth: number;
-}
-
 interface DataContextType {
     foodMenu: MenuCategory[];
     updateFoodMenu: React.Dispatch<React.SetStateAction<MenuCategory[]>>;
@@ -115,8 +107,6 @@ interface DataContextType {
     updateTermsData: React.Dispatch<React.SetStateAction<TermItem[]>>;
     songs: Song[];
     updateSongs: React.Dispatch<React.SetStateAction<Song[]>>;
-    optimizationSettings: OptimizationSettings;
-    updateOptimizationSettings: React.Dispatch<React.SetStateAction<OptimizationSettings>>;
     adminPassword: string;
     updateAdminPassword: React.Dispatch<React.SetStateAction<string>>;
     syncUrl: string;
@@ -143,63 +133,6 @@ const INITIAL_SEO: HeaderData = {
     navOrder: ["menu", "gallery", "blog", "drinks", "events", "songs"],
     customScripts: { header: "", footer: "" }
 };
-
-const INITIAL_OPTIMIZATION: OptimizationSettings = {
-    enabled: true,
-    quality: 85,
-    maxHeroWidth: 1920,
-    maxGalleryWidth: 800,
-    maxGeneralWidth: 1200
-};
-
-const INITIAL_FOOD: MenuCategory[] = [
-  {
-    category: "Small Plates",
-    items: [
-      { name: "Octopus Roll", price: "25", description: "Guacamole, brioche bread, spicy mayonnaise" },
-      { name: "Mediterranean Platter (V)", price: "11", description: "Grilled pita, feta, olives, hummus, red pepper & aubergine relish", note: "Vegan option available" },
-      { name: "Tomato, Basil & Mozzarella Bruschetta (V)", price: "11", description: "Toasted bread, fresh tomatoes, mozzarella, basil pesto, olive oil" },
-      { name: "Calamari", price: "14", description: "Lightly buttered salt and pepper squid, served with tartar sauce" },
-      { name: "Black Angus Beef Carpaccio (GF)", price: "18", description: "Black Angus beef, wild rocket, pomegranate seeds, gherkins, carrots, truffle mayo" },
-      { name: "Tempura Prawn Tacos", price: "15", description: "Guacamole, cherry tomato, pickled red onions, lime, avocado, tempura prawn" },
-      { name: "Baked Prawns", price: "18", description: "King prawns, tomato sauce, garlic, chilli, parsley, olive oil, homemade bread" },
-      { name: "Baked Camembert (V)", price: "16", description: "Camembert cheese, walnut, honey, rosemary, truffle, homemade bread" }
-    ]
-  },
-  {
-    category: "Pinsa",
-    items: [
-      { name: "Al Funghi (V)", price: "15", description: "Truffle paste, mix mushrooms, soft cheese, olives powder" },
-      { name: "Al Pesto (V)", price: "15", description: "Basil pesto, soft cheese, cherry tomato's, olive" },
-      { name: "Burrata Pinsa", price: "17", description: "Burrata, basil pesto, mozzarella, tomato sauce, crudo, prosciutto" }
-    ]
-  },
-  {
-    category: "Mains & Sharing",
-    items: [
-      { name: "Mini Burgers (Sharing for 4)", price: "16", description: "Fresh tomatoes, red onion, lettuce, light house sauce, on a whole wheat bun" },
-      { name: "Steak Sandwich & French Fries", price: "22", description: "Steak, basil pesto, mozzarella, pepper sauce, red onion, tomato, lettuce, mayo" },
-      { name: "Chicken Sandwich", price: "20", description: "Cesar dressing, mozzarella, crispy chicken, wild rocket, fresh tomatoes, onion" }
-    ]
-  },
-  {
-    category: "Sides",
-    items: [
-      { name: "Padron Peppers with Smashed Feta (V, GF)", price: "6", description: "Blistered padron peppers, served with creamy smashed feta" },
-      { name: "Corn Ribs (V, GF)", price: "6", description: "Crispy sweetcorn, tossed with parmesan chives, garlic & smoker paprika" },
-      { name: "Homemade Focaccia Bread (V)", price: "6", description: "With olives, cherry tomatoes, rosemary" },
-      { name: "Parmesan and Truffle Fries (V, GF)", price: "6.5", description: "Crispy fries with truffle oil and parmesan cheese" },
-      { name: "French Fries (VG)", price: "6", description: "Classic golden fries" }
-    ]
-  },
-  {
-    category: "Desserts",
-    items: [
-      { name: "Vanilla Cheesecake (GF)", price: "8.5", description: "With wild berries compote & fresh fruit" },
-      { name: "Truffon Chocolate (GF)", price: "8.5", description: "Raspberry purée, exotic fruit, pistachio crumble" }
-    ]
-  }
-];
 
 const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now", showBadge: true, showButtons: true };
 const INITIAL_HIGHLIGHTS: HighlightsData = { enabled: true, heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs", "Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
@@ -245,13 +178,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG));
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
-    const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', INITIAL_FOOD));
+    const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
     const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { enabled: true, heading: "Loved", subtext: "Reviews from around the web.", items: [] }));
     const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { enabled: true, heading: "Private Karaoke in Soho", sections: [], footerTitle: "Ready?", footerText: "Plan your night.", footerHighlight: "No chains, just LKC." }));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Epic Events", subtitle: "Private bookings in Soho.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
-    const [optimizationSettings, setOptimizationSettings] = useState<OptimizationSettings>(() => init('optimizationSettings', INITIAL_OPTIMIZATION));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', 'https://files.londonkaraoke.club/db.php'));
     const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', { databaseURL: '', apiKey: '' }));
@@ -283,7 +215,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
     useEffect(() => { persist('termsData', termsData); }, [termsData]);
     useEffect(() => { persist('songs', songs); }, [songs]);
-    useEffect(() => { persist('optimizationSettings', optimizationSettings); }, [optimizationSettings]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
     useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
     useEffect(() => { persist('firebaseConfig', firebaseConfig); }, [firebaseConfig]);
@@ -291,7 +222,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, optimizationSettings, version: "6.0" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.9" 
     }, null, 2);
 
     const importDatabase = (json: any) => {
@@ -313,7 +244,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.eventsData) setEventsData(c.eventsData);
             if (c.termsData) setTermsData(c.termsData);
             if (c.songs) setSongs(c.songs);
-            if (c.optimizationSettings) setOptimizationSettings(c.optimizationSettings);
             return true;
         } catch (e) { return false; }
     };
@@ -406,7 +336,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
             eventsData, updateEventsData: setEventsData, termsData, updateTermsData: setTermsData,
             songs, updateSongs: setSongs,
-            optimizationSettings, updateOptimizationSettings: setOptimizationSettings,
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             firebaseConfig, updateFirebaseConfig: setFirebaseConfig, isDataLoading,
             purgeCache: () => { localStorage.clear(); window.location.reload(); },

@@ -29,162 +29,84 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   
   const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
 
-  const handleNav = (page: any) => {
+  const handleMobileNav = (page: any) => {
     onNavigate(page);
     setIsMenuOpen(false);
-  };
+  }
 
-  // 1. Define hardcoded "Source of Truth" links to ensure the menu is NEVER empty
-  const defaultLinks = ["home", "menu", "drinks", "gallery", "songs", "events", "blog", "imageEditor"];
-  
-  // 2. Merge CMS links with defaults, ensuring no duplicates and filtering out empty strings
-  const rawLinks = (headerData.navOrder && headerData.navOrder.length > 0) 
-    ? headerData.navOrder 
-    : defaultLinks;
-
-  // Filter out any broken data and ensure essential pages are present
-  const navLinks = Array.from(new Set(["home", ...rawLinks, "imageEditor"]))
-    .filter(link => link && typeof link === 'string' && link.trim() !== "");
-
+  const navLinks = headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"];
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = navLinks.slice(0, half);
   const rightLinks = navLinks.slice(half);
 
   const getLabel = (key: string) => {
-      switch(key.toLowerCase()) {
-          case 'home': return 'HOME';
+      switch(key) {
           case 'menu': return 'FOOD MENU';
           case 'gallery': return 'GALLERY';
-          case 'blog': return 'LATEST NEWS';
+          case 'blog': return 'BLOG';
           case 'drinks': return 'DRINKS';
           case 'events': return 'EVENTS';
-          case 'songs': return 'SONG LIST';
-          case 'imageeditor': return 'AI STUDIO';
+          case 'songs': return 'SONGS';
           default: return key.toUpperCase();
       }
   };
 
   return (
-    <header className="sticky top-0 z-[100] bg-black/95 backdrop-blur-2xl shadow-2xl border-b border-zinc-900">
+    <header className="sticky top-0 z-50 bg-black shadow-2xl border-b border-zinc-900">
       <style>{`
         @keyframes wing-enter-left {
-          0% { opacity: 0; transform: translateX(-80px) skewX(-10deg); }
-          100% { opacity: 1; transform: translateX(0) skewX(0); }
+          0% { opacity: 0; transform: translateX(-50px) skewX(-15deg) scale(0.9); }
+          100% { opacity: 1; transform: translateX(0) skewX(0) scale(1); }
         }
         @keyframes wing-enter-right {
-          0% { opacity: 0; transform: translateX(80px) skewX(10deg); }
-          100% { opacity: 1; transform: translateX(0) skewX(0); }
+          0% { opacity: 0; transform: translateX(50px) skewX(15deg) scale(0.9); }
+          100% { opacity: 1; transform: translateX(0) skewX(0) scale(1); }
         }
-        @keyframes item-pop {
-          0% { opacity: 0; transform: scale(0.8) translateY(10px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes item-slide-up {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-wing-left { animation: wing-enter-left 0.6s cubic-bezier(0.2, 1, 0.2, 1) forwards; }
-        .animate-wing-right { animation: wing-enter-right 0.6s cubic-bezier(0.2, 1, 0.2, 1) forwards; }
-        .animate-item-pop { animation: item-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-wing-left { animation: wing-enter-left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-wing-right { animation: wing-enter-right 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
       `}</style>
-
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between h-[70px] md:h-[100px]">
-        {/* Left: Action */}
-        <div className="flex-1 flex justify-start items-center">
-            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="relative bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 rounded-full px-5 py-2 md:px-7 md:py-3 transition-all duration-300 shadow-[0_0_20px_rgba(236,72,153,0.4)] hover:shadow-[0_0_30px_rgba(236,72,153,0.6)] flex justify-center group">
-                <span className="text-[10px] md:text-xs font-black text-black uppercase tracking-widest whitespace-nowrap">Book Now</span>
+      <div className="container mx-auto px-4 py-4 grid grid-cols-[1fr_auto_1fr] items-center">
+        <div className="flex justify-start items-center">
+            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="relative bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 rounded-full px-6 py-2 md:px-8 md:py-3 transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)] hover:shadow-[0_0_20px_rgba(236,72,153,0.6)] min-w-[80px] flex justify-center group">
+                <span className="text-[12px] md:text-sm font-black text-black uppercase tracking-widest whitespace-nowrap">Book Now</span>
             </a>
         </div>
-
-        {/* Center: Branding & Desktop Nav */}
-        <div className="flex items-center gap-4 md:gap-12">
-            {/* Desktop Left */}
-            <nav className="hidden xl:flex items-center gap-8">
-                {leftLinks.map(link => (
-                    <button key={link} onClick={() => onNavigate(link as any)} className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 hover:text-white transition-all hover:scale-110">{getLabel(link)}</button>
-                ))}
-            </nav>
-
-            <button onClick={() => handleNav('home')} className="focus:outline-none z-10 transition-all duration-500 hover:scale-110 hover:rotate-3">
+        <div className="flex justify-center items-center">
+            <button onClick={() => onNavigate('home')} className="focus:outline-none z-10 transition-transform duration-300 hover:scale-105">
                 <div className="w-16 h-16 md:w-24 md:h-24 relative flex items-center justify-center">
-                    <img src={headerData.logoUrl} alt="LKC Logo" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.8)]" />
+                    <img src={headerData.logoUrl} alt="London Karaoke Club Logo" className="w-full h-full object-contain drop-shadow-lg" />
                 </div>
             </button>
-
-            {/* Desktop Right */}
-            <nav className="hidden xl:flex items-center gap-8">
-                {rightLinks.map(link => (
-                    <button key={link} onClick={() => onNavigate(link as any)} className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 hover:text-white transition-all hover:scale-110">{getLabel(link)}</button>
-                ))}
-            </nav>
         </div>
-
-        {/* Right: Burger */}
-        <div className="flex-1 flex justify-end items-center">
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)} 
-              className={`relative bg-zinc-900/80 backdrop-blur-md rounded-full px-5 py-2 md:px-7 md:py-3 border-2 transition-all duration-300 group flex items-center justify-center gap-3 ${isMenuOpen ? 'border-pink-500 scale-110 shadow-[0_0_20px_rgba(236,72,153,0.3)]' : 'border-zinc-800'}`}
-            >
-                 <span className="hidden md:block text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white">{isMenuOpen ? 'CLOSE' : 'MENU'}</span>
-                 <div className={`transition-transform duration-500 ${isMenuOpen ? 'rotate-90' : ''}`}>
-                    {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+        <div className="flex justify-end items-center">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="relative bg-zinc-900 hover:bg-zinc-800 rounded-full px-6 py-2 border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] min-w-[80px] flex items-center justify-center h-[42px] md:h-[50px]">
+                 <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-180' : ''}`}>
+                    {isMenuOpen ? <CloseIcon /> : <div className="w-8 h-8 flex items-center justify-center"><MenuIcon /></div>}
                  </div>
             </button>
         </div>
       </div>
-
-      {/* FLY OUT MENU OVERLAY */}
       {isMenuOpen && (
-        <div className="fixed inset-0 top-[70px] md:top-[100px] w-full h-screen z-[999] overflow-hidden">
-            {/* Blackout Backdrop */}
-            <div 
-              className="absolute inset-0 bg-black/95 backdrop-blur-3xl" 
-              onClick={() => setIsMenuOpen(false)}
-            ></div>
-            
-            <div className="relative w-full h-full flex flex-col items-center justify-start pt-12 md:pt-24 px-4 pb-40 overflow-y-auto">
-                <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-12 w-full max-w-7xl">
-                    
-                    {/* Left Wing */}
-                    <div className="w-full md:w-1/2 bg-zinc-900/60 border border-white/5 rounded-[40px] md:rounded-[80px] p-8 md:p-16 flex flex-col items-center md:items-end gap-6 md:gap-12 animate-wing-left origin-right shadow-2xl">
-                        {leftLinks.map((link, idx) => (
-                            <button 
-                              key={link} 
-                              onClick={() => handleNav(link as any)} 
-                              style={{animationDelay: `${idx * 0.08}s` }} 
-                              className="text-2xl md:text-5xl font-black italic tracking-tighter text-zinc-100 hover:text-pink-500 transition-all animate-item-pop opacity-0 fill-mode-forwards hover:scale-110 uppercase text-center md:text-right"
-                            >
-                              {getLabel(link)}
-                            </button>
-                        ))}
-                    </div>
-                    
-                    {/* Right Wing */}
-                    <div className="w-full md:w-1/2 bg-zinc-900/60 border border-white/5 rounded-[40px] md:rounded-[80px] p-8 md:p-16 flex flex-col items-center md:items-start gap-6 md:gap-12 animate-wing-right origin-left shadow-2xl">
-                        {rightLinks.map((link, idx) => (
-                            <button 
-                              key={link} 
-                              onClick={() => handleNav(link as any)} 
-                              style={{animationDelay: `${idx * 0.08}s` }} 
-                              className="text-2xl md:text-5xl font-black italic tracking-tighter text-zinc-100 hover:text-pink-500 transition-all animate-item-pop opacity-0 fill-mode-forwards hover:scale-110 uppercase text-center md:text-left"
-                            >
-                              {getLabel(link)}
-                            </button>
-                        ))}
-                        <a 
-                          href={BOOKING_URL} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-2xl md:text-5xl font-black italic tracking-tighter text-yellow-400 hover:text-yellow-300 transition-all animate-item-pop opacity-0 fill-mode-forwards hover:scale-110 uppercase text-center md:text-left border-t border-zinc-800 pt-6 w-full" 
-                          style={{animationDelay: `${navLinks.length * 0.08}s` }}
-                        >
-                          BOOK NOW
-                        </a>
-                    </div>
+        <div className="fixed top-[80px] left-0 w-full h-[calc(100vh-80px)] pointer-events-none overflow-hidden z-40">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-500" onClick={() => setIsMenuOpen(false)}></div>
+            <div className="relative w-full px-4 pt-8 flex justify-between gap-4 pointer-events-none">
+                <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
+                    {leftLinks.map((link, idx) => (
+                        <button key={link} onClick={() => handleMobileNav(link as any)} style={{animationDelay: `${0.3 + idx*0.1}s`}} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards">{getLabel(link)}</button>
+                    ))}
                 </div>
-
-                {/* Decorative Center Line */}
-                <div className="hidden md:flex flex-col items-center absolute left-1/2 top-0 -translate-x-1/2 h-full pointer-events-none opacity-20">
-                    <div className="w-px h-full bg-gradient-to-b from-pink-500 via-white to-transparent"></div>
-                    <div className="w-4 h-4 rounded-full bg-pink-500 blur-sm animate-pulse absolute top-1/4"></div>
+                <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
+                    {rightLinks.map((link, idx) => (
+                        <button key={link} onClick={() => handleMobileNav(link as any)} style={{animationDelay: `${0.3 + idx*0.1}s`}} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards">{getLabel(link)}</button>
+                    ))}
+                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl md:text-3xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards" style={{animationDelay: `${0.3 + rightLinks.length*0.1}s`}}>BOOK NOW</a>
                 </div>
             </div>
+            <div className="absolute top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-white animate-pulse"></div>
         </div>
       )}
     </header>
