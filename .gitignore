@@ -2,46 +2,59 @@
 # Dependencies
 node_modules/
 
-# Build outputs
-dist/
-build/
-coverage/
-
-# Environment variables
+# Environment
 .env
 .env.local
 .env.*
 
-# IDE files
+# Logs
+*.log
+
+# Editor/IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*.tmp
 
-# Logs
-*.log
+# Build artifacts
+dist/
+build/
+target/
 
-# Python (if present)
+# Python
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 .Python
+*.so
 
-# Temporary files
-*.tmp
-*~
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 
-# OS generated files
+# System files
 .DS_Store
 Thumbs.db
-
-# Testing
-.coverage
-htmlcov/
-
-# Vite specific
-.vite/
-
-# TypeScript/JavaScript build artifacts
-*.tsbuildinfo
 ```
