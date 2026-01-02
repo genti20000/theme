@@ -21,9 +21,11 @@ import EventsPage from './components/EventsPage';
 import BlogPage from './components/BlogPage';
 import Chatbot from './components/Chatbot';
 import VisualEffects from './components/VisualEffects';
+import ImageEditor from './components/ImageEditor';
 import { DataProvider, useData } from './context/DataContext';
 
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
+// Added 'imageEditor' to the Page type to resolve navigation type mismatch
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 
@@ -50,6 +52,8 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'menu' && <Menu />}
       {currentPage === 'drinks' && <DrinksMenu />}
       {currentPage === 'gallery' && <Gallery />}
+      {/* Added ImageEditor to the main content routing */}
+      {currentPage === 'imageEditor' && <ImageEditor />}
       {currentPage === 'songs' && <SongLibrary />}
       {currentPage === 'events' && <EventsPage />}
       {currentPage === 'blog' && <BlogPage />}

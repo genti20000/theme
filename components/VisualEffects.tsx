@@ -16,15 +16,24 @@ const Sparkle = ({ style }: { style: React.CSSProperties }) => (
 
 const FloatingNote = ({ style }: { style: React.CSSProperties }) => {
   const Icon = Math.random() > 0.5 ? Music : Mic2;
+  
+  // Memoize random drift and rotation values to prevent re-randomization on every render
+  const drift = useMemo(() => (Math.random() - 0.5) * 100, []);
+  const rotation = useMemo(() => (Math.random() - 0.5) * 60, []);
+  const duration = useMemo(() => Math.random() * 6 + 6, []);
+  const size = useMemo(() => Math.random() * 15 + 15, []);
+
   return (
     <div 
-      className="absolute pointer-events-none text-zinc-500/20"
+      className="absolute pointer-events-none text-zinc-500/10"
       style={{
-        animation: `float-note ${Math.random() * 5 + 5}s ease-in infinite`,
+        animation: `float-note ${duration}s ease-in-out infinite`,
+        ['--drift' as any]: `${drift}px`,
+        ['--rotation' as any]: `${rotation}deg`,
         ...style
-      }}
+      } as React.CSSProperties}
     >
-      <Icon size={Math.random() * 20 + 15} />
+      <Icon size={size} />
     </div>
   );
 };
@@ -39,12 +48,12 @@ const VisualEffects: React.FC = () => {
     }
   })), []);
 
-  const notes = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
+  const notes = useMemo(() => Array.from({ length: 18 }).map((_, i) => ({
     id: i,
     style: {
       left: `${Math.random() * 100}%`,
       bottom: `-${Math.random() * 10}vh`,
-      animationDelay: `${Math.random() * 8}s`
+      animationDelay: `${Math.random() * 10}s`
     }
   })), []);
 

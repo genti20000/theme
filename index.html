@@ -39,10 +39,17 @@
         50% { opacity: 0.8; transform: scale(1); }
       }
       @keyframes float-note {
-        0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
-        20% { opacity: 0.4; }
-        80% { opacity: 0.4; }
-        100% { transform: translateY(-150px) translateX(30px) rotate(20deg); opacity: 0; }
+        0% { 
+          transform: translateY(0) translateX(0) rotate(0deg); 
+          opacity: 0; 
+        }
+        40% { 
+          opacity: 0.25; 
+        }
+        100% { 
+          transform: translateY(-180px) translateX(var(--drift, 40px)) rotate(var(--rotation, 20deg)); 
+          opacity: 0; 
+        }
       }
 
       .disco-ball-grid {

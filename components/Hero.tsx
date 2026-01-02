@@ -2,27 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 
-// Christmas Icons
-const SnowflakeIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17 12L21.41 16.41L20 17.83L16.17 14H14V16.17L17.83 20L16.41 21.41L12 17L7.59 21.41L6.17 20L10 16.17V14H7.83L4 17.83L2.59 16.41L7 12L2.59 7.59L4 6.17L7.83 10H10V7.83L6.17 4L7.59 2.59L12 7L16.41 2.59L17.83 4L14 7.83V10H16.17L20 6.17L21.41 7.59L17 12Z"/></svg>
-);
-
-const snowflakes = Array.from({ length: 50 }).map((_, i) => {
-    const size = Math.random() * 8 + 4;
-    const duration = Math.random() * 5 + 5;
-    const delay = Math.random() * -10;
-    return {
-        id: `snow-${i}`,
-        style: {
-            left: `${Math.random() * 100}%`,
-            width: `${size}px`,
-            height: `${size}px`,
-            opacity: Math.random() * 0.5 + 0.3,
-            animation: `fall ${duration}s ${delay}s linear infinite`,
-        } as React.CSSProperties,
-    }
-});
-
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
   const { heroData } = useData();
@@ -54,11 +33,6 @@ const Hero: React.FC = () => {
   return (
     <section className="relative h-[90vh] md:h-screen flex flex-col items-center justify-end pb-12 md:pb-24 text-center text-white overflow-hidden bg-black" aria-label="Welcome">
       <style>{`
-        @keyframes fall {
-            0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
-            10% { opacity: 1; }
-            100% { transform: translateY(110vh) translateX(20px); opacity: 0.3; }
-        }
         @keyframes zoom-slow {
             0% { transform: scale(1); }
             100% { transform: scale(1.1); }
@@ -97,17 +71,11 @@ const Hero: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black"></div>
       </div>
       
-      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
-          {snowflakes.map(s => (
-              <div key={s.id} style={s.style} className="absolute top-[-20px] bg-white rounded-full blur-[1px]" />
-          ))}
-      </div>
-
       <div className="relative z-10 p-6 max-w-5xl mx-auto">
         {showBadge && heroData.badgeText && (
           <div className="mb-4 inline-block">
             <span className="py-1 px-4 rounded-full bg-red-600/80 backdrop-blur-sm border border-red-400 text-white text-xs md:text-sm font-bold tracking-wider uppercase animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)]">
-              🎄 {heroData.badgeText} 🎄
+              {heroData.badgeText}
             </span>
           </div>
         )}

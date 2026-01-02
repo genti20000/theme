@@ -1,27 +1,29 @@
 
 import React, { useState } from 'react';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import Highlights from './components/Highlights';
-import Features from './components/Features';
-import Menu from './components/Menu';
-import Fitness from './components/Fitness';
-import Battery from './components/Battery';
-import Testimonials from './components/Testimonials';
-import Footer from './components/Footer';
-import DrinksMenu from './components/DrinksMenu';
-import WhatsAppButton from './components/WhatsAppButton';
-import AdminDashboard from './components/AdminDashboard';
-import InfoSection from './components/InfoSection';
-import FAQ from './components/FAQ';
-import Terms from './components/Terms';
-import Gallery from './components/Gallery';
-import SongLibrary from './components/SongLibrary';
-import EventsPage from './components/EventsPage';
-import BlogPage from './components/BlogPage';
+import Header from './Header';
+import Hero from './Hero';
+import Highlights from './Highlights';
+import Features from './Features';
+import Menu from './Menu';
+import Fitness from './Fitness';
+import Battery from './Battery';
+import Testimonials from './Testimonials';
+import Footer from './Footer';
+import DrinksMenu from './DrinksMenu';
+import WhatsAppButton from './WhatsAppButton';
+import AdminDashboard from './AdminDashboard';
+import InfoSection from './InfoSection';
+import FAQ from './FAQ';
+import Terms from './Terms';
+import Gallery from './Gallery';
+import SongLibrary from './SongLibrary';
+import EventsPage from './EventsPage';
+import BlogPage from './BlogPage';
+import ImageEditor from './ImageEditor';
 import { DataProvider, useData } from '../context/DataContext';
 
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
+// Added 'imageEditor' to the Page type to resolve navigation type mismatch
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 
@@ -48,6 +50,8 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'menu' && <Menu />}
       {currentPage === 'drinks' && <DrinksMenu />}
       {currentPage === 'gallery' && <Gallery />}
+      {/* Added ImageEditor to the main content routing */}
+      {currentPage === 'imageEditor' && <ImageEditor />}
       {currentPage === 'songs' && <SongLibrary />}
       {currentPage === 'events' && <EventsPage />}
       {currentPage === 'blog' && <BlogPage />}
