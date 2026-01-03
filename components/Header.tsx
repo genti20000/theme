@@ -34,8 +34,6 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     setIsMenuOpen(false);
   }
 
-  const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
-
   // Define menu structure based on user request
   const menuStructure = {
     explore: [
