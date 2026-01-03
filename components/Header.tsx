@@ -34,10 +34,99 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     setIsMenuOpen(false);
   }
 
-  const navLinks = headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"];
-  const half = Math.ceil(navLinks.length / 2);
-  const leftLinks = navLinks.slice(0, half);
-  const rightLinks = navLinks.slice(half);
+  const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
+
+  // Define menu structure based on user request
+  const menuStructure = {
+    explore: [
+      { key: 'home', label: 'HOME', action: () => onNavigate('home') },
+      { key: 'gallery', label: 'GALLERY', action: () => onNavigate('gallery') },
+      { key: 'blog', label: 'BLOG', action: () => onNavigate('blog') },
+      { key: 'menu', label: 'FOOD MENU', action: () => onNavigate('menu') },
+      { key: 'drinks', label: 'DRINKS MENU', action: () => onNavigate('drinks') },
+    ],
+    book: [
+      { key: 'book-room', label: 'BOOK A ROOM', action: () => window.open(BOOKING_URL, '_blank') },
+      { key: 'special-offers', label: 'SPECIAL OFFERS', action: () => {
+          onNavigate('home');
+          setTimeout(() => {
+            const section = document.getElementById('special-offers');
+            if (section) {
+              section.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 100);
+        }
+      },
+      { key: 'faqs', label: 'FAQS', action: () => {
+          // Scroll to FAQ section on home page
+          onNavigate('home');
+          setTimeout(() => {
+            const faqSection = document.querySelector('#faq');
+            if (faqSection) {
+              faqSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              // If FAQ section is not found on home page, navigate to FAQ component
+              onNavigate('home');
+            }
+          }, 100);
+        }
+      },
+    ],
+    events: [
+      { key: 'birthday', label: 'BIRTHDAY PARTIES', action: () => onNavigate('events') },
+      { key: 'hen-stag', label: 'HEN & STAG DOS', action: () => onNavigate('events') },
+      { key: 'corporate', label: 'CORPORATE EVENTS', action: () => onNavigate('events') },
+    ],
+    lkc: [
+      { key: 'about', label: 'ABOUT US', action: () => {
+          onNavigate('home');
+          // Scroll to About Us section after navigation
+          setTimeout(() => {
+            const section = document.getElementById('about-section');
+            if (section) {
+              section.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              // If the section doesn't exist, just ensure we're on the home page
+              window.scrollTo(0, 0);
+            }
+          }, 100);
+        }
+      },
+      { key: 'contact', label: 'CONTACT & LOCATION', action: () => {
+          onNavigate('home');
+          // Scroll to Contact section after navigation
+          setTimeout(() => {
+            const section = document.getElementById('contact-section');
+            if (section) {
+              section.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              // If the section doesn't exist, just ensure we're on the home page
+              window.scrollTo(0, 0);
+            }
+          }, 100);
+        }
+      },
+      { key: 'careers', label: 'CAREERS', action: () => {
+          onNavigate('home');
+          // Scroll to Careers section after navigation
+          setTimeout(() => {
+            const section = document.getElementById('careers-section');
+            if (section) {
+              section.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              // If the section doesn't exist, just ensure we're on the home page
+              window.scrollTo(0, 0);
+            }
+          }, 100);
+        }
+      },
+    ],
+    connect: [
+      { key: 'instagram', label: 'INSTAGRAM', action: () => window.open('https://instagram.com', '_blank') },
+      { key: 'tiktok', label: 'TIKTOK', action: () => window.open('https://tiktok.com', '_blank') },
+      { key: 'facebook', label: 'FACEBOOK', action: () => window.open('https://facebook.com', '_blank') },
+    ]
+  };
 
   const getLabel = (key: string) => {
       switch(key) {
@@ -95,15 +184,78 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-500" onClick={() => setIsMenuOpen(false)}></div>
             <div className="relative w-full px-4 pt-8 flex justify-between gap-4 pointer-events-none">
                 <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
-                    {leftLinks.map((link, idx) => (
-                        <button key={link} onClick={() => handleMobileNav(link as any)} style={{animationDelay: `${0.3 + idx*0.1}s`}} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards">{getLabel(link)}</button>
+                    <h3 className="text-xl md:text-2xl font-black tracking-wider text-pink-400 border-b border-pink-400 w-full text-center pb-2">EXPLORE</h3>
+                    {menuStructure.explore.map((item, idx) => (
+                        <button 
+                            key={item.key} 
+                            onClick={() => {
+                                item.action();
+                                setIsMenuOpen(false);
+                            }} 
+                            style={{animationDelay: `${0.3 + idx*0.1}s`}} 
+                            className="text-xl md:text-2xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards"
+                        >
+                            {item.label}
+                        </button>
+                    ))}
+                    <h3 className="text-xl md:text-2xl font-black tracking-wider text-pink-400 border-b border-pink-400 w-full text-center pb-2 mt-4">LKC</h3>
+                    {menuStructure.lkc.map((item, idx) => (
+                        <button 
+                            key={item.key} 
+                            onClick={() => {
+                                item.action();
+                                setIsMenuOpen(false);
+                            }} 
+                            style={{animationDelay: `${0.3 + (menuStructure.explore.length + idx)*0.1}s`}} 
+                            className="text-xl md:text-2xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards"
+                        >
+                            {item.label}
+                        </button>
                     ))}
                 </div>
                 <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_30px_rgba(147,51,234,0.6)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
-                    {rightLinks.map((link, idx) => (
-                        <button key={link} onClick={() => handleMobileNav(link as any)} style={{animationDelay: `${0.3 + idx*0.1}s`}} className="text-xl md:text-3xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards">{getLabel(link)}</button>
+                    <h3 className="text-xl md:text-2xl font-black tracking-wider text-pink-400 border-b border-pink-400 w-full text-center pb-2">BOOK</h3>
+                    {menuStructure.book.map((item, idx) => (
+                        <button 
+                            key={item.key} 
+                            onClick={() => {
+                                item.action();
+                                setIsMenuOpen(false);
+                            }} 
+                            style={{animationDelay: `${0.3 + idx*0.1}s`}} 
+                            className="text-xl md:text-2xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards"
+                        >
+                            {item.label}
+                        </button>
                     ))}
-                    <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="text-xl md:text-3xl font-black tracking-wider text-yellow-400 hover:text-yellow-300 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards" style={{animationDelay: `${0.3 + rightLinks.length*0.1}s`}}>BOOK NOW</a>
+                    <h3 className="text-xl md:text-2xl font-black tracking-wider text-pink-400 border-b border-pink-400 w-full text-center pb-2 mt-4">EVENTS</h3>
+                    {menuStructure.events.map((item, idx) => (
+                        <button 
+                            key={item.key} 
+                            onClick={() => {
+                                item.action();
+                                setIsMenuOpen(false);
+                            }} 
+                            style={{animationDelay: `${0.3 + idx*0.1}s`}} 
+                            className="text-xl md:text-2xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards"
+                        >
+                            {item.label}
+                        </button>
+                    ))}
+                    <h3 className="text-xl md:text-2xl font-black tracking-wider text-pink-400 border-b border-pink-400 w-full text-center pb-2 mt-4">CONNECT</h3>
+                    {menuStructure.connect.map((item, idx) => (
+                        <button 
+                            key={item.key} 
+                            onClick={() => {
+                                item.action();
+                                setIsMenuOpen(false);
+                            }} 
+                            style={{animationDelay: `${0.3 + (menuStructure.book.length + menuStructure.events.length + idx)*0.1}s`}} 
+                            className="text-xl md:text-2xl font-black tracking-wider text-gray-100 hover:text-pink-400 transition-colors animate-item-slide-up opacity-0 fill-mode-forwards"
+                        >
+                            {item.label}
+                        </button>
+                    ))}
                 </div>
             </div>
             <div className="absolute top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-white animate-pulse"></div>
