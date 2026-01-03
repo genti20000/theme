@@ -24,8 +24,8 @@ import VisualEffects from './components/VisualEffects';
 import ImageEditor from './components/ImageEditor';
 import { DataProvider, useData } from './context/DataContext';
 
-// Added 'imageEditor' to the Page type to resolve navigation type mismatch
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
+// Added 'imageEditor' and new page types to the Page type to resolve navigation type mismatch
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'about' | 'contact' | 'careers';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 
@@ -59,6 +59,21 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'blog' && <BlogPage />}
       {currentPage === 'admin' && <AdminDashboard />}
       {currentPage === 'terms' && <Terms />}
+      {/* Placeholder pages for About, Contact, and Careers - these will render the home page content but could be customized later */}
+      {(currentPage === 'about' || currentPage === 'contact' || currentPage === 'careers') && (
+        <>
+          <Hero />
+          {highlightsData.enabled !== false && <Highlights />}
+          <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
+          {featuresData.enabled !== false && <Features />}
+          {vibeData.enabled !== false && <Fitness />}
+          {batteryData.enabled !== false && <Battery />}
+          {testimonialsData.enabled !== false && <Testimonials />}
+          {infoSectionData.enabled !== false && <InfoSection />}
+          {faqData.enabled !== false && <FAQ />}
+          {galleryData.showOnHome && <div className="mt-20"><Gallery /></div>}
+        </>
+      )}
     </main>
   );
 };
