@@ -19,7 +19,6 @@ import Gallery from './components/Gallery';
 import SongLibrary from './components/SongLibrary';
 import EventsPage from './components/EventsPage';
 import BlogPage from './components/BlogPage';
-import Chatbot from './components/Chatbot';
 import VisualEffects from './components/VisualEffects';
 import ImageEditor from './components/ImageEditor';
 import { DataProvider, useData } from './context/DataContext';
@@ -71,7 +70,6 @@ const AppShell: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> =
             <MainContent currentPage={currentPage} navigateTo={navigateTo} />
             {currentPage !== 'admin' && <Footer onNavigate={navigateTo} />}
             {currentPage !== 'admin' && <WhatsAppButton />}
-            {currentPage !== 'admin' && <Chatbot />}
         </>
     );
 }
