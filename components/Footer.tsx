@@ -3,8 +3,8 @@ import React from 'react';
 import { useData } from '../context/DataContext';
 
 interface FooterProps {
-  // Added 'songs' and new page types to the supported navigation pages for type consistency
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'events' | 'blog' | 'songs' | 'about' | 'contact' | 'careers') => void;
+  // Added 'songs' to the supported navigation pages for type consistency
+  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'events' | 'blog' | 'songs') => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate }) => {

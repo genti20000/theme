@@ -2,7 +2,8 @@
 import React, { useMemo } from 'react';
 import { Music, Mic2, Star } from 'lucide-react';
 
-const Sparkle = ({ style }: { style: React.CSSProperties }) => (
+// Explicitly type as React.FC to handle standard React props like 'key' correctly in TypeScript
+const Sparkle: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
   <div 
     className="absolute pointer-events-none text-white/40"
     style={{
@@ -14,18 +15,19 @@ const Sparkle = ({ style }: { style: React.CSSProperties }) => (
   </div>
 );
 
-const FloatingNote = ({ style }: { style: React.CSSProperties }) => {
+// Explicitly type as React.FC to handle standard React props like 'key' correctly in TypeScript
+const FloatingNote: React.FC<{ style: React.CSSProperties }> = ({ style }) => {
   const Icon = Math.random() > 0.5 ? Music : Mic2;
   
   // Memoize random drift and rotation values to prevent re-randomization on every render
-  const drift = useMemo(() => (Math.random() - 0.5) * 100, []);
-  const rotation = useMemo(() => (Math.random() - 0.5) * 60, []);
-  const duration = useMemo(() => Math.random() * 6 + 6, []);
-  const size = useMemo(() => Math.random() * 15 + 15, []);
+  const drift = useMemo(() => (Math.random() - 0.5) * 150, []); // Increased drift range
+  const rotation = useMemo(() => (Math.random() - 0.5) * 90, []); // Increased rotation range
+  const duration = useMemo(() => Math.random() * 8 + 8, []); // Slower, more elegant rise
+  const size = useMemo(() => Math.random() * 20 + 20, []); // Slightly larger icons
 
   return (
     <div 
-      className="absolute pointer-events-none text-zinc-500/10"
+      className="absolute pointer-events-none text-white/40 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
       style={{
         animation: `float-note ${duration}s ease-in-out infinite`,
         ['--drift' as any]: `${drift}px`,
@@ -33,7 +35,7 @@ const FloatingNote = ({ style }: { style: React.CSSProperties }) => {
         ...style
       } as React.CSSProperties}
     >
-      <Icon size={size} />
+      <Icon size={size} strokeWidth={1.5} />
     </div>
   );
 };
@@ -48,12 +50,12 @@ const VisualEffects: React.FC = () => {
     }
   })), []);
 
-  const notes = useMemo(() => Array.from({ length: 18 }).map((_, i) => ({
+  const notes = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
     id: i,
     style: {
       left: `${Math.random() * 100}%`,
       bottom: `-${Math.random() * 10}vh`,
-      animationDelay: `${Math.random() * 10}s`
+      animationDelay: `${Math.random() * 12}s`
     }
   })), []);
 
@@ -92,7 +94,7 @@ const VisualEffects: React.FC = () => {
       {sparkles.map(s => <Sparkle key={s.id} style={s.style} />)}
 
       {/* Musical notes at bottom */}
-      <div className="absolute bottom-0 left-0 w-full h-40 overflow-hidden">
+      <div className="absolute bottom-0 left-0 w-full h-64 overflow-hidden">
         {notes.map(n => <FloatingNote key={n.id} style={n.style} />)}
       </div>
     </div>
