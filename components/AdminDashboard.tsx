@@ -443,20 +443,162 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </SectionCard>
         )}
 
+        {tab === 'food' && (
+            <SectionCard title="Food Menu Control">
+                {foodMenu.map((cat, ci) => (
+                    <div key={ci} className="bg-zinc-800/30 p-6 rounded-2xl mb-6 border border-zinc-800">
+                        <div className="flex gap-4 items-end mb-4">
+                            <Input label="Category Name" value={cat.category} onChange={v => {
+                                const next = [...foodMenu]; next[ci].category = v; updateFoodMenu(next);
+                            }} />
+                            <button onClick={() => updateFoodMenu(foodMenu.filter((_, idx) => idx !== ci))} className="mb-6 bg-red-900/20 text-red-500 p-3 rounded-xl">×</button>
+                        </div>
+                        <div className="space-y-4">
+                            {cat.items.map((item, ii) => (
+                                <div key={ii} className="grid grid-cols-12 gap-3 items-start border-b border-zinc-800/50 pb-4">
+                                    <div className="col-span-4"><Input label="Item Name" value={item.name} onChange={v => { const next = [...foodMenu]; next[ci].items[ii].name = v; updateFoodMenu(next); }} /></div>
+                                    <div className="col-span-2"><Input label="Price" value={item.price} onChange={v => { const next = [...foodMenu]; next[ci].items[ii].price = v; updateFoodMenu(next); }} /></div>
+                                    <div className="col-span-5"><Input label="Description" value={item.description} onChange={v => { const next = [...foodMenu]; next[ci].items[ii].description = v; updateFoodMenu(next); }} /></div>
+                                    <button onClick={() => { const next = [...foodMenu]; next[ci].items = next[ci].items.filter((_, idx) => idx !== ii); updateFoodMenu(next); }} className="col-span-1 mt-7 text-red-500">×</button>
+                                </div>
+                            ))}
+                            <button onClick={() => { const next = [...foodMenu]; next[ci].items.push({name: 'New Item', description: '', price: '0.00'}); updateFoodMenu(next); }} className="text-xs font-black uppercase text-zinc-500">+ Add Item</button>
+                        </div>
+                    </div>
+                ))}
+                <button onClick={() => updateFoodMenu([...foodMenu, {category: 'New Section', items: []}])} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD MENU CATEGORY</button>
+            </SectionCard>
+        )}
+
+        {tab === 'drinks' && (
+            <div className="space-y-12">
+                <SectionCard title="Drinks Hero & General">
+                    <MediaPicker label="Drinks Header Image" value={drinksData.headerImageUrl} onChange={v => updateDrinksData(prev => ({...prev, headerImageUrl: v}))} />
+                </SectionCard>
+                <SectionCard title="Packages (Special Box)">
+                    <Input label="Title" value={drinksData.packagesData.title} onChange={v => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, title: v}}))} />
+                    <Input label="Subtitle" value={drinksData.packagesData.subtitle} onChange={v => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, subtitle: v}}))} />
+                    {drinksData.packagesData.items.map((item, i) => (
+                        <div key={i} className="flex gap-4 mb-4 items-end bg-zinc-800/30 p-4 rounded-xl">
+                            <Input label="Package Name" value={item.name} onChange={v => { const next = [...drinksData.packagesData.items]; next[i].name = v; updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} />
+                            <Input label="Price" value={item.price} onChange={v => { const next = [...drinksData.packagesData.items]; next[i].price = v; updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} />
+                            <button onClick={() => { const next = drinksData.packagesData.items.filter((_, idx) => idx !== i); updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} className="mb-6 text-red-500">×</button>
+                        </div>
+                    ))}
+                    <button onClick={() => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: [...prev.packagesData.items, {name: 'New Package', price: '£0'}]}}))} className="w-full py-2 bg-zinc-800 text-[10px] font-black uppercase rounded-xl">+ Add Package</button>
+                </SectionCard>
+                <DrinkCategoryEditor title="Cocktails" data={drinksData.cocktailsData} setter={v => updateDrinksData(prev => ({...prev, cocktailsData: v}))} />
+                <DrinkCategoryEditor title="Wines" data={drinksData.winesData} setter={v => updateDrinksData(prev => ({...prev, winesData: v}))} />
+                <DrinkCategoryEditor title="Bottle Service" data={drinksData.bottleServiceData} setter={v => updateDrinksData(prev => ({...prev, bottleServiceData: v}))} />
+                <DrinkCategoryEditor title="By The Glass" data={drinksData.byTheGlassData} setter={v => updateDrinksData(prev => ({...prev, byTheGlassData: v}))} />
+            </div>
+        )}
+
+        {tab === 'events' && (
+            <div className="space-y-12">
+                <SectionCard title="Events Hero">
+                    <Input label="Title" value={eventsData.hero.title} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, title: v}}))} />
+                    <Input label="Subtitle" value={eventsData.hero.subtitle} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, subtitle: v}}))} />
+                    <MediaPicker label="Hero Media" value={eventsData.hero.image} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, image: v}}))} />
+                </SectionCard>
+                <SectionCard title="Event Types/Sections">
+                    {eventsData.sections.map((section, si) => (
+                        <div key={si} className="bg-zinc-800/30 p-6 rounded-2xl mb-8 border border-zinc-800">
+                             <div className="flex justify-between items-start mb-4">
+                                <h4 className="text-pink-500 font-black uppercase text-sm">Section {si+1}</h4>
+                                <button onClick={() => updateEventsData(prev => ({...prev, sections: prev.sections.filter((_, idx) => idx !== si)}))} className="text-red-500 font-bold">Delete</button>
+                             </div>
+                             <Input label="Section Title" value={section.title} onChange={v => { const next = [...eventsData.sections]; next[si].title = v; updateEventsData(prev => ({...prev, sections: next})); }} />
+                             <Input label="Subtitle" value={section.subtitle} onChange={v => { const next = [...eventsData.sections]; next[si].subtitle = v; updateEventsData(prev => ({...prev, sections: next})); }} />
+                             <TextArea label="Description" value={section.description} onChange={v => { const next = [...eventsData.sections]; next[si].description = v; updateEventsData(prev => ({...prev, sections: next})); }} />
+                             <MediaPicker label="Section Image" value={section.imageUrl} onChange={v => { const next = [...eventsData.sections]; next[si].imageUrl = v; updateEventsData(prev => ({...prev, sections: next})); }} />
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-zinc-500">Key Features</label>
+                                {section.features.map((f, fi) => (
+                                    <div key={fi} className="flex gap-2">
+                                        <input className="flex-1 bg-zinc-900 border border-zinc-800 p-2 rounded text-xs text-white" value={f} onChange={e => {
+                                            const next = [...eventsData.sections]; next[si].features[fi] = e.target.value; updateEventsData(prev => ({...prev, sections: next}));
+                                        }} />
+                                        <button onClick={() => { const next = [...eventsData.sections]; next[si].features = next[si].features.filter((_, idx) => idx !== fi); updateEventsData(prev => ({...prev, sections: next})); }} className="text-red-500">×</button>
+                                    </div>
+                                ))}
+                                <button onClick={() => { const next = [...eventsData.sections]; next[si].features.push('New Feature'); updateEventsData(prev => ({...prev, sections: next})); }} className="text-[10px] uppercase font-black text-zinc-600">+ Add Feature</button>
+                             </div>
+                        </div>
+                    ))}
+                    <button onClick={() => updateEventsData(prev => ({...prev, sections: [...prev.sections, {id: Date.now().toString(), title: 'New Event', subtitle: 'Celebrate', description: '', imageUrl: '', features: []}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD EVENT SECTION</button>
+                </SectionCard>
+            </div>
+        )}
+
+        {tab === 'blog' && (
+            <SectionCard title="LKC Blog/Stories Feed">
+                <Input label="Main Heading" value={blogData.heading} onChange={v => updateBlogData(prev => ({...prev, heading: v}))} />
+                <TextArea label="Subheading" value={blogData.subtext} onChange={v => updateBlogData(prev => ({...prev, subtext: v}))} />
+                <div className="space-y-8 mt-10">
+                    {blogData.posts.map((post, pi) => (
+                        <div key={pi} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
+                            <button onClick={() => updateBlogData(prev => ({...prev, posts: prev.posts.filter((_, idx) => idx !== pi)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Post</button>
+                            <Input label="Post Title" value={post.title} onChange={v => { const next = [...blogData.posts]; next[pi].title = v; updateBlogData(prev => ({...prev, posts: next})); }} />
+                            <div className="grid grid-cols-2 gap-4">
+                                <Input label="Date" value={post.date} onChange={v => { const next = [...blogData.posts]; next[pi].date = v; updateBlogData(prev => ({...prev, posts: next})); }} />
+                                <MediaPicker label="Featured Media" value={post.imageUrl} onChange={v => { const next = [...blogData.posts]; next[pi].imageUrl = v; updateBlogData(prev => ({...prev, posts: next})); }} />
+                            </div>
+                            <TextArea label="Excerpt (Summary)" value={post.excerpt} onChange={v => { const next = [...blogData.posts]; next[pi].excerpt = v; updateBlogData(prev => ({...prev, posts: next})); }} />
+                            <TextArea label="Full Article Content" value={post.content} onChange={v => { const next = [...blogData.posts]; next[pi].content = v; updateBlogData(prev => ({...prev, posts: next})); }} />
+                        </div>
+                    ))}
+                    <button onClick={() => updateBlogData(prev => ({...prev, posts: [...prev.posts, {id: Date.now().toString(), title: 'New Story', date: '2024-XX-XX', excerpt: '', content: '', imageUrl: ''}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ CREATE NEW BLOG POST</button>
+                </div>
+            </SectionCard>
+        )}
+
+        {tab === 'info' && (
+            <SectionCard title="Information Sections" enabled={infoSectionData.enabled} onToggle={v => updateInfoSectionData(prev => ({...prev, enabled: v}))}>
+                <Input label="Main Section Heading" value={infoSectionData.heading} onChange={v => updateInfoSectionData(prev => ({...prev, heading: v}))} />
+                {infoSectionData.sections.map((sec, si) => (
+                    <div key={si} className="bg-zinc-800/30 p-4 rounded-xl mb-4 border border-zinc-800">
+                        <Input label="Title" value={sec.title} onChange={v => { const next = [...infoSectionData.sections]; next[si].title = v; updateInfoSectionData(prev => ({...prev, sections: next})); }} />
+                        <TextArea label="Content" value={sec.content} onChange={v => { const next = [...infoSectionData.sections]; next[si].content = v; updateInfoSectionData(prev => ({...prev, sections: next})); }} />
+                        <button onClick={() => updateInfoSectionData(prev => ({...prev, sections: prev.sections.filter((_, idx) => idx !== si)}))} className="text-red-500 text-[10px] uppercase font-bold">Remove Section</button>
+                    </div>
+                ))}
+                <button onClick={() => updateInfoSectionData(prev => ({...prev, sections: [...prev.sections, {title: 'New Info', content: ''}]}))} className="w-full py-2 bg-zinc-800 mb-8 rounded-xl text-[10px] font-black">+ Add Section</button>
+                <Input label="Footer Title" value={infoSectionData.footerTitle} onChange={v => updateInfoSectionData(prev => ({...prev, footerTitle: v}))} />
+                <TextArea label="Footer Text" value={infoSectionData.footerText} onChange={v => updateInfoSectionData(prev => ({...prev, footerText: v}))} />
+                <Input label="Footer Highlight" value={infoSectionData.footerHighlight} onChange={v => updateInfoSectionData(prev => ({...prev, footerHighlight: v}))} />
+            </SectionCard>
+        )}
+
+        {tab === 'terms' && (
+            <SectionCard title="Terms & Conditions Management">
+                {termsData.map((term, ti) => (
+                    <div key={ti} className="bg-zinc-800/30 p-6 rounded-2xl mb-6 border border-zinc-800 relative group">
+                        <button onClick={() => updateTermsData(termsData.filter((_, idx) => idx !== ti))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">Delete</button>
+                        <Input label="Clause Title" value={term.title} onChange={v => { const next = [...termsData]; next[ti].title = v; updateTermsData(next); }} />
+                        <TextArea label="Clause Content" value={term.content} onChange={v => { const next = [...termsData]; next[ti].content = v; updateTermsData(next); }} />
+                    </div>
+                ))}
+                <button onClick={() => updateTermsData([...termsData, {title: 'New Term', content: ''}])} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW TERM</button>
+            </SectionCard>
+        )}
+
         {tab === 'faq' && (
             <SectionCard title="Frequently Asked Questions" enabled={faqData.enabled} onToggle={v => updateFaqData(prev => ({...prev, enabled: v}))}>
                 <Input label="Heading" value={faqData.heading} onChange={v => updateFaqData(prev => ({...prev, heading: v}))} />
                 <TextArea label="Subtext" value={faqData.subtext} onChange={v => updateFaqData(prev => ({...prev, subtext: v}))} />
                 {faqData.items.map((item, idx) => (
-                    <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl mb-4">
+                    <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl mb-4 border border-zinc-800">
                         <Input label="Question" value={item.question} onChange={v => {
                             const next = [...faqData.items]; next[idx].question = v; updateFaqData(prev => ({...prev, items: next}));
                         }} />
                         <TextArea label="Answer" value={item.answer} onChange={v => {
                             const next = [...faqData.items]; next[idx].answer = v; updateFaqData(prev => ({...prev, items: next}));
                         }} />
+                        <button onClick={() => updateFaqData(prev => ({...prev, items: prev.items.filter((_, idx) => idx !== idx)}))} className="text-red-500 text-[10px] font-bold uppercase">Delete FAQ</button>
                     </div>
                 ))}
+                <button onClick={() => updateFaqData(prev => ({...prev, items: [...prev.items, {question: 'New Question', answer: ''}]}))} className="w-full py-2 bg-zinc-800 rounded-xl text-[10px] font-black">+ Add FAQ Item</button>
             </SectionCard>
         )}
 
