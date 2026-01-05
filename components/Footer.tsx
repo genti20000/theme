@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { useData } from '../context/DataContext';
 
 interface FooterProps {
-  // Added 'songs' to the supported navigation pages for type consistency
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'events' | 'blog' | 'songs') => void;
+  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'events' | 'blog' | 'songs' | 'sitemap') => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
@@ -65,6 +63,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li><a href="#" className="hover:text-white">About Us</a></li>
               <li><a href="#" className="hover:text-white">Contact & Location</a></li>
               <li><a href="#" className="hover:text-white">Careers</a></li>
+              <li><button onClick={() => onNavigate('sitemap')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left">Sitemap</button></li>
             </ul>
           </div>
           <div>
@@ -88,7 +87,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     <button onClick={() => onNavigate('terms')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left text-xs">Terms of Use</button>
                     <button onClick={() => onNavigate('terms')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left text-xs">Booking Policy</button>
                     <button onClick={() => onNavigate('terms')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left text-xs">Legal</button>
-                    <a href="#" className="hover:text-white">Site Map</a>
+                    <button onClick={() => onNavigate('sitemap')} className="bg-transparent p-0 text-gray-400 hover:text-white text-left text-xs">Site Map</button>
                 </div>
             </div>
         </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from './Header';
 import Hero from './Hero';
@@ -19,16 +18,19 @@ import Gallery from './Gallery';
 import SongLibrary from './SongLibrary';
 import EventsPage from './EventsPage';
 import BlogPage from './BlogPage';
+import VisualEffects from './VisualEffects';
 import ImageEditor from './ImageEditor';
+import InstagramHighlights from './InstagramHighlights';
+import InstagramPage from './InstagramPage';
+import SitemapPage from './SitemapPage';
 import { DataProvider, useData } from '../context/DataContext';
 
-// Added 'imageEditor' to the Page type to resolve navigation type mismatch
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'instagram' | 'sitemap';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 
     galleryData, highlightsData, featuresData, vibeData, batteryData, 
-    testimonialsData, infoSectionData, faqData 
+    testimonialsData, infoSectionData, faqData, instagramHighlightsData
   } = useData();
 
   return (
@@ -36,6 +38,7 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'home' && (
         <>
           <Hero />
+          {instagramHighlightsData.enabled !== false && <InstagramHighlights />}
           {highlightsData.enabled !== false && <Highlights />}
           <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
           {featuresData.enabled !== false && <Features />}
@@ -50,16 +53,29 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'menu' && <Menu />}
       {currentPage === 'drinks' && <DrinksMenu />}
       {currentPage === 'gallery' && <Gallery />}
-      {/* Added ImageEditor to the main content routing */}
       {currentPage === 'imageEditor' && <ImageEditor />}
       {currentPage === 'songs' && <SongLibrary />}
       {currentPage === 'events' && <EventsPage />}
       {currentPage === 'blog' && <BlogPage />}
       {currentPage === 'admin' && <AdminDashboard />}
       {currentPage === 'terms' && <Terms />}
+      {currentPage === 'instagram' && <InstagramPage />}
+      {currentPage === 'sitemap' && <SitemapPage onNavigate={navigateTo} />}
     </main>
   );
 };
+
+const AppShell: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
+    return (
+        <>
+            {currentPage !== 'admin' && <VisualEffects />}
+            {currentPage !== 'admin' && <Header onNavigate={navigateTo} />}
+            <MainContent currentPage={currentPage} navigateTo={navigateTo} />
+            {currentPage !== 'admin' && <Footer onNavigate={navigateTo} />}
+            {currentPage !== 'admin' && <WhatsAppButton />}
+        </>
+    );
+}
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -72,22 +88,10 @@ const App: React.FC = () => {
   return (
     <DataProvider>
       <div className="bg-black text-white min-h-screen relative selection:bg-pink-500 selection:text-white">
-        {/* We use a subcomponent to access the DataContext */}
         <AppShell currentPage={currentPage} navigateTo={navigateTo} />
       </div>
     </DataProvider>
   );
 };
-
-const AppShell: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
-    return (
-        <>
-            {currentPage !== 'admin' && <Header onNavigate={navigateTo} />}
-            <MainContent currentPage={currentPage} navigateTo={navigateTo} />
-            {currentPage !== 'admin' && <Footer onNavigate={navigateTo} />}
-            {currentPage !== 'admin' && <WhatsAppButton />}
-        </>
-    );
-}
 
 export default App;
