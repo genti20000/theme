@@ -48,7 +48,7 @@ const TextArea: React.FC<{ label: string; value: string; onChange: (v: string) =
 const CodeArea: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
     <div className="mb-6">
       <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-      <textarea rows={6} className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-green-500 font-mono outline-none focus:border-pink-500 transition-all text-xs leading-tight" value={value || ''} onChange={(e) => onChange(e.target.value)} />
+      <textarea rows={6} className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-green-500 font-mono outline-none focus:border-pink-500 transition-all text-xs leading-tight" value={value || ''} onChange={(v) => onChange(v)} />
     </div>
   );
 
@@ -57,7 +57,7 @@ const AdminDashboard: React.FC = () => {
   const [passInput, setPassInput] = useState('');
   const [tab, setTab] = useState('seo');
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [activeLibraryCallback, setActiveLibraryCallback] = useState<(url: string) => void>(() => {});
+  const [activeLibraryCallback, setActiveLibraryCallback] = useState<(url: string) => void>(() => (url: string) => {});
   const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
 
   const { 
@@ -254,30 +254,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-20 font-sans">
-      {/* Media Library Modal */}
+      {/* Media Library Modal - IMPROVED GRID: Not Stacked */}
       {isLibraryOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
-          <div className="bg-zinc-900 w-full max-w-5xl h-[80vh] rounded-[3rem] border border-zinc-800 flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-8 border-b border-zinc-800 flex justify-between items-center">
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10">
+          <div className="bg-zinc-900 w-full max-w-6xl h-[85vh] rounded-[3rem] border border-zinc-800 flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-8 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50 backdrop-blur-md">
               <h3 className="text-2xl font-black uppercase tracking-tighter italic">LKC <span className="text-pink-500">Media Library</span></h3>
               <button onClick={() => setIsLibraryOpen(false)} className="bg-zinc-800 p-3 rounded-full hover:bg-zinc-700 transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {/* Robust Grid Layout: Ensures horizontal layout across all viewports */}
+            <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-6">
               {storageFiles.map((file, idx) => (
                 <button 
                   key={idx} 
                   onClick={() => activeLibraryCallback(file.url)}
-                  className="aspect-square bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-pink-500 transition-all relative group shadow-lg"
+                  className="aspect-square bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-pink-500 transition-all relative group shadow-lg hover:shadow-pink-500/20"
                 >
                   {file.url.toLowerCase().match(/\.(mp4|webm|mov)$/) ? (
                     <video src={file.url} className="w-full h-full object-cover" />
                   ) : (
-                    <img src={file.url} className="w-full h-full object-cover" alt="" />
+                    <img src={file.url} className="w-full h-full object-cover" alt={file.name} loading="lazy" />
                   )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="bg-pink-500 text-white text-[10px] font-black uppercase px-4 py-2 rounded-full">Select</span>
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
+                    <span className="bg-pink-500 text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-full mb-2">Select</span>
+                    <span className="text-white text-[8px] font-bold truncate w-full px-1">{file.name}</span>
                   </div>
                 </button>
               ))}
@@ -595,7 +597,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <TextArea label="Answer" value={item.answer} onChange={v => {
                             const next = [...faqData.items]; next[idx].answer = v; updateFaqData(prev => ({...prev, items: next}));
                         }} />
-                        <button onClick={() => updateFaqData(prev => ({...prev, items: prev.items.filter((_, idx) => idx !== idx)}))} className="text-red-500 text-[10px] font-bold uppercase">Delete FAQ</button>
+                        <button onClick={() => updateFaqData(prev => ({...prev, items: prev.items.filter((_, i) => i !== idx)}))} className="text-red-500 text-[10px] font-bold uppercase">Delete FAQ</button>
                     </div>
                 ))}
                 <button onClick={() => updateFaqData(prev => ({...prev, items: [...prev.items, {question: 'New Question', answer: ''}]}))} className="w-full py-2 bg-zinc-800 rounded-xl text-[10px] font-black">+ Add FAQ Item</button>
