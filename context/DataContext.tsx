@@ -127,36 +127,36 @@ interface DataContextType {
 
 const INITIAL_SEO: HeaderData = { 
     logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png",
-    siteTitle: "London Karaoke Club | Private Rooms Soho",
-    siteDescription: "Luxury private karaoke booths in London Soho. 80,000+ songs, cocktails and more.",
+    siteTitle: "London Karaoke Club | Private Karaoke Bar & Cocktails in Soho",
+    siteDescription: "Luxury private karaoke suites in Soho, London. Over 80,000 songs, signature cocktails, and premium service. Perfect for hen parties and birthdays. Book online.",
     faviconUrl: "/favicon.svg",
     navOrder: ["menu", "gallery", "blog", "drinks", "events", "songs"],
     customScripts: { header: "", footer: "" }
 };
 
-const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Unleash Your Inner Star", subText: "Luxury private suites in Soho.", buttonText: "Book Now", showBadge: true, showButtons: true };
-const INITIAL_HIGHLIGHTS: HighlightsData = { enabled: true, heading: "Get Loud.", subtext: "Best karaoke in London.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "Why LKC?", featureList: ["Private Booths", "80k Songs", "Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
+const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Private Karaoke Bar in Soho", subText: "London's most exclusive private karaoke suites. 80,000+ songs and pro-audio sound.", buttonText: "Book Now", showBadge: true, showButtons: true };
+const INITIAL_HIGHLIGHTS: HighlightsData = { enabled: true, heading: "Best Karaoke in Soho", subtext: "Step into Soho's premier destination for private singing and celebrations.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "The LKC Difference", featureList: ["Bespoke Private Booths", "80,000+ Global Hits", "Central Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
 const INITIAL_FEATURES: FeaturesData = {
     enabled: true,
-    experience: { label: "Experience", heading: "Private Stage", text: "Your own world.", image: "https://picsum.photos/seed/room/1200/800" },
-    occasions: { heading: "Every Occasion", text: "Parties of all sizes.", items: [{title: "Hen Parties", text: "Bubbles and songs."}] },
-    grid: { heading: "Features", items: [{title: "Neon Lighting", description: "Vibrant vibes.", image: "https://picsum.photos/seed/neon/400/400"}] }
+    experience: { label: "The Experience", heading: "Bespoke Private Stage", text: "Luxury karaoke redefined in the heart of London.", image: "https://picsum.photos/seed/room/1200/800" },
+    occasions: { heading: "Parties & Occasions", text: "We specialize in unforgettable London events.", items: [{title: "Hen Parties", text: "Premium bubbles and your favorite anthems."}] },
+    grid: { heading: "Venue Highlights", items: [{title: "Smart Lighting", description: "Immersive mood lighting.", image: "https://picsum.photos/seed/neon/400/400"}] }
 };
-const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nights", text: "Join the energy.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Hard", bottomText: "Until 3AM." };
-const INITIAL_STATS: BatteryData = { enabled: true, statPrefix: "Over", statNumber: "80K", statSuffix: "Songs", subText: "Updated daily." };
-const INITIAL_GALLERY: GalleryData = { heading: "Gallery", subtext: "Moments from Soho", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}], showOnHome: false };
-const INITIAL_BLOG: BlogData = { heading: "LKC Stories", subtext: "News and events.", posts: [{id: '1', title: 'Welcome', date: '2024-01-01', excerpt: 'Site launched.', content: 'Welcome to LKC.', imageUrl: 'https://picsum.photos/seed/blog/800/600'}] };
-const INITIAL_FAQ: FAQData = { enabled: true, heading: "FAQ", subtext: "Questions?", items: [{question: "Where is it?", answer: "Soho, London."}] };
+const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nightlife", text: "Unmatched energy in London's most iconic district.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Until 3AM", bottomText: "The party never stops at LKC Soho." };
+const INITIAL_STATS: BatteryData = { enabled: true, statPrefix: "Over", statNumber: "80,000", statSuffix: "Songs", subText: "Updated monthly with the latest hits." };
+const INITIAL_GALLERY: GalleryData = { heading: "Soho Karaoke Gallery", subtext: "A glimpse inside our luxury private booths.", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}], showOnHome: false };
+const INITIAL_BLOG: BlogData = { heading: "London Karaoke News", subtext: "Stay updated with events and nightlife tips.", posts: [{id: '1', title: 'Welcome to LKC Soho', date: '2024-01-01', excerpt: 'Discover London\'s newest private karaoke experience.', content: 'Welcome to London Karaoke Club.', imageUrl: 'https://picsum.photos/seed/blog/800/600'}] };
+const INITIAL_FAQ: FAQData = { enabled: true, heading: "Soho Karaoke FAQs", subtext: "Common questions about booking and our venue.", items: [{question: "Where is the club located?", answer: "We are located in the heart of Soho, London."}] };
 const INITIAL_DRINKS: DrinksData = {
     headerImageUrl: "https://picsum.photos/seed/bar/1600/800",
-    packagesData: { title: "Packages", subtitle: "Groups", items: [], notes: [] },
+    packagesData: { title: "Party Packages", subtitle: "Bespoke group deals", items: [], notes: [] },
     bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } },
     cocktailsData: [], winesData: []
 };
 
 const INITIAL_TERMS: TermItem[] = [
-    { title: "Age Restriction:", content: "– Our venue is strictly for guests aged 18 and over." },
-    { title: "Booking Times:", content: "– All guests must vacate the premises no later than closing time." }
+    { title: "Age Policy", content: "– Our Soho venue is strictly for guests aged 18 and over." },
+    { title: "Booking Confirmation", content: "– All bookings are subject to our standard terms and conditions." }
 ];
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -179,15 +179,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { enabled: true, heading: "Loved", subtext: "Reviews from around the web.", items: [] }));
-    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { enabled: true, heading: "Private Karaoke in Soho", sections: [], footerTitle: "Ready?", footerText: "Plan your night.", footerHighlight: "No chains, just LKC." }));
-    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Epic Events", subtitle: "Private bookings in Soho.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { enabled: true, heading: "Client Reviews", subtext: "What people say about London's best karaoke.", items: [] }));
+    const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { enabled: true, heading: "Luxury Private Karaoke Soho", sections: [], footerTitle: "Ready to Sing?", footerText: "Book your private suite in Soho today.", footerHighlight: "No chains, just the London Karaoke Club." }));
+    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Corporate & Private Events", subtitle: "The ultimate venue for London group bookings.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', 'https://files.londonkaraoke.club/db.php'));
     const [firebaseConfig, setFirebaseConfig] = useState<FirebaseConfig>(() => init('firebaseConfig', { databaseURL: '', apiKey: '' }));
-    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready?", ctaText: "Book now.", ctaButtonText: "Book" }));
+    const [footerData, setFooterData] = useState<FooterData>(() => init('footerData', { ctaHeading: "Ready to Book?", ctaText: "Secure your private karaoke room in Soho.", ctaButtonText: "Book Now" }));
     const [isDataLoading, setIsDataLoading] = useState(false);
 
     useEffect(() => {
@@ -222,7 +222,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "5.9" 
+        infoSectionData, eventsData, termsData, songs, adminPassword, version: "6.0" 
     }, null, 2);
 
     const importDatabase = (json: any) => {

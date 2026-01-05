@@ -31,7 +31,7 @@ const Hero: React.FC = () => {
   const showButtons = heroData.showButtons !== false;
 
   return (
-    <section className="relative h-[90vh] md:h-screen flex flex-col items-center justify-end pb-12 md:pb-24 text-center text-white overflow-hidden bg-black" aria-label="Welcome">
+    <section className="relative h-[90vh] md:h-screen flex flex-col items-center justify-end pb-12 md:pb-24 text-center text-white overflow-hidden bg-black" aria-label="Welcome to London Karaoke Club">
       <style>{`
         @keyframes zoom-slow {
             0% { transform: scale(1); }
@@ -54,7 +54,7 @@ const Hero: React.FC = () => {
                         {isVideo(slide) ? (
                             <video src={slide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
                         ) : (
-                            <img src={slide} alt="" className="w-full h-full object-cover object-center animate-zoom-slow" />
+                            <img src={slide} alt="LKC Soho Interior" className="w-full h-full object-cover object-center animate-zoom-slow" />
                         )}
                     </div>
                     {/* Mobile Version */}
@@ -62,7 +62,7 @@ const Hero: React.FC = () => {
                          {isVideo(mobileSlide) ? (
                             <video src={mobileSlide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
                         ) : (
-                            <img src={mobileSlide} alt="" className="w-full h-full object-cover object-center animate-zoom-slow" />
+                            <img src={mobileSlide} alt="LKC Soho Interior Mobile" className="w-full h-full object-cover object-center animate-zoom-slow" />
                         )}
                     </div>
                 </div>
@@ -88,11 +88,11 @@ const Hero: React.FC = () => {
         
         {showButtons && (
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="bg-red-600 hover:bg-red-700 text-white text-lg font-bold py-3 px-10 rounded-full border-2 border-white transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.6)]">
+              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" title="Book your Soho Karaoke Room" className="bg-red-600 hover:bg-red-700 text-white text-lg font-bold py-3 px-10 rounded-full border-2 border-white transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.6)]">
               {heroData.buttonText}
               </a>
               <button onClick={() => window.scrollTo({top: window.innerHeight, behavior: 'smooth'})} className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-bold py-3 px-10 rounded-full border border-white/20 transition-all">
-                  Explore LKC
+                  Explore LKC Soho
               </button>
           </div>
         )}
