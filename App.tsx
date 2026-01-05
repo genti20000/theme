@@ -22,10 +22,11 @@ import BlogPage from './components/BlogPage';
 import VisualEffects from './components/VisualEffects';
 import ImageEditor from './components/ImageEditor';
 import InstagramHighlights from './components/InstagramHighlights';
+import InstagramPage from './components/InstagramPage';
 import { DataProvider, useData } from './context/DataContext';
 
-// Added 'imageEditor' to the Page type to resolve navigation type mismatch
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog';
+// Added 'instagram' to the Page type
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'instagram';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 
@@ -60,6 +61,7 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'blog' && <BlogPage />}
       {currentPage === 'admin' && <AdminDashboard />}
       {currentPage === 'terms' && <Terms />}
+      {currentPage === 'instagram' && <InstagramPage />}
     </main>
   );
 };

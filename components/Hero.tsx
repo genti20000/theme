@@ -52,17 +52,47 @@ const Hero: React.FC = () => {
                     {/* Desktop Version */}
                     <div className="hidden md:block w-full h-full">
                         {isVideo(slide) ? (
-                            <video src={slide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
+                            <video 
+                              src={slide} 
+                              autoPlay 
+                              muted 
+                              loop 
+                              playsInline 
+                              width="1920"
+                              height="1080"
+                              className="w-full h-full object-cover animate-zoom-slow" 
+                            />
                         ) : (
-                            <img src={slide} alt="LKC Soho Interior" className="w-full h-full object-cover object-center animate-zoom-slow" />
+                            <img 
+                              src={slide} 
+                              alt="LKC Soho Interior" 
+                              width="1920"
+                              height="1080"
+                              className="w-full h-full object-cover object-center animate-zoom-slow" 
+                            />
                         )}
                     </div>
                     {/* Mobile Version */}
                     <div className="md:hidden block w-full h-full">
                          {isVideo(mobileSlide) ? (
-                            <video src={mobileSlide} autoPlay muted loop playsInline className="w-full h-full object-cover animate-zoom-slow" />
+                            <video 
+                              src={mobileSlide} 
+                              autoPlay 
+                              muted 
+                              loop 
+                              playsInline 
+                              width="1080"
+                              height="1920"
+                              className="w-full h-full object-cover animate-zoom-slow" 
+                            />
                         ) : (
-                            <img src={mobileSlide} alt="LKC Soho Interior Mobile" className="w-full h-full object-cover object-center animate-zoom-slow" />
+                            <img 
+                              src={mobileSlide} 
+                              alt="LKC Soho Interior Mobile" 
+                              width="1080"
+                              height="1920"
+                              className="w-full h-full object-cover object-center animate-zoom-slow" 
+                            />
                         )}
                     </div>
                 </div>
