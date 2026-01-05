@@ -69,7 +69,14 @@ export interface EventSection { id: string; title: string; subtitle: string; des
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
 
 export interface InstagramHighlight { id: string; title: string; imageUrl: string; link: string; }
-export interface InstagramHighlightsData { enabled?: boolean; heading: string; username: string; highlights: InstagramHighlight[]; }
+export interface InstagramPost { id: string; imageUrl: string; likes: string; comments: string; caption?: string; }
+export interface InstagramHighlightsData { 
+    enabled?: boolean; 
+    heading: string; 
+    username: string; 
+    highlights: InstagramHighlight[];
+    posts: InstagramPost[];
+}
 
 export interface TermItem { title: string; content: string; }
 
@@ -158,7 +165,13 @@ const INITIAL_DRINKS: DrinksData = {
     bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } },
     cocktailsData: [], winesData: []
 };
-const INITIAL_INSTAGRAM: InstagramHighlightsData = { enabled: true, heading: "Catch the Highlights", username: "@londonkaraoke.club", highlights: [] };
+const INITIAL_INSTAGRAM: InstagramHighlightsData = { 
+    enabled: true, 
+    heading: "Catch the Highlights", 
+    username: "@londonkaraoke.club", 
+    highlights: [],
+    posts: []
+};
 
 const INITIAL_TERMS: TermItem[] = [
     { title: "Age Policy", content: "– Our Soho venue is strictly for guests aged 18 and over." },
@@ -230,7 +243,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.1" 
+        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.2" 
     }, null, 2);
 
     const importDatabase = (json: any) => {

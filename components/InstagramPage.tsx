@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 
@@ -80,10 +81,11 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ highlight, onClose }) => {
 };
 
 const InstagramPage: React.FC = () => {
-  const { instagramHighlightsData, galleryData } = useData();
+  const { instagramHighlightsData } = useData();
   const [activeStory, setActiveStory] = useState<any>(null);
 
   const username = instagramHighlightsData.username || "@londonkaraoke.club";
+  const posts = instagramHighlightsData.posts || [];
 
   return (
     <div className="bg-black min-h-screen text-white pt-24 pb-20 selection:bg-pink-500">
@@ -123,7 +125,7 @@ const InstagramPage: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex justify-center md:justify-start gap-6 text-sm">
-                    <span><strong className="text-white">128</strong> posts</span>
+                    <span><strong className="text-white">{posts.length}</strong> posts</span>
                     <span><strong className="text-white">12.5k</strong> followers</span>
                     <span><strong className="text-white">150</strong> following</span>
                 </div>
@@ -195,23 +197,23 @@ const InstagramPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-1 md:gap-4 mt-2 md:mt-4">
-                {/* Use gallery images as simulated Instagram posts */}
-                {galleryData.images.length > 0 ? (
-                    galleryData.images.map((img) => (
-                        <div key={img.id} className="aspect-square relative group cursor-pointer overflow-hidden bg-zinc-900 border border-zinc-800/30">
-                            <img src={img.url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                {/* Use dedicated instagram posts if available */}
+                {posts.length > 0 ? (
+                    posts.map((post) => (
+                        <div key={post.id} className="aspect-square relative group cursor-pointer overflow-hidden bg-zinc-900 border border-zinc-800/30">
+                            <img src={post.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 md:gap-8">
                                 <div className="flex items-center gap-1 md:gap-2">
                                     <svg className="w-4 h-4 md:w-6 md:h-6 fill-white" viewBox="0 0 24 24">
                                       <path d="M12.1 20.9l-.1.1-.1c-1.1-.7-2.1-1.4-3.2-2.1-1.4-.9-2.9-1.9-4.3-2.8l-.1-.1c-.1-.1-.1-.1-.2-.2C3.2 14.8 2 13.5 2 12c0-1.5 1.2-2.8 2.3-3.8.1-.1.1-.1.2-.2l.1-.1c1.4-.9 2.9-1.9 4.3-2.8 1.1-.7 2.1-1.4 3.2-2.1l.1-.1.1.1c1.1.7 2.1 1.4 3.2 2.1 1.4.9 2.9 1.9 4.3 2.8l.1.1c.1.1.1.1.2.2 1.1 1 2.3 2.3 2.3 3.8 0 1.5-1.2 2.8-2.3 3.8-.1.1-.1.1-.2.2l-.1.1c-1.4.9-2.9 1.9-4.3 2.8-1.1.7-2.1 1.4-3.2 2.1z"/>
                                     </svg>
-                                    <span className="font-black text-xs md:text-lg">2.4k</span>
+                                    <span className="font-black text-xs md:text-lg">{post.likes}</span>
                                 </div>
                                 <div className="flex items-center gap-1 md:gap-2">
                                     <svg className="w-4 h-4 md:w-6 md:h-6 fill-white" viewBox="0 0 24 24">
                                       <path d="M20.656 17.008a9.993 9.993 0 10-3.59 3.615L22 22z"/>
                                     </svg>
-                                    <span className="font-black text-xs md:text-lg">156</span>
+                                    <span className="font-black text-xs md:text-lg">{post.comments}</span>
                                 </div>
                             </div>
                         </div>
@@ -221,7 +223,7 @@ const InstagramPage: React.FC = () => {
                         <div className="w-20 h-20 mx-auto border-4 border-zinc-800 rounded-full mb-6 flex items-center justify-center">
                             <svg className="w-10 h-10 text-zinc-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         </div>
-                        <h4 className="text-xl font-bold text-zinc-500">No Posts Yet</h4>
+                        <h4 className="text-xl font-bold text-zinc-500">No Social Posts Added</h4>
                     </div>
                 )}
             </div>

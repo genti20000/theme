@@ -485,7 +485,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div key={i} className="flex gap-4 mb-4 items-end bg-zinc-800/30 p-4 rounded-xl">
                             <Input label="Package Name" value={item.name} onChange={v => { const next = [...drinksData.packagesData.items]; next[i].name = v; updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} />
                             <Input label="Price" value={item.price} onChange={v => { const next = [...drinksData.packagesData.items]; next[i].price = v; updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} />
-                            <button onClick={() => { const next = drinksData.packagesData.items.filter((_, idx) => idx !== i); updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} className="mb-6 text-red-500">×</button>
+                            <button onClick={() => { const next = drinksData.packagesData.items.filter((_, idx) => idx !== i); updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} className="text-red-500">×</button>
                         </div>
                     ))}
                     <button onClick={() => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: [...prev.packagesData.items, {name: 'New Package', price: '£0'}]}}))} className="w-full py-2 bg-zinc-800 text-[10px] font-black uppercase rounded-xl">+ Add Package</button>
@@ -557,21 +557,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         )}
 
         {tab === 'instagram' && (
-            <SectionCard title="Instagram Highlights" enabled={instagramHighlightsData.enabled} onToggle={v => updateInstagramHighlightsData(prev => ({...prev, enabled: v}))}>
-                <Input label="Section Heading" value={instagramHighlightsData.heading} onChange={v => updateInstagramHighlightsData(prev => ({...prev, heading: v}))} />
-                <Input label="Instagram Username" value={instagramHighlightsData.username} onChange={v => updateInstagramHighlightsData(prev => ({...prev, username: v}))} />
-                <div className="space-y-6">
-                    {instagramHighlightsData.highlights.map((h, i) => (
-                        <div key={h.id} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
-                            <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: prev.highlights.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Highlight</button>
-                            <Input label="Bubble Title" value={h.title} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].title = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
-                            <Input label="Instagram URL Link" value={h.link} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].link = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
-                            <MediaPicker label="Cover Image" value={h.imageUrl} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].imageUrl = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
-                        </div>
-                    ))}
-                    <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: [...prev.highlights, {id: Date.now().toString(), title: 'New Highlight', imageUrl: '', link: ''}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW BUBBLE</button>
-                </div>
-            </SectionCard>
+            <div className="space-y-12">
+                <SectionCard title="Instagram Highlights" enabled={instagramHighlightsData.enabled} onToggle={v => updateInstagramHighlightsData(prev => ({...prev, enabled: v}))}>
+                    <Input label="Section Heading" value={instagramHighlightsData.heading} onChange={v => updateInstagramHighlightsData(prev => ({...prev, heading: v}))} />
+                    <Input label="Instagram Username" value={instagramHighlightsData.username} onChange={v => updateInstagramHighlightsData(prev => ({...prev, username: v}))} />
+                    <div className="space-y-6">
+                        {instagramHighlightsData.highlights.map((h, i) => (
+                            <div key={h.id} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
+                                <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: prev.highlights.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Highlight</button>
+                                <Input label="Bubble Title" value={h.title} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].title = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
+                                <Input label="Instagram URL Link" value={h.link} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].link = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
+                                <MediaPicker label="Cover Image" value={h.imageUrl} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].imageUrl = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
+                            </div>
+                        ))}
+                        <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: [...prev.highlights, {id: Date.now().toString(), title: 'New Highlight', imageUrl: '', link: ''}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW BUBBLE</button>
+                    </div>
+                </SectionCard>
+
+                <SectionCard title="Social Posts Feed">
+                    <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">These posts populate the Instagram-style grid on the Social page.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {(instagramHighlightsData.posts || []).map((post, i) => (
+                            <div key={post.id} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
+                                <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, posts: prev.posts.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Post</button>
+                                <MediaPicker label="Post Media" value={post.imageUrl} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].imageUrl = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Likes Count" value={post.likes} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].likes = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
+                                    <Input label="Comments" value={post.comments} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].comments = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
+                                </div>
+                                <TextArea label="Caption" value={post.caption || ''} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].caption = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
+                            </div>
+                        ))}
+                    </div>
+                    <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, posts: [...(prev.posts || []), {id: Date.now().toString(), imageUrl: '', likes: '0', comments: '0', caption: ''}]}))} className="w-full py-4 mt-6 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW SOCIAL POST</button>
+                </SectionCard>
+            </div>
         )}
 
         {tab === 'info' && (
