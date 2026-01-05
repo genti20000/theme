@@ -9,7 +9,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { footerData } = useData();
-  const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
+  const BOOKING_URL = "https://www.sumupbookings.com/londonkaraokeclub";
 
   const handleScrollToOffers = () => {
     onNavigate('home');

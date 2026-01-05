@@ -68,6 +68,9 @@ export interface FAQData { enabled?: boolean; heading: string; subtext: string; 
 export interface EventSection { id: string; title: string; subtitle: string; description: string; imageUrl: string; features: string[]; }
 export interface EventsData { hero: { title: string; subtitle: string; image: string; }; sections: EventSection[]; }
 
+export interface InstagramHighlight { id: string; title: string; imageUrl: string; link: string; }
+export interface InstagramHighlightsData { enabled?: boolean; heading: string; username: string; highlights: InstagramHighlight[]; }
+
 export interface TermItem { title: string; content: string; }
 
 export interface FirebaseConfig { databaseURL: string; apiKey: string; }
@@ -103,6 +106,8 @@ interface DataContextType {
     updateFaqData: React.Dispatch<React.SetStateAction<FAQData>>;
     eventsData: EventsData;
     updateEventsData: React.Dispatch<React.SetStateAction<EventsData>>;
+    instagramHighlightsData: InstagramHighlightsData;
+    updateInstagramHighlightsData: React.Dispatch<React.SetStateAction<InstagramHighlightsData>>;
     termsData: TermItem[];
     updateTermsData: React.Dispatch<React.SetStateAction<TermItem[]>>;
     songs: Song[];
@@ -153,6 +158,7 @@ const INITIAL_DRINKS: DrinksData = {
     bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } },
     cocktailsData: [], winesData: []
 };
+const INITIAL_INSTAGRAM: InstagramHighlightsData = { enabled: true, heading: "Catch the Highlights", username: "@londonkaraoke.club", highlights: [] };
 
 const INITIAL_TERMS: TermItem[] = [
     { title: "Age Policy", content: "– Our Soho venue is strictly for guests aged 18 and over." },
@@ -182,6 +188,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { enabled: true, heading: "Client Reviews", subtext: "What people say about London's best karaoke.", items: [] }));
     const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { enabled: true, heading: "Luxury Private Karaoke Soho", sections: [], footerTitle: "Ready to Sing?", footerText: "Book your private suite in Soho today.", footerHighlight: "No chains, just the London Karaoke Club." }));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Corporate & Private Events", subtitle: "The ultimate venue for London group bookings.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
+    const [instagramHighlightsData, setInstagramHighlightsData] = useState<InstagramHighlightsData>(() => init('instagramHighlightsData', INITIAL_INSTAGRAM));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
@@ -213,6 +220,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('testimonialsData', testimonialsData); }, [testimonialsData]);
     useEffect(() => { persist('infoSectionData', infoSectionData); }, [infoSectionData]);
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
+    useEffect(() => { persist('instagramHighlightsData', instagramHighlightsData); }, [instagramHighlightsData]);
     useEffect(() => { persist('termsData', termsData); }, [termsData]);
     useEffect(() => { persist('songs', songs); }, [songs]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
@@ -222,7 +230,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
         galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, termsData, songs, adminPassword, version: "6.0" 
+        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.1" 
     }, null, 2);
 
     const importDatabase = (json: any) => {
@@ -242,6 +250,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
             if (c.infoSectionData) setInfoSectionData(c.infoSectionData);
             if (c.eventsData) setEventsData(c.eventsData);
+            if (c.instagramHighlightsData) setInstagramHighlightsData(c.instagramHighlightsData);
             if (c.termsData) setTermsData(c.termsData);
             if (c.songs) setSongs(c.songs);
             return true;
@@ -334,8 +343,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
             blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
-            eventsData, updateEventsData: setEventsData, termsData, updateTermsData: setTermsData,
-            songs, updateSongs: setSongs,
+            eventsData, updateEventsData: setEventsData, instagramHighlightsData, updateInstagramHighlightsData: setInstagramHighlightsData,
+            termsData, updateTermsData: setTermsData, songs, updateSongs: setSongs,
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             firebaseConfig, updateFirebaseConfig: setFirebaseConfig, isDataLoading,
             purgeCache: () => { localStorage.clear(); window.location.reload(); },

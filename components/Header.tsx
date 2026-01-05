@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerData } = useData();
   
-  const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
+  const BOOKING_URL = "https://www.sumupbookings.com/londonkaraokeclub";
 
   const handleMobileNav = (page: any) => {
     onNavigate(page);

@@ -7,7 +7,7 @@ const Hero: React.FC = () => {
   const { heroData } = useData();
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  const BOOKING_URL = "https://squareup.com/appointments/book/aijx16oiq683tl/LCK48B0G6CF51/services";
+  const BOOKING_URL = "https://www.sumupbookings.com/londonkaraokeclub";
   const slides = heroData.slides && heroData.slides.length > 0 ? heroData.slides : [heroData.backgroundImageUrl];
 
   useEffect(() => {

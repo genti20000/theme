@@ -21,6 +21,7 @@ import EventsPage from './components/EventsPage';
 import BlogPage from './components/BlogPage';
 import VisualEffects from './components/VisualEffects';
 import ImageEditor from './components/ImageEditor';
+import InstagramHighlights from './components/InstagramHighlights';
 import { DataProvider, useData } from './context/DataContext';
 
 // Added 'imageEditor' to the Page type to resolve navigation type mismatch
@@ -29,7 +30,7 @@ type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | '
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 
     galleryData, highlightsData, featuresData, vibeData, batteryData, 
-    testimonialsData, infoSectionData, faqData 
+    testimonialsData, infoSectionData, faqData, instagramHighlightsData
   } = useData();
 
   return (
@@ -37,6 +38,7 @@ const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }
       {currentPage === 'home' && (
         <>
           <Hero />
+          {instagramHighlightsData.enabled !== false && <InstagramHighlights />}
           {highlightsData.enabled !== false && <Highlights />}
           <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
           {featuresData.enabled !== false && <Features />}

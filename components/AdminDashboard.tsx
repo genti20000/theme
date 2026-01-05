@@ -48,7 +48,7 @@ const TextArea: React.FC<{ label: string; value: string; onChange: (v: string) =
 const CodeArea: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
     <div className="mb-6">
       <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-      <textarea rows={6} className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-green-500 font-mono outline-none focus:border-pink-500 transition-all text-xs leading-tight" value={value || ''} onChange={(v) => onChange(v)} />
+      <textarea rows={6} className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-green-500 font-mono outline-none focus:border-pink-500 transition-all text-xs leading-tight" value={value || ''} onChange={(v) => onChange(v.target.value)} />
     </div>
   );
 
@@ -68,6 +68,7 @@ const AdminDashboard: React.FC = () => {
     featuresData, updateFeaturesData, vibeData, updateVibeData, foodMenu, updateFoodMenu,
     drinksData, updateDrinksData, testimonialsData, updateTestimonialsData,
     infoSectionData, updateInfoSectionData, eventsData, updateEventsData,
+    instagramHighlightsData, updateInstagramHighlightsData,
     termsData, updateTermsData, fetchServerFiles
   } = useData();
 
@@ -299,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <div className="flex bg-zinc-900/50 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-8 sticky top-[88px] z-40 backdrop-blur-md">
-        {['seo', 'nav', 'hero', 'about', 'features', 'vibe', 'stats', 'food', 'drinks', 'events', 'blog', 'faq', 'info', 'gallery', 'terms', 'config'].map(t => (
+        {['seo', 'nav', 'hero', 'about', 'features', 'vibe', 'stats', 'food', 'drinks', 'events', 'blog', 'instagram', 'faq', 'info', 'gallery', 'terms', 'config'].map(t => (
             <button key={t} onClick={() => setTab(t)} className={`px-4 py-5 uppercase font-black text-[10px] tracking-widest transition-all relative flex-shrink-0 ${tab === t ? 'text-pink-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
                 {t}
                 {tab === t && <div className="absolute bottom-0 left-0 right-0 h-1 bg-pink-500"></div>}
@@ -441,7 +442,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <Input label="Prefix (e.g. Over)" value={batteryData.statPrefix} onChange={v => updateBatteryData(prev => ({...prev, statPrefix: v}))} />
                 <Input label="Number (e.g. 80K)" value={batteryData.statNumber} onChange={v => updateBatteryData(prev => ({...prev, statNumber: v}))} />
                 <Input label="Suffix (e.g. Songs)" value={batteryData.statSuffix} onChange={v => updateBatteryData(prev => ({...prev, statSuffix: v}))} />
-                <Input label="Subtext" value={batteryData.subText} onChange={v => updateBatteryData(prev => ({...prev, subText: v}))} />
+                <Input label="Subtext" value={batteryData.subText} onChange={v => updateBatteryData(prev => ({...prev, statSuffix: v}))} />
             </SectionCard>
         )}
 
@@ -555,12 +556,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </SectionCard>
         )}
 
+        {tab === 'instagram' && (
+            <SectionCard title="Instagram Highlights" enabled={instagramHighlightsData.enabled} onToggle={v => updateInstagramHighlightsData(prev => ({...prev, enabled: v}))}>
+                <Input label="Section Heading" value={instagramHighlightsData.heading} onChange={v => updateInstagramHighlightsData(prev => ({...prev, heading: v}))} />
+                <Input label="Instagram Username" value={instagramHighlightsData.username} onChange={v => updateInstagramHighlightsData(prev => ({...prev, username: v}))} />
+                <div className="space-y-6">
+                    {instagramHighlightsData.highlights.map((h, i) => (
+                        <div key={h.id} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
+                            <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: prev.highlights.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Highlight</button>
+                            <Input label="Bubble Title" value={h.title} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].title = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
+                            <Input label="Instagram URL Link" value={h.link} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].link = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
+                            <MediaPicker label="Cover Image" value={h.imageUrl} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].imageUrl = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
+                        </div>
+                    ))}
+                    <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: [...prev.highlights, {id: Date.now().toString(), title: 'New Highlight', imageUrl: '', link: ''}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW BUBBLE</button>
+                </div>
+            </SectionCard>
+        )}
+
         {tab === 'info' && (
             <SectionCard title="Information Sections" enabled={infoSectionData.enabled} onToggle={v => updateInfoSectionData(prev => ({...prev, enabled: v}))}>
                 <Input label="Main Section Heading" value={infoSectionData.heading} onChange={v => updateInfoSectionData(prev => ({...prev, heading: v}))} />
                 {infoSectionData.sections.map((sec, si) => (
                     <div key={si} className="bg-zinc-800/30 p-4 rounded-xl mb-4 border border-zinc-800">
                         <Input label="Title" value={sec.title} onChange={v => { const next = [...infoSectionData.sections]; next[si].title = v; updateInfoSectionData(prev => ({...prev, sections: next})); }} />
+                        {/* Fixed: Added missing 'const' for 'next' variable */}
                         <TextArea label="Content" value={sec.content} onChange={v => { const next = [...infoSectionData.sections]; next[si].content = v; updateInfoSectionData(prev => ({...prev, sections: next})); }} />
                         <button onClick={() => updateInfoSectionData(prev => ({...prev, sections: prev.sections.filter((_, idx) => idx !== si)}))} className="text-red-500 text-[10px] uppercase font-bold">Remove Section</button>
                     </div>
