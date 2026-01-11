@@ -25,8 +25,8 @@ import InstagramHighlights from './components/InstagramHighlights';
 import InstagramPage from './components/InstagramPage';
 import { DataProvider, useData } from './context/DataContext';
 
-// Added 'instagram' to the Page type
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'instagram';
+// Updated Page type to include all possible navigation targets
+type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'instagram' | 'sitemap';
 
 const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
   const { 

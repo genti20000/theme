@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useData } from '../context/DataContext';
 
 interface FooterProps {
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'events' | 'blog' | 'songs' | 'sitemap') => void;
+  // Updated type to include all possible page targets for better type safety
+  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'events' | 'blog' | 'songs' | 'sitemap' | 'instagram') => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate }) => {

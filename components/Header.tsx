@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 
 interface HeaderProps {
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog') => void;
+  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'instagram' | 'sitemap') => void;
 }
 
 const MenuIcon = () => (
-  <svg className="w-6 h-6 text-gray-300 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
+  <svg className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
     <rect x="3" y="6" width="18" height="2" rx="1" />
     <rect x="3" y="11" width="18" height="2" rx="1" />
     <rect x="3" y="16" width="12" height="2" rx="1" />
@@ -80,29 +79,42 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         .animate-wing-right { animation: wing-enter-right 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         .animate-item-slide-up { animation: item-slide-up 0.5s ease-out forwards; }
       `}</style>
-      <div className="container mx-auto px-4 py-4 grid grid-cols-[1fr_auto_1fr] items-center">
+      <div className="container mx-auto px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center">
+        {/* Left Side: Book Now Button */}
         <div className="flex justify-start items-center">
-            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className="relative bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 rounded-full px-6 py-2 md:px-8 md:py-3 transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)] hover:shadow-[0_0_20px_rgba(236,72,153,0.6)] min-w-[80px] flex justify-center group">
-                <span className="text-[12px] md:text-sm font-black text-black uppercase tracking-widest whitespace-nowrap">Book Now</span>
+            <a 
+              href={BOOKING_URL} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="relative bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 rounded-full h-[38px] w-[88px] md:h-[50px] md:w-[120px] transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)] hover:shadow-[0_0_20px_rgba(236,72,153,0.6)] flex items-center justify-center group"
+            >
+                <span className="text-[9px] md:text-sm font-black text-black uppercase tracking-widest whitespace-nowrap">Book Now</span>
             </a>
         </div>
+
+        {/* Center: Logo (10% smaller than previous 110px -> ~99px) */}
         <div className="flex justify-center items-center">
             <button onClick={() => onNavigate('home')} className="focus:outline-none z-10 transition-transform duration-300 hover:scale-105">
-                <div className="w-16 h-16 md:w-24 md:h-24 relative flex items-center justify-center">
+                <div className="w-[99px] h-[99px] md:w-32 md:h-32 relative flex items-center justify-center">
                     <img src={headerData.logoUrl} alt="London Karaoke Club Logo" className="w-full h-full object-contain drop-shadow-lg" />
                 </div>
             </button>
         </div>
+
+        {/* Right Side: Menu Toggle Button */}
         <div className="flex justify-end items-center">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="relative bg-zinc-900 hover:bg-zinc-800 rounded-full px-6 py-2 border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] min-w-[80px] flex items-center justify-center h-[42px] md:h-[50px]">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              className="relative bg-zinc-900 hover:bg-zinc-800 rounded-full h-[38px] w-[88px] md:h-[50px] md:w-[120px] border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] flex items-center justify-center"
+            >
                  <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-180' : ''}`}>
-                    {isMenuOpen ? <CloseIcon /> : <div className="w-8 h-8 flex items-center justify-center"><MenuIcon /></div>}
+                    {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
                  </div>
             </button>
         </div>
       </div>
       {isMenuOpen && (
-        <div className="fixed top-[80px] left-0 w-full h-[calc(100vh-80px)] pointer-events-none overflow-hidden z-40">
+        <div className="fixed top-[90px] left-0 w-full h-[calc(100vh-90px)] pointer-events-none overflow-hidden z-40">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-500" onClick={() => setIsMenuOpen(false)}></div>
             <div className="relative w-full px-4 pt-8 flex justify-between gap-4 pointer-events-none">
                 <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900/90 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
