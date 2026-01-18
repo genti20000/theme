@@ -31,18 +31,19 @@ const Hero: React.FC = () => {
   const showButtons = heroData.showButtons !== false;
 
   return (
-    <section className="relative h-[90vh] md:h-screen flex flex-col items-center justify-end pb-12 md:pb-24 text-center text-white overflow-hidden bg-black" aria-label="Welcome to London Karaoke Club">
+    <section className="relative w-full h-[90vh] md:h-screen flex flex-col items-center justify-end pb-12 md:pb-24 text-center text-white overflow-hidden bg-black" aria-label="Welcome to London Karaoke Club">
       <style>{`
         @keyframes zoom-slow {
             0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
+            100% { transform: scale(1.05); }
         }
         .animate-zoom-slow { animation: zoom-slow 20s ease-in-out infinite alternate; }
       `}</style>
       
+      {/* Background Container: Reduced height on mobile to 110% to ensure full width visibility */}
       <div 
-        className="absolute w-full h-[140%] -top-[20%] left-0 z-0 will-change-transform motion-reduce:transform-none" 
-        style={{ transform: `translateY(${scrollY * 0.25}px)` }}
+        className="absolute inset-x-0 h-[110%] md:h-[140%] -top-[5%] md:-top-[20%] z-0 will-change-transform motion-reduce:transform-none" 
+        style={{ transform: `translateY(${scrollY * 0.15}px)` }}
       >
         {slides.map((slide, index) => {
              const active = index === currentSlide;
@@ -72,7 +73,7 @@ const Hero: React.FC = () => {
                             />
                         )}
                     </div>
-                    {/* Mobile Version */}
+                    {/* Mobile Version: Prioritizes full width visibility */}
                     <div className="md:hidden block w-full h-full">
                          {isVideo(mobileSlide) ? (
                             <video 
