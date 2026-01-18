@@ -1,8 +1,11 @@
+
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { AppLink } from './AppLink';
+import { Page, NAV, SUMUP_BOOKING_URL } from '../lib/nav';
 
 interface HeaderProps {
-  onNavigate: (page: 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'instagram' | 'sitemap') => void;
+  onNavigate: (page: Page) => void;
 }
 
 const MenuIcon = () => (
@@ -25,13 +28,11 @@ const CloseIcon = () => (
 const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerData } = useData();
-  
-  const BOOKING_URL = "https://www.sumupbookings.com/londonkaraokeclub";
 
-  const handleMobileNav = (page: any) => {
+  const handleMobileNav = (page: Page) => {
     onNavigate(page);
     setIsMenuOpen(false);
-  }
+  };
 
   const navLinks = headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"];
   const half = Math.ceil(navLinks.length / 2);
@@ -39,15 +40,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const rightLinks = navLinks.slice(half);
 
   const getLabel = (key: string) => {
-      switch(key) {
-          case 'menu': return 'FOOD MENU';
-          case 'gallery': return 'GALLERY';
-          case 'blog': return 'BLOG';
-          case 'drinks': return 'DRINKS';
-          case 'events': return 'EVENTS';
-          case 'songs': return 'SONGS';
-          default: return key.toUpperCase();
-      }
+    const item = NAV.find(n => n.href === key);
+    return item ? item.label.toUpperCase() : key.toUpperCase();
   };
 
   const getHoverGlow = (index: number) => {
@@ -82,76 +76,74 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
       <div className="container mx-auto px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center">
         {/* Left Side: Book Now Button */}
         <div className="flex justify-start items-center">
-            <a 
-              href={BOOKING_URL} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="relative bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 rounded-full h-[38px] w-[88px] md:h-[50px] md:w-[120px] transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)] hover:shadow-[0_0_20px_rgba(236,72,153,0.6)] flex items-center justify-center group"
-            >
-                <span className="text-[9px] md:text-sm font-black text-black uppercase tracking-widest whitespace-nowrap">Book Now</span>
-            </a>
+          <AppLink 
+            href={SUMUP_BOOKING_URL} 
+            external
+            className="relative bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 rounded-full h-[38px] w-[88px] md:h-[50px] md:w-[120px] transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)] hover:shadow-[0_0_20px_rgba(236,72,153,0.6)] flex items-center justify-center group"
+          >
+            <span className="text-[9px] md:text-sm font-black text-black uppercase tracking-widest whitespace-nowrap">Book Now</span>
+          </AppLink>
         </div>
 
-        {/* Center: Logo (10% smaller than previous 110px -> ~99px) */}
+        {/* Center: Logo (99px sizing) */}
         <div className="flex justify-center items-center">
-            <button onClick={() => onNavigate('home')} className="focus:outline-none z-10 transition-transform duration-300 hover:scale-105">
-                <div className="w-[99px] h-[99px] md:w-32 md:h-32 relative flex items-center justify-center">
-                    <img src={headerData.logoUrl} alt="London Karaoke Club Logo" className="w-full h-full object-contain drop-shadow-lg" />
-                </div>
-            </button>
+          <button onClick={() => onNavigate('home')} className="focus:outline-none z-10 transition-transform duration-300 hover:scale-105">
+            <div className="w-[99px] h-[99px] md:w-32 md:h-32 relative flex items-center justify-center">
+              <img src={headerData.logoUrl} alt="London Karaoke Club Logo" className="w-full h-full object-contain drop-shadow-lg" />
+            </div>
+          </button>
         </div>
 
         {/* Right Side: Menu Toggle Button */}
         <div className="flex justify-end items-center">
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)} 
-              className="relative bg-zinc-900 hover:bg-zinc-800 rounded-full h-[38px] w-[88px] md:h-[50px] md:w-[120px] border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] flex items-center justify-center"
-            >
-                 <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-180' : ''}`}>
-                    {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
-                 </div>
-            </button>
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)} 
+            className="relative bg-zinc-900 hover:bg-zinc-800 rounded-full h-[38px] w-[88px] md:h-[50px] md:w-[120px] border border-zinc-700 transition-all duration-300 hover:border-pink-500 group shadow-[0_0_10px_rgba(0,0,0,0.5)] flex items-center justify-center"
+          >
+            <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-180' : ''}`}>
+              {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+            </div>
+          </button>
         </div>
       </div>
       {isMenuOpen && (
         <div className="fixed top-[90px] left-0 w-full h-[calc(100vh-90px)] pointer-events-none overflow-hidden z-40">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-500" onClick={() => setIsMenuOpen(false)}></div>
-            <div className="relative w-full px-4 pt-8 flex justify-between gap-4 pointer-events-none">
-                <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900/90 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
-                    {leftLinks.map((link, idx) => (
-                        <button 
-                          key={link} 
-                          onClick={() => handleMobileNav(link as any)} 
-                          style={{animationDelay: `${0.2 + idx*0.08}s` }} 
-                          className={`text-xl md:text-4xl font-black tracking-wider text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 ${getHoverGlow(idx)}`}
-                        >
-                          {getLabel(link)}
-                        </button>
-                    ))}
-                </div>
-                <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900/90 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
-                    {rightLinks.map((link, idx) => (
-                        <button 
-                          key={link} 
-                          onClick={() => handleMobileNav(link as any)} 
-                          style={{animationDelay: `${0.2 + idx*0.08}s` }} 
-                          className={`text-xl md:text-4xl font-black tracking-wider text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 ${getHoverGlow(idx + leftLinks.length)}`}
-                        >
-                          {getLabel(link)}
-                        </button>
-                    ))}
-                    <a 
-                      href={BOOKING_URL} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-xl md:text-4xl font-black tracking-wider text-yellow-400 hover:text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" 
-                      style={{animationDelay: `${0.2 + rightLinks.length*0.08}s` }}
-                    >
-                      BOOK NOW
-                    </a>
-                </div>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-500" onClick={() => setIsMenuOpen(false)}></div>
+          <div className="relative w-full px-4 pt-8 flex justify-between gap-4 pointer-events-none">
+            <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900/90 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
+              {leftLinks.map((link, idx) => (
+                <button 
+                  key={link} 
+                  onClick={() => handleMobileNav(link as Page)} 
+                  style={{animationDelay: `${0.2 + idx*0.08}s` }} 
+                  className={`text-xl md:text-4xl font-black tracking-wider text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 ${getHoverGlow(idx)}`}
+                >
+                  {getLabel(link)}
+                </button>
+              ))}
             </div>
-            <div className="absolute top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-white animate-pulse"></div>
+            <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900/90 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
+              {rightLinks.map((link, idx) => (
+                <button 
+                  key={link} 
+                  onClick={() => handleMobileNav(link as Page)} 
+                  style={{animationDelay: `${0.2 + idx*0.08}s` }} 
+                  className={`text-xl md:text-4xl font-black tracking-wider text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 ${getHoverGlow(idx + leftLinks.length)}`}
+                >
+                  {getLabel(link)}
+                </button>
+              ))}
+              <AppLink 
+                href={SUMUP_BOOKING_URL} 
+                external
+                className="text-xl md:text-4xl font-black tracking-wider text-yellow-400 hover:text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" 
+                style={{animationDelay: `${0.2 + rightLinks.length*0.08}s` }}
+              >
+                BOOK NOW
+              </AppLink>
+            </div>
+          </div>
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-white animate-pulse"></div>
         </div>
       )}
     </header>

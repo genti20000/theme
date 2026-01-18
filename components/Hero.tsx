@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
+import { SUMUP_BOOKING_URL } from '../lib/nav';
 
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
   const { heroData } = useData();
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  const BOOKING_URL = "https://www.sumupbookings.com/londonkaraokeclub";
   const slides = heroData.slides && heroData.slides.length > 0 ? heroData.slides : [heroData.backgroundImageUrl];
 
   useEffect(() => {
@@ -119,7 +119,7 @@ const Hero: React.FC = () => {
         
         {showButtons && (
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" title="Book your Soho Karaoke Room" className="bg-red-600 hover:bg-red-700 text-white text-lg font-bold py-3 px-10 rounded-full border-2 border-white transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.6)]">
+              <a href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" title="Book your Soho Karaoke Room" className="bg-red-600 hover:bg-red-700 text-white text-lg font-bold py-3 px-10 rounded-full border-2 border-white transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.6)]">
               {heroData.buttonText}
               </a>
               <button onClick={() => window.scrollTo({top: window.innerHeight, behavior: 'smooth'})} className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-bold py-3 px-10 rounded-full border border-white/20 transition-all">
