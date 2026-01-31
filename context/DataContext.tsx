@@ -251,6 +251,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isDataLoading, setIsDataLoading] = useState(false);
 
     useEffect(() => {
+        setBlogData(prev => {
+            const existingIds = new Set(prev.posts.map(post => post.id));
+            const missingPosts = INITIAL_BLOG.posts.filter(post => !existingIds.has(post.id));
+            if (missingPosts.length === 0) return prev;
+            return { ...prev, posts: [...prev.posts, ...missingPosts] };
+        });
+    }, []);
+
+    useEffect(() => {
         document.title = headerData.siteTitle;
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) metaDesc.setAttribute('content', headerData.siteDescription);
