@@ -12,6 +12,7 @@
     "@google/genai": "latest",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
+    "react-router-dom": "^7.9.3",
     "@supabase/supabase-js": "2",
     "lucide-react": "0.344.0"
   },

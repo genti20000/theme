@@ -1,95 +1,66 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Route, Routes, Outlet } from 'react-router-dom';
 import Header from './components/Header';
-import Hero from './components/Hero';
-import Highlights from './components/Highlights';
-import Features from './components/Features';
-import Menu from './components/Menu';
-import Fitness from './components/Fitness';
-import Battery from './components/Battery';
-import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
-import DrinksMenu from './components/DrinksMenu';
 import WhatsAppButton from './components/WhatsAppButton';
 import AdminDashboard from './components/AdminDashboard';
-import InfoSection from './components/InfoSection';
-import FAQ from './components/FAQ';
 import Terms from './components/Terms';
 import Gallery from './components/Gallery';
 import SongLibrary from './components/SongLibrary';
 import EventsPage from './components/EventsPage';
 import BlogPage from './components/BlogPage';
 import VisualEffects from './components/VisualEffects';
-import ImageEditor from './components/ImageEditor';
-import InstagramHighlights from './components/InstagramHighlights';
 import InstagramPage from './components/InstagramPage';
-import { DataProvider, useData } from './context/DataContext';
+import Menu from './components/Menu';
+import SitemapPage from './components/SitemapPage';
+import HashScroll from './components/HashScroll';
+import { DataProvider } from './context/DataContext';
+import DrinksPage from './pages/DrinksPage';
+import HomePage from './pages/HomePage';
+import StubPage from './pages/StubPage';
 
-// Updated Page type to include all possible navigation targets
-type Page = 'home' | 'menu' | 'drinks' | 'gallery' | 'imageEditor' | 'admin' | 'terms' | 'songs' | 'events' | 'blog' | 'instagram' | 'sitemap';
-
-const MainContent: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
-  const { 
-    galleryData, highlightsData, featuresData, vibeData, batteryData, 
-    testimonialsData, infoSectionData, faqData, instagramHighlightsData
-  } = useData();
-
+const AppShell: React.FC = () => {
   return (
-    <main>
-      {currentPage === 'home' && (
-        <>
-          <Hero />
-          {instagramHighlightsData.enabled !== false && <InstagramHighlights />}
-          {highlightsData.enabled !== false && <Highlights />}
-          <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
-          {featuresData.enabled !== false && <Features />}
-          {vibeData.enabled !== false && <Fitness />}
-          {batteryData.enabled !== false && <Battery />}
-          {testimonialsData.enabled !== false && <Testimonials />}
-          {infoSectionData.enabled !== false && <InfoSection />}
-          {faqData.enabled !== false && <FAQ />}
-          {galleryData.showOnHome && <div className="mt-20"><Gallery /></div>}
-        </>
-      )}
-      {currentPage === 'menu' && <Menu />}
-      {currentPage === 'drinks' && <DrinksMenu />}
-      {currentPage === 'gallery' && <Gallery />}
-      {/* Added ImageEditor to the main content routing */}
-      {currentPage === 'imageEditor' && <ImageEditor />}
-      {currentPage === 'songs' && <SongLibrary />}
-      {currentPage === 'events' && <EventsPage />}
-      {currentPage === 'blog' && <BlogPage />}
-      {currentPage === 'admin' && <AdminDashboard />}
-      {currentPage === 'terms' && <Terms />}
-      {currentPage === 'instagram' && <InstagramPage />}
-    </main>
+    <>
+      <VisualEffects />
+      <Header />
+      <main>
+        <Outlet />
+      </main>
+      <Footer />
+      <WhatsAppButton />
+    </>
   );
 };
 
-const AppShell: React.FC<{ currentPage: Page; navigateTo: (p: Page) => void }> = ({ currentPage, navigateTo }) => {
-    return (
-        <>
-            {currentPage !== 'admin' && <VisualEffects />}
-            {currentPage !== 'admin' && <Header onNavigate={navigateTo} />}
-            <MainContent currentPage={currentPage} navigateTo={navigateTo} />
-            {currentPage !== 'admin' && <Footer onNavigate={navigateTo} />}
-            {currentPage !== 'admin' && <WhatsAppButton />}
-        </>
-    );
-}
-
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-
-  const navigateTo = (page: Page) => {
-    setCurrentPage(page);
-    window.scrollTo(0, 0);
-  };
-
   return (
     <DataProvider>
       <div className="bg-black text-white min-h-screen relative selection:bg-pink-500 selection:text-white">
-        <AppShell currentPage={currentPage} navigateTo={navigateTo} />
+        <HashScroll />
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route index element={<HomePage />} />
+            <Route path="drinks" element={<DrinksPage />} />
+            <Route path="food" element={<Menu />} />
+            <Route path="gallery" element={<Gallery />} />
+            <Route path="blog" element={<BlogPage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="songs" element={<SongLibrary />} />
+            <Route path="faqs" element={<StubPage title="FAQs" />} />
+            <Route path="about" element={<StubPage title="About Us" />} />
+            <Route path="contact" element={<StubPage title="Contact & Location" />} />
+            <Route path="careers" element={<StubPage title="Careers" />} />
+            <Route path="privacy" element={<StubPage title="Privacy Policy" />} />
+            <Route path="booking-policy" element={<StubPage title="Booking Policy" />} />
+            <Route path="terms" element={<Terms />} />
+            <Route path="sitemap" element={<SitemapPage />} />
+            <Route path="instagram" element={<InstagramPage />} />
+            <Route path="*" element={<StubPage title="Page Not Found" />} />
+          </Route>
+          <Route path="admin" element={<AdminDashboard />} />
+        </Routes>
       </div>
     </DataProvider>
   );

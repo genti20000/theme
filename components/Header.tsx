@@ -1,12 +1,8 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { AppLink } from './AppLink';
-import { Page, NAV, SUMUP_BOOKING_URL } from '../lib/nav';
-
-interface HeaderProps {
-  onNavigate: (page: Page) => void;
-}
+import { NAV_LABELS, ROUTES, SUMUP_BOOKING_URL } from '../lib/nav';
 
 const MenuIcon = () => (
   <svg className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
@@ -25,14 +21,9 @@ const CloseIcon = () => (
   </svg>
 );
 
-const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerData } = useData();
-
-  const handleMobileNav = (page: Page) => {
-    onNavigate(page);
-    setIsMenuOpen(false);
-  };
 
   const navLinks = headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"];
   const half = Math.ceil(navLinks.length / 2);
@@ -40,8 +31,12 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const rightLinks = navLinks.slice(half);
 
   const getLabel = (key: string) => {
-    const item = NAV.find(n => n.href === key);
-    return item ? item.label.toUpperCase() : key.toUpperCase();
+    const label = NAV_LABELS[key as keyof typeof NAV_LABELS];
+    return label ? label.toUpperCase() : key.toUpperCase();
+  };
+
+  const getHref = (key: string) => {
+    return ROUTES[key as keyof typeof ROUTES] ?? "/";
   };
 
   const getHoverGlow = (index: number) => {
@@ -76,22 +71,23 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
       <div className="container mx-auto px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center">
         {/* Left Side: Book Now Button */}
         <div className="flex justify-start items-center">
-          <AppLink 
-            href={SUMUP_BOOKING_URL} 
-            external
+          <a
+            href={SUMUP_BOOKING_URL}
             className="relative bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-300 hover:to-pink-400 rounded-full h-[38px] w-[88px] md:h-[50px] md:w-[120px] transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)] hover:shadow-[0_0_20px_rgba(236,72,153,0.6)] flex items-center justify-center group"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             <span className="text-[9px] md:text-sm font-black text-black uppercase tracking-widest whitespace-nowrap">Book Now</span>
-          </AppLink>
+          </a>
         </div>
 
         {/* Center: Logo (99px sizing) */}
         <div className="flex justify-center items-center">
-          <button onClick={() => onNavigate('home')} className="focus:outline-none z-10 transition-transform duration-300 hover:scale-105">
+          <Link to="/" className="focus:outline-none z-10 transition-transform duration-300 hover:scale-105">
             <div className="w-[99px] h-[99px] md:w-32 md:h-32 relative flex items-center justify-center">
               <img src={headerData.logoUrl} alt="London Karaoke Club Logo" className="w-full h-full object-contain drop-shadow-lg" />
             </div>
-          </button>
+          </Link>
         </div>
 
         {/* Right Side: Menu Toggle Button */}
@@ -112,35 +108,38 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           <div className="relative w-full px-4 pt-8 flex justify-between gap-4 pointer-events-none">
             <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-purple-900/90 border-2 border-white rounded-tl-2xl rounded-tr-sm rounded-bl-[60px] rounded-br-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-6 animate-wing-left origin-top-right pointer-events-auto">
               {leftLinks.map((link, idx) => (
-                <button 
+                <Link
                   key={link} 
-                  onClick={() => handleMobileNav(link as Page)} 
+                  to={getHref(link)}
+                  onClick={() => setIsMenuOpen(false)}
                   style={{animationDelay: `${0.2 + idx*0.08}s` }} 
                   className={`text-xl md:text-4xl font-black tracking-wider text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 ${getHoverGlow(idx)}`}
                 >
                   {getLabel(link)}
-                </button>
+                </Link>
               ))}
             </div>
             <div className="w-1/2 bg-gradient-to-bl from-zinc-900 to-purple-900/90 border-2 border-white rounded-tr-2xl rounded-tl-sm rounded-br-[60px] rounded-bl-3xl p-6 shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-6 animate-wing-right origin-top-left pointer-events-auto">
               {rightLinks.map((link, idx) => (
-                <button 
+                <Link
                   key={link} 
-                  onClick={() => handleMobileNav(link as Page)} 
+                  to={getHref(link)}
+                  onClick={() => setIsMenuOpen(false)}
                   style={{animationDelay: `${0.2 + idx*0.08}s` }} 
                   className={`text-xl md:text-4xl font-black tracking-wider text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 ${getHoverGlow(idx + leftLinks.length)}`}
                 >
                   {getLabel(link)}
-                </button>
+                </Link>
               ))}
-              <AppLink 
-                href={SUMUP_BOOKING_URL} 
-                external
-                className="text-xl md:text-4xl font-black tracking-wider text-yellow-400 hover:text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" 
+              <a
+                href={SUMUP_BOOKING_URL}
+                className="text-xl md:text-4xl font-black tracking-wider text-yellow-400 hover:text-white transition-all duration-300 animate-item-slide-up opacity-0 hover:scale-110 active:scale-95 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]"
                 style={{animationDelay: `${0.2 + rightLinks.length*0.08}s` }}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 BOOK NOW
-              </AppLink>
+              </a>
             </div>
           </div>
           <div className="absolute top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-white animate-pulse"></div>
