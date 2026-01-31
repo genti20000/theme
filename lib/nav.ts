@@ -97,10 +97,9 @@ export const NAV: NavItem[] = [
   { label: "Privacy Policy", href: ROUTES.privacy, section: "Legal" },
   { label: "Terms of Use", href: ROUTES.terms, section: "Legal" },
   { label: "Booking Policy", href: ROUTES["booking-policy"], section: "Legal" },
-  { label: "Legal", href: ROUTES.terms, section: "Legal" },
 
   // Connect
-  { label: "WhatsApp", href: WHATSAPP_URL, section: "Connect", external: true },
+  { label: "Live Support", href: WHATSAPP_URL, section: "Connect", external: true },
   { label: "Instagram", href: "https://instagram.com/londonkaraoke.club", section: "Connect", external: true },
   { label: "TikTok", href: "https://tiktok.com/@londonkaraoke.club", section: "Connect", external: true },
   { label: "Facebook", href: "https://facebook.com/londonkaraokeclub", section: "Connect", external: true },
