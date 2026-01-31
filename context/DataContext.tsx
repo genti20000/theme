@@ -157,12 +157,24 @@ const INITIAL_FEATURES: FeaturesData = {
 const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nightlife", text: "Unmatched energy in London's most iconic district.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Until 3AM", bottomText: "The party never stops at LKC Soho." };
 const INITIAL_STATS: BatteryData = { enabled: true, statPrefix: "Over", statNumber: "80,000", statSuffix: "Songs", subText: "Updated monthly with the latest hits." };
 const INITIAL_GALLERY: GalleryData = { heading: "Soho Karaoke Gallery", subtext: "A glimpse inside our luxury private booths.", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}], showOnHome: false };
-const HEN_DO_POST: BlogPost = {
-    id: '2',
-    title: 'The De Facto Hen Do Karaoke Destination in Soho – London Karaoke Club',
-    date: '2025-02-14',
-    excerpt: 'London Karaoke Club is the hen do karaoke destination in Soho with private rooms, custom welcomes, and all-night party energy.',
-    content: `The De Facto Hen Do Karaoke Destination in Soho – London Karaoke Club
+const INITIAL_BLOG: BlogData = {
+    heading: "London Karaoke News",
+    subtext: "Stay updated with events and nightlife tips.",
+    posts: [
+        {
+            id: '1',
+            title: 'Welcome to LKC Soho',
+            date: '2024-01-01',
+            excerpt: 'Discover London\'s newest private karaoke experience.',
+            content: 'Welcome to London Karaoke Club.',
+            imageUrl: 'https://picsum.photos/seed/blog/800/600'
+        },
+        {
+            id: '2',
+            title: 'The De Facto Hen Do Karaoke Destination in Soho – London Karaoke Club',
+            date: '2025-02-14',
+            excerpt: 'London Karaoke Club is the hen do karaoke destination in Soho with private rooms, custom welcomes, and all-night party energy.',
+            content: `The De Facto Hen Do Karaoke Destination in Soho – London Karaoke Club
 
 Looking for the ultimate hen night in London? Skip the ordinary and head straight to London Karaoke Club — the undisputed home of hen do karaoke parties in Soho. This isn’t just another night out — this is your bride’s main character moment.
 
@@ -182,22 +194,8 @@ From high heels to high notes, London Karaoke Club is where hen dos go to become
 Book Now
 Forget average. This is the hen party benchmark.
 Book your hen do karaoke party now: https://www.sumupbookings.com/londonkaraokeclub`,
-    imageUrl: 'https://picsum.photos/seed/hen-do-soho/1200/800'
-};
-
-const INITIAL_BLOG: BlogData = {
-    heading: "London Karaoke News",
-    subtext: "Stay updated with events and nightlife tips.",
-    posts: [
-        {
-            id: '1',
-            title: 'Welcome to LKC Soho',
-            date: '2024-01-01',
-            excerpt: 'Discover London\'s newest private karaoke experience.',
-            content: 'Welcome to London Karaoke Club.',
-            imageUrl: 'https://picsum.photos/seed/blog/800/600'
-        },
-        HEN_DO_POST
+            imageUrl: 'https://picsum.photos/seed/hen-do-soho/1200/800'
+        }
     ]
 };
 const INITIAL_FAQ: FAQData = { enabled: true, heading: "Soho Karaoke FAQs", subtext: "Common questions about booking and our venue.", items: [{question: "Where is the club located?", answer: "We are located in the heart of Soho, London."}] };
