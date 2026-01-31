@@ -25,7 +25,9 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerData } = useData();
 
-  const navLinks = headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"];
+  const navLinks = (headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).filter(
+    (link) => link in ROUTES
+  );
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = navLinks.slice(0, half);
   const rightLinks = navLinks.slice(half);
