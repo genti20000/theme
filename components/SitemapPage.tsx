@@ -1,53 +1,47 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { ROUTES } from '../lib/nav';
 
-interface SitemapProps {
-  onNavigate: (page: any) => void;
-}
-
-const SitemapPage: React.FC<SitemapProps> = ({ onNavigate }) => {
-  const { blogData, eventsData, instagramHighlightsData } = useData();
+const SitemapPage: React.FC = () => {
+  const { blogData, eventsData } = useData();
 
   const sections = [
     {
       title: "Main Site",
       links: [
-        { label: "Home", page: "home" },
-        { label: "Food Menu", page: "menu" },
-        { label: "Drinks Menu", page: "drinks" },
-        { label: "Gallery", page: "gallery" },
-        { label: "Song Library", page: "songs" },
-        { label: "Events & Occasions", page: "events" },
-        { label: "Nightlife Blog", page: "blog" },
-        { label: "Social Hub", page: "instagram" },
+        { label: "Home", to: ROUTES.home },
+        { label: "Food Menu", to: ROUTES.menu },
+        { label: "Drinks Menu", to: ROUTES.drinks },
+        { label: "Gallery", to: ROUTES.gallery },
+        { label: "Song Library", to: ROUTES.songs },
+        { label: "Events & Occasions", to: ROUTES.events },
+        { label: "Nightlife Blog", to: ROUTES.blog },
+        { label: "Social Hub", to: ROUTES.instagram },
       ]
     },
     {
       title: "Events",
-      links: eventsData.sections.map(s => ({ 
-        label: s.title, 
-        page: "events",
-        action: () => {
-            onNavigate('events');
-            // Logic to scroll to section could go here if needed
-        }
+      links: eventsData.sections.map(s => ({
+        label: s.title,
+        to: ROUTES.events,
       }))
     },
     {
       title: "Recent Blog Posts",
       links: blogData.posts.slice(0, 5).map(p => ({
         label: p.title,
-        page: "blog"
+        to: ROUTES.blog
       }))
     },
     {
       title: "Legal & Info",
       links: [
-        { label: "Terms & Conditions", page: "terms" },
-        { label: "Privacy Policy", page: "terms" },
-        { label: "Booking Policy", page: "terms" },
-        { label: "FAQ", page: "home" }, // FAQ is on home
-        { label: "Sitemap", page: "sitemap" },
+        { label: "Terms & Conditions", to: ROUTES.terms },
+        { label: "Privacy Policy", to: ROUTES.privacy },
+        { label: "Booking Policy", to: ROUTES["booking-policy"] },
+        { label: "FAQ", to: ROUTES.faqs },
+        { label: "Sitemap", to: ROUTES.sitemap },
       ]
     }
   ];
@@ -74,13 +68,13 @@ const SitemapPage: React.FC<SitemapProps> = ({ onNavigate }) => {
                     <ul className="space-y-3">
                         {section.links.map((link, lIdx) => (
                             <li key={lIdx}>
-                                <button 
-                                    onClick={() => link.action ? link.action() : onNavigate(link.page)}
+                                <Link
+                                    to={link.to}
                                     className="text-zinc-400 hover:text-white transition-all text-sm font-bold hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] flex items-center group"
                                 >
                                     <span className="w-0 group-hover:w-3 transition-all h-[1px] bg-yellow-400 mr-0 group-hover:mr-2"></span>
                                     {link.label}
-                                </button>
+                                </Link>
                             </li>
                         ))}
                     </ul>

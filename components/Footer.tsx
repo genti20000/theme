@@ -1,25 +1,11 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { AppLink } from './AppLink';
-import { Page, NAV, SUMUP_BOOKING_URL } from '../lib/nav';
+import { NAV, SUMUP_BOOKING_URL } from '../lib/nav';
 
-interface FooterProps {
-  onNavigate: (page: Page) => void;
-}
-
-const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+const Footer: React.FC = () => {
   const { footerData } = useData();
-
-  const handleScrollToOffers = () => {
-    onNavigate('home');
-    setTimeout(() => {
-        const section = document.getElementById('special-offers');
-        if (section) {
-            section.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, 100);
-  };
 
   const sections = ["Explore", "Book", "Events", "LKC", "Connect"] as const;
 
@@ -29,13 +15,14 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         <div className="text-center mb-12 pb-12 border-b border-gray-700">
           <h4 className="text-3xl font-bold text-white mb-4">{footerData.ctaHeading}</h4>
           <p className="text-gray-300 mb-6 max-w-lg mx-auto text-base">{footerData.ctaText}</p>
-          <AppLink 
-            href={SUMUP_BOOKING_URL} 
-            external
+          <a
+            href={SUMUP_BOOKING_URL}
             className="inline-block bg-yellow-400 hover:bg-yellow-500 text-black text-sm font-bold py-3 px-6 rounded-full border-2 border-white transition-transform duration-300 ease-in-out hover:scale-105"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             {footerData.ctaButtonText}
-          </AppLink>
+          </a>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
@@ -45,17 +32,20 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <ul className="space-y-2">
                 {NAV.filter(n => n.section === section).map((item, idx) => (
                   <li key={`${section}-${idx}`}>
-                    <AppLink 
-                      href={item.href} 
-                      external={item.external}
-                      onNavigate={onNavigate}
-                      className="text-gray-400 hover:text-white transition-colors"
-                      onClick={() => {
-                        if (item.label === "Special Offers") handleScrollToOffers();
-                      }}
-                    >
-                      {item.label}
-                    </AppLink>
+                    {item.external ? (
+                      <a
+                        href={item.href}
+                        className="text-gray-400 hover:text-white transition-colors"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {item.label}
+                      </a>
+                    ) : (
+                      <Link to={item.href} className="text-gray-400 hover:text-white transition-colors">
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -68,13 +58,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <div className="flex flex-col md:flex-row justify-between items-center">
                 <div className="flex flex-col md:flex-row gap-4">
                     <p>Copyright © {new Date().getFullYear()} London Karaoke Club. All rights reserved.</p>
-                    <button onClick={() => onNavigate('admin')} className="text-gray-600 hover:text-gray-400 text-xs text-left md:ml-4">Admin Login</button>
+                    <Link to="/admin" className="text-gray-600 hover:text-gray-400 text-xs text-left md:ml-4">Admin Login</Link>
                 </div>
                 <div className="flex space-x-4 mt-4 md:mt-0">
-                    <AppLink href="terms" onNavigate={onNavigate} className="text-gray-400 hover:text-white text-xs">Privacy Policy</AppLink>
-                    <AppLink href="terms" onNavigate={onNavigate} className="text-gray-400 hover:text-white text-xs">Terms of Use</AppLink>
-                    <AppLink href="terms" onNavigate={onNavigate} className="text-gray-400 hover:text-white text-xs">Booking Policy</AppLink>
-                    <AppLink href="sitemap" onNavigate={onNavigate} className="text-gray-400 hover:text-white text-xs">Site Map</AppLink>
+                    <Link to="/privacy" className="text-gray-400 hover:text-white text-xs">Privacy Policy</Link>
+                    <Link to="/terms" className="text-gray-400 hover:text-white text-xs">Terms of Use</Link>
+                    <Link to="/booking-policy" className="text-gray-400 hover:text-white text-xs">Booking Policy</Link>
+                    <Link to="/sitemap" className="text-gray-400 hover:text-white text-xs">Site Map</Link>
                 </div>
             </div>
         </div>

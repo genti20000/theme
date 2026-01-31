@@ -1,9 +1,14 @@
 
 import React from 'react';
 import { useData } from '../context/DataContext';
+import { SUMUP_BOOKING_URL } from '../lib/nav';
 
-const DrinksMenu: React.FC = () => {
-  const { drinksData } = useData();
+interface DrinksMenuProps {
+  showReadyToBookCta?: boolean;
+}
+
+const DrinksMenu: React.FC<DrinksMenuProps> = ({ showReadyToBookCta = false }) => {
+  const { drinksData, footerData } = useData();
   const { packagesData, bottleServiceData, byTheGlassData, shotsData, cocktailsData, winesData, headerImageUrl } = drinksData;
 
   return (
@@ -176,6 +181,21 @@ const DrinksMenu: React.FC = () => {
 
         </div>
       </section>
+
+      {showReadyToBookCta && (
+        <div className="pb-16 md:pb-24">
+          <div className="container mx-auto px-6 text-center">
+            <h4 className="text-3xl font-bold text-white mb-4">{footerData.ctaHeading}</h4>
+            <p className="text-gray-300 mb-6 max-w-lg mx-auto text-base">{footerData.ctaText}</p>
+            <a
+              href={SUMUP_BOOKING_URL}
+              className="inline-block bg-yellow-400 hover:bg-yellow-500 text-black text-sm font-bold py-3 px-6 rounded-full border-2 border-white transition-transform duration-300 ease-in-out hover:scale-105"
+            >
+              {footerData.ctaButtonText}
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
