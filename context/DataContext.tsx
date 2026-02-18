@@ -45,7 +45,30 @@ export interface BatteryData { enabled?: boolean; statPrefix: string; statNumber
 export interface FooterData { ctaHeading: string; ctaText: string; ctaButtonText: string; }
 
 export interface GalleryImage { id: string; url: string; caption: string; }
-export interface GalleryData { heading: string; subtext: string; images: GalleryImage[]; videos?: any[]; showOnHome?: boolean; }
+export interface GalleryCollection { id: string; name: string; subtext?: string; images: GalleryImage[]; }
+export interface GalleryData {
+    heading: string;
+    subtext: string;
+    images: GalleryImage[];
+    videos?: any[];
+    showOnHome?: boolean;
+    homeFeatureEnabled?: boolean;
+    collections?: GalleryCollection[];
+    activeCollectionId?: string;
+}
+export interface HomeSectionRepeats {
+    hero: number;
+    instagramHighlights: number;
+    highlights: number;
+    features: number;
+    vibe: number;
+    battery: number;
+    testimonials: number;
+    info: number;
+    faq: number;
+    drinks: number;
+    gallery: number;
+}
 
 export interface BlogPost { id: string; title: string; date: string; excerpt: string; content: string; imageUrl: string; }
 export interface BlogData { heading: string; subtext: string; posts: BlogPost[]; }
@@ -103,6 +126,8 @@ interface DataContextType {
     updateFooterData: React.Dispatch<React.SetStateAction<FooterData>>;
     galleryData: GalleryData;
     updateGalleryData: React.Dispatch<React.SetStateAction<GalleryData>>;
+    homeSectionRepeats: HomeSectionRepeats;
+    updateHomeSectionRepeats: React.Dispatch<React.SetStateAction<HomeSectionRepeats>>;
     blogData: BlogData;
     updateBlogData: React.Dispatch<React.SetStateAction<BlogData>>;
     testimonialsData: TestimonialsData;
@@ -156,7 +181,22 @@ const INITIAL_FEATURES: FeaturesData = {
 };
 const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nightlife", text: "Unmatched energy in London's most iconic district.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Until 3AM", bottomText: "The party never stops at LKC Soho." };
 const INITIAL_STATS: BatteryData = { enabled: true, statPrefix: "Over", statNumber: "80,000", statSuffix: "Songs", subText: "Updated monthly with the latest hits." };
-const INITIAL_GALLERY: GalleryData = { heading: "Soho Karaoke Gallery", subtext: "A glimpse inside our luxury private booths.", images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}], showOnHome: false };
+const INITIAL_GALLERY: GalleryData = {
+    heading: "Soho Karaoke Gallery",
+    subtext: "A glimpse inside our luxury private booths.",
+    images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}],
+    showOnHome: false,
+    homeFeatureEnabled: false,
+    collections: [
+        {
+            id: 'default',
+            name: 'Main Gallery',
+            subtext: 'A glimpse inside our luxury private booths.',
+            images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}]
+        }
+    ],
+    activeCollectionId: 'default'
+};
 const INITIAL_BLOG: BlogData = {
     heading: "London Karaoke News",
     subtext: "Stay updated with events and nightlife tips.",
@@ -193,8 +233,35 @@ From high heels to high notes, London Karaoke Club is where hen dos go to become
 
 Book Now
 Forget average. This is the hen party benchmark.
-Book your hen do karaoke party now: https://www.sumupbookings.com/londonkaraokeclub`,
+Book your hen do karaoke party now: https://bookings.londonkaraoke.club`,
             imageUrl: 'https://picsum.photos/seed/hen-do-soho/1200/800'
+        },
+        {
+            id: '3',
+            title: 'Birthday Karaoke Parties in Soho: How to Plan a Night Everyone Talks About',
+            date: '2026-02-14',
+            excerpt: 'Planning a birthday in London? Here is the LKC blueprint for a private karaoke night with zero stress and maximum fun.',
+            content: `Birthday Karaoke Parties in Soho: How to Plan a Night Everyone Talks About
+
+If you want a birthday that feels personal, high-energy, and easy to organize, private karaoke is hard to beat. At London Karaoke Club, birthday groups get their own room, their own soundtrack, and a setup designed for celebration from the first song.
+
+How to Build the Perfect Birthday Night
+- Pick your start vibe: warm-up drinks and throwback tracks before the big singalong hits.
+- Build a shared queue: mix crowd-pleasers, duets, and one surprise anthem for the birthday moment.
+- Plan photo moments: use the room lighting and neon look to capture content between songs.
+- Keep food and drinks simple: pre-select favorites so your group spends more time singing and less time deciding.
+- End on a finale: choose one last all-group song everyone knows.
+
+Why birthdays work so well at LKC
+- Private rooms for your group only
+- Huge song catalog across pop, R&B, afrobeats, rock, and classics
+- Central Soho location for easy before-and-after plans
+- A party atmosphere that works for small or large groups
+
+Birthday nights should feel effortless. We help you set it up fast so your group can focus on having a great time.
+
+Book your birthday karaoke session now: https://bookings.londonkaraoke.club`,
+            imageUrl: 'https://picsum.photos/seed/birthday-karaoke-soho/1200/800'
         }
     ]
 };
@@ -211,6 +278,19 @@ const INITIAL_INSTAGRAM: InstagramHighlightsData = {
     username: "@londonkaraoke.club", 
     highlights: [],
     posts: []
+};
+const INITIAL_HOME_SECTION_REPEATS: HomeSectionRepeats = {
+    hero: 1,
+    instagramHighlights: 1,
+    highlights: 1,
+    features: 1,
+    vibe: 1,
+    battery: 1,
+    testimonials: 1,
+    info: 1,
+    faq: 1,
+    drinks: 1,
+    gallery: 1
 };
 
 const INITIAL_TERMS: TermItem[] = [
@@ -234,6 +314,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', INITIAL_VIBE));
     const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_STATS));
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY));
+    const [homeSectionRepeats, setHomeSectionRepeats] = useState<HomeSectionRepeats>(() => init('homeSectionRepeats', INITIAL_HOME_SECTION_REPEATS));
     const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG));
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
@@ -252,10 +333,56 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     useEffect(() => {
         setBlogData(prev => {
-            const existingIds = new Set(prev.posts.map(post => post.id));
-            const missingPosts = INITIAL_BLOG.posts.filter(post => !existingIds.has(post.id));
+            const safePosts = Array.isArray(prev.posts) ? prev.posts : [];
+            const existingIds = new Set(safePosts.map(post => post.id));
+            const existingTitles = new Set(safePosts.map(post => post.title.trim().toLowerCase()));
+
+            const missingPosts = INITIAL_BLOG.posts.filter(post => {
+                const normalizedTitle = post.title.trim().toLowerCase();
+                return !existingIds.has(post.id) && !existingTitles.has(normalizedTitle);
+            });
+
             if (missingPosts.length === 0) return prev;
-            return { ...prev, posts: [...prev.posts, ...missingPosts] };
+            return { ...prev, posts: [...missingPosts, ...safePosts] };
+        });
+    }, []);
+
+    useEffect(() => {
+        setGalleryData(prev => {
+            if (typeof prev.homeFeatureEnabled === 'boolean') return prev;
+            return { ...prev, homeFeatureEnabled: Boolean(prev.showOnHome) };
+        });
+    }, []);
+
+    useEffect(() => {
+        setGalleryData(prev => {
+            const hasCollections = Array.isArray(prev.collections) && prev.collections.length > 0;
+            if (hasCollections) {
+                if (prev.activeCollectionId) return prev;
+                return { ...prev, activeCollectionId: prev.collections![0].id };
+            }
+            const migratedId = 'default';
+            return {
+                ...prev,
+                collections: [{
+                    id: migratedId,
+                    name: 'Main Gallery',
+                    subtext: prev.subtext,
+                    images: Array.isArray(prev.images) ? prev.images : []
+                }],
+                activeCollectionId: migratedId
+            };
+        });
+    }, []);
+
+    useEffect(() => {
+        setHomeSectionRepeats(prev => {
+            const merged: HomeSectionRepeats = { ...INITIAL_HOME_SECTION_REPEATS, ...prev };
+            const normalizedEntries = Object.entries(merged).map(([key, val]) => {
+                const next = Number.isFinite(val) && val > 0 ? Math.floor(val) : 1;
+                return [key, next];
+            });
+            return Object.fromEntries(normalizedEntries) as HomeSectionRepeats;
         });
     }, []);
 
@@ -275,6 +402,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('vibeData', vibeData); }, [vibeData]);
     useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
     useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
+    useEffect(() => { persist('homeSectionRepeats', homeSectionRepeats); }, [homeSectionRepeats]);
     useEffect(() => { persist('blogData', blogData); }, [blogData]);
     useEffect(() => { persist('faqData', faqData); }, [faqData]);
     useEffect(() => { persist('drinksData', drinksData); }, [drinksData]);
@@ -291,7 +419,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
-        galleryData, blogData, faqData, drinksData, foodMenu, testimonialsData, 
+        galleryData, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData, 
         infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.2" 
     }, null, 2);
 
@@ -305,6 +433,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.vibeData) setVibeData(c.vibeData);
             if (c.batteryData) setBatteryData(c.batteryData);
             if (c.galleryData) setGalleryData(c.galleryData);
+            if (c.homeSectionRepeats) setHomeSectionRepeats(c.homeSectionRepeats);
             if (c.blogData) setBlogData(c.blogData);
             if (c.faqData) setFaqData(c.faqData);
             if (c.drinksData) setDrinksData(c.drinksData);
@@ -403,6 +532,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             highlightsData, updateHighlightsData: setHighlightsData, featuresData, updateFeaturesData: setFeaturesData,
             vibeData, updateVibeData: setVibeData, batteryData, updateBatteryData: setBatteryData,
             footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
+            homeSectionRepeats, updateHomeSectionRepeats: setHomeSectionRepeats,
             blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
             eventsData, updateEventsData: setEventsData, instagramHighlightsData, updateInstagramHighlightsData: setInstagramHighlightsData,

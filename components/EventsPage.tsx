@@ -38,7 +38,7 @@ const FadeInScrollSection: React.FC<{ children: React.ReactNode; className?: str
 
 const EventsPage: React.FC = () => {
   const { eventsData } = useData();
-  const BOOKING_URL = "https://www.sumupbookings.com/londonkaraokeclub";
+  const BOOKING_URL = "https://bookings.londonkaraoke.club";
 
   if (!eventsData || !eventsData.hero) return null;
 

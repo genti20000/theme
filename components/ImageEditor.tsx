@@ -47,6 +47,11 @@ const ImageEditor: React.FC = () => {
   const [galleryTab, setGalleryTab] = useState<'site' | 'storage'>('site');
   const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const siteCollections = (galleryData.collections && galleryData.collections.length > 0)
+    ? galleryData.collections
+    : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [] }];
+  const activeSiteCollection = siteCollections.find(c => c.id === galleryData.activeCollectionId) || siteCollections[0];
+  const siteGalleryImages = activeSiteCollection?.images || [];
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,8 +119,12 @@ const ImageEditor: React.FC = () => {
           }
 
           if (generatedImage) {
-              const newImages = [...galleryData.images, { id: Date.now().toString(), url: url, caption: 'AI Generated' }];
-              updateGalleryData({ ...galleryData, images: newImages });
+              const activeId = activeSiteCollection?.id || 'default';
+              const nextCollections = siteCollections.map(c =>
+                c.id === activeId ? { ...c, images: [...(c.images || []), { id: Date.now().toString(), url: url, caption: 'AI Generated' }] } : c
+              );
+              const nextActive = nextCollections.find(c => c.id === activeId) || nextCollections[0];
+              updateGalleryData({ ...galleryData, collections: nextCollections, activeCollectionId: activeId, images: nextActive.images });
           } else if (generatedVideo) {
               // Now galleryData.videos is properly typed
               const newVideos = [...(galleryData.videos || []), { id: Date.now().toString(), url: url, thumbnail: '', title: 'AI Video' }];
@@ -757,7 +766,7 @@ const ImageEditor: React.FC = () => {
                     
                     <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {galleryTab === 'site' ? (
-                            galleryData.images.map((img) => (
+                            siteGalleryImages.map((img) => (
                                 <button 
                                     key={img.id} 
                                     onClick={() => handleSelectSample(img.url)}

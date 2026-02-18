@@ -8,8 +8,19 @@ const Gallery: React.FC = () => {
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [activeCollectionId, setActiveCollectionId] = useState<string>('');
 
-  const images = galleryData.images || [];
+  const collections = (galleryData.collections && galleryData.collections.length > 0)
+    ? galleryData.collections
+    : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [] }];
+  const activeCollection = collections.find(c => c.id === activeCollectionId)
+    || collections.find(c => c.id === galleryData.activeCollectionId)
+    || collections[0];
+  const images = activeCollection?.images || [];
+
+  useEffect(() => {
+    if (!activeCollectionId && activeCollection?.id) setActiveCollectionId(activeCollection.id);
+  }, [activeCollectionId, activeCollection]);
 
   const handleImageLoad = (id: string) => {
       setLoadedImages(prev => ({ ...prev, [id]: true }));
@@ -32,6 +43,11 @@ const Gallery: React.FC = () => {
       document.body.style.overflow = '';
     }
   }, [lightboxIndex]);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setLightboxIndex(null);
+  }, [activeCollection?.id]);
 
   if (isDataLoading && images.length === 0) {
       return (
@@ -115,7 +131,24 @@ const Gallery: React.FC = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tighter uppercase italic">{galleryData.heading}</h2>
-          <p className="text-gray-400 text-lg mb-8">{galleryData.subtext}</p>
+          <p className="text-gray-400 text-lg mb-8">{activeCollection?.subtext || galleryData.subtext}</p>
+          {collections.length > 1 && (
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {collections.map((collection) => (
+                <button
+                  key={collection.id}
+                  onClick={() => setActiveCollectionId(collection.id)}
+                  className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase transition-all border ${
+                    activeCollection?.id === collection.id
+                      ? 'bg-pink-500 text-white border-pink-400'
+                      : 'bg-zinc-900/60 text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-500'
+                  }`}
+                >
+                  {collection.name}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex justify-center gap-4 bg-zinc-900/50 p-1 rounded-full w-max mx-auto border border-zinc-800">
               <button 
                 onClick={() => setViewMode('carousel')} 

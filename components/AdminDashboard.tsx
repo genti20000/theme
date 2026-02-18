@@ -59,6 +59,7 @@ const AdminDashboard: React.FC = () => {
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [activeLibraryCallback, setActiveLibraryCallback] = useState<(url: string) => void>(() => (url: string) => {});
   const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
+  const [selectedGalleryId, setSelectedGalleryId] = useState<string>('');
 
   const { 
     isDataLoading, headerData, updateHeaderData, heroData, updateHeroData, highlightsData, updateHighlightsData,
@@ -69,7 +70,7 @@ const AdminDashboard: React.FC = () => {
     drinksData, updateDrinksData, testimonialsData, updateTestimonialsData,
     infoSectionData, updateInfoSectionData, eventsData, updateEventsData,
     instagramHighlightsData, updateInstagramHighlightsData,
-    termsData, updateTermsData, fetchServerFiles
+    termsData, updateTermsData, fetchServerFiles, homeSectionRepeats, updateHomeSectionRepeats
   } = useData();
 
   const batchFileRef = useRef<HTMLInputElement>(null);
@@ -79,6 +80,39 @@ const AdminDashboard: React.FC = () => {
       fetchServerFiles().then(setStorageFiles);
     }
   }, [isLibraryOpen, fetchServerFiles]);
+
+  const galleryCollections = (galleryData.collections && galleryData.collections.length > 0)
+    ? galleryData.collections
+    : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [] }];
+  const activeGallery = galleryCollections.find(g => g.id === selectedGalleryId)
+    || galleryCollections.find(g => g.id === galleryData.activeCollectionId)
+    || galleryCollections[0];
+
+  useEffect(() => {
+    if (!selectedGalleryId && activeGallery?.id) {
+      setSelectedGalleryId(activeGallery.id);
+    }
+  }, [selectedGalleryId, activeGallery]);
+
+  const updateActiveGalleryImages = (updater: (images: any[]) => any[]) => {
+    const activeId = activeGallery?.id;
+    if (!activeId) return;
+    updateGalleryData(prev => {
+      const collections = (prev.collections && prev.collections.length > 0)
+        ? prev.collections
+        : [{ id: 'default', name: 'Main Gallery', subtext: prev.subtext, images: prev.images || [] }];
+      const nextCollections = collections.map(col =>
+        col.id === activeId ? { ...col, images: updater(col.images || []) } : col
+      );
+      const nextActive = nextCollections.find(col => col.id === activeId) || nextCollections[0];
+      return {
+        ...prev,
+        collections: nextCollections,
+        activeCollectionId: activeId,
+        images: nextActive.images
+      };
+    });
+  };
 
   const MediaPicker: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -138,10 +172,7 @@ const AdminDashboard: React.FC = () => {
     for (let i = 0; i < files.length; i++) {
         const url = await uploadFile(files[i]);
         if (url) {
-            updateGalleryData(prev => ({
-                ...prev,
-                images: [...prev.images, { id: Date.now().toString() + i, url, caption: 'LKC Soho' }]
-            }));
+            updateActiveGalleryImages(images => [...images, { id: Date.now().toString() + i, url, caption: 'LKC Soho' }]);
         }
     }
   };
@@ -201,6 +232,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           [nextOrder[index], nextOrder[index + 1]] = [nextOrder[index + 1], nextOrder[index]];
       }
       updateHeaderData(prev => ({...prev, navOrder: nextOrder}));
+  };
+
+  const homeSectionOptions = [
+    { key: 'hero', label: 'Hero' },
+    { key: 'instagramHighlights', label: 'Instagram Highlights' },
+    { key: 'highlights', label: 'Highlights' },
+    { key: 'features', label: 'Features' },
+    { key: 'vibe', label: 'Vibe' },
+    { key: 'battery', label: 'Stats/Battery' },
+    { key: 'testimonials', label: 'Testimonials' },
+    { key: 'info', label: 'Info Section' },
+    { key: 'faq', label: 'FAQ' },
+    { key: 'drinks', label: 'Drinks Menu' },
+    { key: 'gallery', label: 'Gallery (Home Feature)' }
+  ] as const;
+
+  const setSectionRepeat = (key: typeof homeSectionOptions[number]['key'], value: number) => {
+    const clamped = Math.max(1, Math.min(6, Math.floor(Number(value) || 1)));
+    updateHomeSectionRepeats(prev => ({ ...prev, [key]: clamped }));
   };
 
   const DrinkCategoryEditor = ({ title, data, setter }: { title: string, data: DrinkCategory[], setter: (val: DrinkCategory[]) => void }) => (
@@ -647,17 +697,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         {tab === 'gallery' && (
             <>
             <SectionCard title="Gallery Options">
-                <div className="flex items-center gap-4">
-                    <input type="checkbox" checked={galleryData.showOnHome} onChange={e => updateGalleryData(prev => ({...prev, showOnHome: e.target.checked}))} className="w-5 h-5 accent-pink-500" />
-                    <label className="text-xs font-black uppercase tracking-widest text-zinc-300">Show Gallery Preview on Home Page</label>
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-xs font-black uppercase tracking-widest text-zinc-300">Separate Gallery Section on Home Page</p>
+                        <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">Turn this on to show the full gallery as its own home page feature block.</p>
+                    </div>
+                    <Toggle
+                        label="Homepage Gallery"
+                        checked={galleryData.homeFeatureEnabled ?? galleryData.showOnHome ?? false}
+                        onChange={v => updateGalleryData(prev => ({...prev, homeFeatureEnabled: v, showOnHome: v}))}
+                    />
                 </div>
             </SectionCard>
+            <SectionCard title="Gallery Collections">
+                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Create separate galleries and switch which one you are editing.</p>
+                <div className="space-y-4">
+                    {galleryCollections.map((collection, ci) => (
+                        <div key={collection.id} className={`p-4 rounded-2xl border ${activeGallery?.id === collection.id ? 'border-pink-500 bg-pink-500/5' : 'border-zinc-800 bg-zinc-900/40'}`}>
+                            <div className="flex flex-col md:flex-row gap-3 md:items-end">
+                                <div className="flex-1">
+                                    <Input
+                                        label="Gallery Name"
+                                        value={collection.name}
+                                        onChange={v => updateGalleryData(prev => ({
+                                            ...prev,
+                                            collections: (prev.collections || []).map(c => c.id === collection.id ? { ...c, name: v } : c)
+                                        }))}
+                                    />
+                                </div>
+                                <div className="flex gap-2 mb-6">
+                                    <button
+                                        onClick={() => {
+                                            setSelectedGalleryId(collection.id);
+                                            updateGalleryData(prev => ({ ...prev, activeCollectionId: collection.id }));
+                                        }}
+                                        className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            updateGalleryData(prev => {
+                                                const collections = (prev.collections || []).filter(c => c.id !== collection.id);
+                                                if (collections.length === 0) return prev;
+                                                const nextActive = prev.activeCollectionId === collection.id ? collections[0].id : prev.activeCollectionId;
+                                                return { ...prev, collections, activeCollectionId: nextActive, images: collections[0].images || [] };
+                                            });
+                                            if (activeGallery?.id === collection.id) {
+                                                const next = galleryCollections.find(c => c.id !== collection.id);
+                                                if (next) setSelectedGalleryId(next.id);
+                                            }
+                                        }}
+                                        disabled={galleryCollections.length <= 1}
+                                        className="px-4 py-2 rounded-xl bg-red-600/20 disabled:opacity-40 text-red-400 text-[10px] font-black uppercase"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                            <TextArea
+                                label="Gallery Subtext"
+                                value={collection.subtext || ''}
+                                onChange={v => updateGalleryData(prev => ({
+                                    ...prev,
+                                    collections: (prev.collections || []).map(c => c.id === collection.id ? { ...c, subtext: v } : c)
+                                }))}
+                            />
+                        </div>
+                    ))}
+                </div>
+                <button
+                    onClick={() => {
+                        const newId = Date.now().toString();
+                        updateGalleryData(prev => ({
+                            ...prev,
+                            collections: [...(prev.collections || []), { id: newId, name: `Gallery ${(prev.collections || []).length + 1}`, subtext: '', images: [] }],
+                            activeCollectionId: newId
+                        }));
+                        setSelectedGalleryId(newId);
+                    }}
+                    className="w-full py-4 mt-6 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all"
+                >
+                    + ADD NEW GALLERY
+                </button>
+            </SectionCard>
             <SectionCard title="Visual Archive">
+                <p className="text-[10px] text-zinc-500 mb-4 uppercase tracking-widest">Editing: {activeGallery?.name || 'Gallery'}</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-                    {galleryData.images.map((img, i) => (
+                    {(activeGallery?.images || []).map((img, i) => (
                         <div key={img.id} className="relative group aspect-square rounded-2xl overflow-hidden border border-zinc-800 shadow-xl">
                             <img src={img.url} className="w-full h-full object-cover" alt="" />
-                            <button onClick={() => updateGalleryData(prev => ({...prev, images: prev.images.filter((_, idx) => idx !== i)}))} className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                            <button onClick={() => updateActiveGalleryImages(images => images.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                         </div>
                     ))}
                     <div className="aspect-square border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center bg-zinc-900/50 hover:border-pink-500 group transition-all">
@@ -687,6 +817,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <SectionCard title="Connectivity">
                     <Input label="PHP Sync URL" value={syncUrl} onChange={v => updateSyncUrl(v)} />
                     <Input label="Auth Key (Admin Password)" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
+                </SectionCard>
+
+                <SectionCard title="Homepage Section Reuse">
+                    <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Set how many times each section appears on the home page (1 to 6).</p>
+                    <div className="space-y-3">
+                        {homeSectionOptions.map(({ key, label }) => (
+                            <div key={key} className="flex items-center justify-between bg-zinc-800/40 border border-zinc-700 rounded-xl px-4 py-3">
+                                <span className="text-xs font-black uppercase tracking-widest text-zinc-300">{label}</span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={6}
+                                    value={homeSectionRepeats[key] ?? 1}
+                                    onChange={e => setSectionRepeat(key, Number(e.target.value))}
+                                    className="w-20 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm font-bold outline-none focus:border-pink-500"
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </SectionCard>
 
                 <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600 text-red-500 rounded-2xl font-black uppercase tracking-widest">Reset Local Cache</button>

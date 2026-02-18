@@ -43,14 +43,14 @@ const Chatbot: React.FC = () => {
                 - Location: Heart of Soho, London (near Oxford St, Bond St).
                 - Hours: 2pm to 3am daily.
                 - Experience: Private luxury booths (no "padded boxes"), 80,000+ songs, pro-audio.
-                - Booking: MUST pre-book via SumUp (https://www.sumupbookings.com/londonkaraokeclub). No walk-ins allowed.
+                - Booking: MUST pre-book via our booking site (https://bookings.londonkaraoke.club). No walk-ins allowed.
                 - Age: Strictly 18+. Valid photo ID required.
                 - Pricing: Minimum 2 hours. Extension possible if slot is free.
                 - Food/Drink: Signature cocktails, gourmet sharing platters. No outside food/drink.
                 - WhatsApp: For large events/corporate, contact +44 7761 383514.
                 
                 FAQs you should handle:
-                1. How do I book? (Direct them to the SumUp link).
+                1. How do I book? (Direct them to https://bookings.londonkaraoke.club).
                 2. Can I bring my own booze? (No, we have a fully licensed bar).
                 3. What songs do you have? (80k+ songs, updated monthly, browse via smartphone remote in the room).
                 4. Can I host a hen party? (Yes! We specialize in hen dos and birthdays).

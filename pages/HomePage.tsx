@@ -15,6 +15,7 @@ import { useData } from '../context/DataContext';
 const HomePage: React.FC = () => {
   const {
     galleryData,
+    homeSectionRepeats,
     highlightsData,
     featuresData,
     vibeData,
@@ -25,26 +26,43 @@ const HomePage: React.FC = () => {
     instagramHighlightsData,
   } = useData();
 
+  const repeatCount = (n: number) => Math.max(1, Math.floor(Number(n) || 1));
+  const renderRepeated = (count: number, render: (index: number) => React.ReactNode) =>
+    Array.from({ length: repeatCount(count) }, (_, index) => (
+      <React.Fragment key={index}>{render(index)}</React.Fragment>
+    ));
+
   return (
     <>
-      <Hero />
-      {instagramHighlightsData.enabled !== false && <InstagramHighlights />}
-      {highlightsData.enabled !== false && <Highlights />}
+      {renderRepeated(homeSectionRepeats.hero, (i) => <Hero key={`hero-${i}`} />)}
+      {instagramHighlightsData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.instagramHighlights, (i) => <InstagramHighlights key={`instagram-${i}`} />)}
+      {highlightsData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.highlights, (i) => <Highlights key={`highlights-${i}`} />)}
       <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
-      {featuresData.enabled !== false && <Features />}
-      {vibeData.enabled !== false && <Fitness />}
-      {batteryData.enabled !== false && <Battery />}
-      {testimonialsData.enabled !== false && <Testimonials />}
-      {infoSectionData.enabled !== false && <InfoSection />}
-      {faqData.enabled !== false && <FAQ />}
-      <section id="drinks">
-        <DrinksMenu />
-      </section>
-      {galleryData.showOnHome && (
-        <div className="mt-20">
-          <Gallery />
-        </div>
-      )}
+      {featuresData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.features, (i) => <Features key={`features-${i}`} />)}
+      {vibeData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.vibe, (i) => <Fitness key={`vibe-${i}`} />)}
+      {batteryData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.battery, (i) => <Battery key={`battery-${i}`} />)}
+      {testimonialsData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.testimonials, (i) => <Testimonials key={`testimonials-${i}`} />)}
+      {infoSectionData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.info, (i) => <InfoSection key={`info-${i}`} />)}
+      {faqData.enabled !== false &&
+        renderRepeated(homeSectionRepeats.faq, (i) => <FAQ key={`faq-${i}`} />)}
+      {renderRepeated(homeSectionRepeats.drinks, (i) => (
+        <section id={i === 0 ? "drinks" : undefined} key={`drinks-${i}`}>
+          <DrinksMenu />
+        </section>
+      ))}
+      {(galleryData.homeFeatureEnabled ?? galleryData.showOnHome ?? false) &&
+        renderRepeated(homeSectionRepeats.gallery, (i) => (
+          <div className="mt-20" key={`gallery-${i}`}>
+            <Gallery />
+          </div>
+        ))}
     </>
   );
 };
