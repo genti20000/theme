@@ -181,47 +181,48 @@ const AdminDashboard: React.FC = () => {
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
+header("Content-Type: application/json; charset=utf-8");
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 $auth_key = 'Bearer ${adminPassword}';
-$data_file = 'site_data.json';
-$upload_dir = 'uploads/';
-
 $headers = getallheaders();
-$auth = $headers['Authorization'] ?? '';
+$auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
 if ($auth !== $auth_key) { http_response_code(401); die(json_encode(['success'=>false, 'error'=>'Auth Failed'])); }
 
+$db = new mysqli('localhost', 'DB_USER', 'DB_PASS', 'DB_NAME');
+if ($db->connect_error) { http_response_code(500); die(json_encode(['success'=>false, 'error'=>'DB connection failed'])); }
+$db->set_charset('utf8mb4');
+$db->query("CREATE TABLE IF NOT EXISTS lkc_site_data (id INT PRIMARY KEY, payload LONGTEXT NOT NULL, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)");
+
+$upload_dir = __DIR__.'/uploads/';
+if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+$base = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_FILES['file'])) {
-        if (!is_dir($upload_dir)) mkdir($upload_dir, 0755);
-        $name = time().'_'.basename($_FILES['file']['name']);
-        if (move_uploaded_file($_FILES['file']['tmp_name'], $upload_dir.$name)) {
-            echo json_encode(['success'=>true, 'url'=>'https://'.$_SERVER['HTTP_HOST'].'/'.$upload_dir.$name]);
-        } else {
-            echo json_encode(['success'=>false, 'error'=>'Upload failed']);
-        }
-    } else {
-        $input = file_get_contents('php://input');
-        if (file_put_contents($data_file, $input)) {
-            echo json_encode(['success'=>true]);
-        } else {
-            echo json_encode(['success'=>false, 'error'=>'Write failed']);
-        }
+  if (isset($_FILES['file'])) {
+    $name = time().'_'.preg_replace('/[^A-Za-z0-9._-]/', '_', basename($_FILES['file']['name']));
+    if (move_uploaded_file($_FILES['file']['tmp_name'], $upload_dir.$name)) {
+      echo json_encode(['success'=>true, 'url'=>$base.'/uploads/'.$name]); exit;
     }
-} else {
-    if (isset($_GET['list'])) {
-        $files = is_dir($upload_dir) ? array_diff(scandir($upload_dir), ['.', '..']) : [];
-        $result = [];
-        foreach($files as $f) $result[] = ['name'=>$f, 'url'=>'https://'.$_SERVER['HTTP_HOST'].'/'.$upload_dir.$f];
-        echo json_encode(['success'=>true, 'files'=>$result]);
-    } else {
-        if (file_exists($data_file)) {
-            echo file_get_contents($data_file);
-        } else {
-            echo json_encode(['error'=>'no data']);
-        }
-    }
+    echo json_encode(['success'=>false, 'error'=>'Upload failed']); exit;
+  }
+  $input = file_get_contents('php://input');
+  $stmt = $db->prepare("REPLACE INTO lkc_site_data (id, payload) VALUES (1, ?)");
+  $stmt->bind_param('s', $input);
+  $ok = $stmt->execute();
+  echo json_encode(['success'=>$ok]); exit;
 }
+
+if (isset($_GET['list'])) {
+  $files = array_values(array_filter(scandir($upload_dir), fn($f) => $f !== '.' && $f !== '..'));
+  $result = array_map(fn($f) => ['name'=>$f, 'url'=>$base.'/uploads/'.$f], $files);
+  echo json_encode(['success'=>true, 'files'=>$result]); exit;
+}
+
+$res = $db->query("SELECT payload FROM lkc_site_data WHERE id = 1 LIMIT 1");
+if (!$res || $res->num_rows === 0) { echo json_encode(['error'=>'no data']); exit; }
+$row = $res->fetch_assoc();
+echo $row['payload'];
 ?>`;
 
   const moveNavItem = (index: number, direction: 'up' | 'down') => {
