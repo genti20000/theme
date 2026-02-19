@@ -48,6 +48,9 @@ const slugify = (value: string) =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 
+const isVideoFile = (url: string) => /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url);
+const isImageFile = (url: string) => /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/i.test(url);
+
 const Card: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
   <section className={`bg-zinc-900 border border-zinc-800 rounded-2xl p-5 ${className}`}>
     <h3 className="text-sm font-black uppercase tracking-widest mb-4">{title}</h3>
@@ -415,7 +418,28 @@ const AdminDashboard: React.FC = () => {
                   onClick={() => applyMediaSelection(file.url)}
                   className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden text-left hover:border-pink-500 transition-colors"
                 >
-                  <img src={file.url} alt={file.name} className="w-full aspect-square object-cover" />
+                  <div className="h-36 w-full bg-black overflow-hidden border-b border-zinc-800">
+                    {isVideoFile(file.url) ? (
+                      <video
+                        src={file.url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="block w-full h-full object-cover"
+                      />
+                    ) : isImageFile(file.url) ? (
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        loading="lazy"
+                        className="block w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                        Unsupported preview
+                      </div>
+                    )}
+                  </div>
                   <div className="p-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 truncate">{file.name}</p>
                   </div>
