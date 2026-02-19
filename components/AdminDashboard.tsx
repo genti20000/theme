@@ -76,6 +76,7 @@ const AdminDashboard: React.FC = () => {
     homeSectionRepeats,
     updateHomeSectionRepeats,
     adminPassword,
+    updateAdminPassword,
     syncUrl,
     exportDatabase,
     purgeCache,
@@ -263,8 +264,23 @@ const AdminDashboard: React.FC = () => {
     try {
       const files = await fetchServerFiles();
       setStorageFiles(files);
+      if (files.length === 0) {
+        const probe = await fetch(`${syncUrl}?list=1`, {
+          headers: { Authorization: `Bearer ${adminPassword}` }
+        });
+        const probeData = await probe.json().catch(() => ({}));
+        if (probe.status === 401 || String(probeData?.error || '').toLowerCase().includes('auth')) {
+          setIsAuthenticated(false);
+          setSyncError('Unauthorized (401). Re-enter admin key.');
+          return;
+        }
+        setSyncError('No server files found. Upload one to get started.');
+      } else {
+        setSyncError('');
+      }
     } catch {
       setStorageFiles([]);
+      setSyncError('Failed to load server files.');
     }
   };
 
@@ -272,6 +288,40 @@ const AdminDashboard: React.FC = () => {
     setMediaTarget(target);
     setIsMediaModalOpen(true);
     await refreshStorageFiles();
+  };
+
+  const unlockWithKey = async () => {
+    const nextKey = passInput.trim();
+    if (!nextKey) {
+      setSyncError('Enter admin key.');
+      return;
+    }
+    setSyncStatus('Saving');
+    setSyncError('');
+    try {
+      const response = await fetch(`${syncUrl}?list=1`, {
+        headers: { Authorization: `Bearer ${nextKey}` }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401 || data?.success === false) {
+        setSyncStatus('Error');
+        setSyncError(data?.error || 'Unauthorized (401).');
+        setIsAuthenticated(false);
+        return;
+      }
+      if (!response.ok) {
+        setSyncStatus('Error');
+        setSyncError(`Auth check failed (${response.status}).`);
+        return;
+      }
+      updateAdminPassword(nextKey);
+      setIsAuthenticated(true);
+      setSyncStatus('Idle');
+      setSyncError('');
+    } catch (error) {
+      setSyncStatus('Error');
+      setSyncError(`Auth check failed: ${String(error)}`);
+    }
   };
 
   const applyMediaSelection = (url: string) => {
@@ -316,14 +366,7 @@ const AdminDashboard: React.FC = () => {
             placeholder="Admin key"
           />
           <button
-            onClick={() => {
-              if (passInput === adminPassword) {
-                setIsAuthenticated(true);
-                setSyncError('');
-              } else {
-                setSyncError('Invalid admin key.');
-              }
-            }}
+            onClick={unlockWithKey}
             className="w-full mt-4 bg-pink-600 hover:bg-pink-500 text-white font-black py-3 rounded-xl uppercase text-sm"
           >
             Unlock
@@ -356,6 +399,9 @@ const AdminDashboard: React.FC = () => {
                     if (url) {
                       await refreshStorageFiles();
                       applyMediaSelection(url);
+                    } else {
+                      setSyncStatus('Error');
+                      setSyncError('Upload failed. Check admin key and db.php upload response.');
                     }
                   }}
                 />
@@ -806,7 +852,13 @@ const AdminDashboard: React.FC = () => {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
                                     const url = await uploadFile(file);
-                                    if (url) updateBlogPost(selectedBlog.id, { imageUrl: url });
+                                    if (url) {
+                                      updateBlogPost(selectedBlog.id, { imageUrl: url });
+                                      setSyncError('');
+                                    } else {
+                                      setSyncStatus('Error');
+                                      setSyncError('Upload failed for featured image.');
+                                    }
                                   }}
                                 />
                               </label>
@@ -848,7 +900,13 @@ const AdminDashboard: React.FC = () => {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
                                     const url = await uploadFile(file);
-                                    if (url) updateBlogPost(selectedBlog.id, { ogImage: url });
+                                    if (url) {
+                                      updateBlogPost(selectedBlog.id, { ogImage: url });
+                                      setSyncError('');
+                                    } else {
+                                      setSyncStatus('Error');
+                                      setSyncError('Upload failed for OG image.');
+                                    }
                                   }}
                                 />
                               </label>
@@ -982,13 +1040,18 @@ const AdminDashboard: React.FC = () => {
                           const file = e.target.files?.[0];
                           if (!file || !activeGallery) return;
                           const url = await uploadFile(file);
-                          if (!url) return;
+                          if (!url) {
+                            setSyncStatus('Error');
+                            setSyncError('Upload failed for gallery image.');
+                            return;
+                          }
                           updateGalleryData(prev => ({
                             ...prev,
                             collections: (prev.collections || []).map(c =>
                               c.id === activeGallery.id ? { ...c, images: [...(c.images || []), { id: `g-${Date.now()}`, url, caption: c.name }] } : c
                             )
                           }));
+                          setSyncError('');
                         }}
                       />
                     </label>

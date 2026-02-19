@@ -608,8 +608,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 headers: { 'Authorization': `Bearer ${adminPassword}` },
                 body: formData
             });
-            const res = await response.json();
-            return res.success ? res.url : null;
+            const res = await response.json().catch(() => ({} as any));
+            if (!response.ok) return null;
+
+            // Support multiple response formats from custom PHP handlers.
+            const url =
+                res?.url ||
+                res?.fileUrl ||
+                res?.file_url ||
+                res?.data?.url ||
+                res?.data?.fileUrl ||
+                res?.path ||
+                null;
+
+            if (typeof url === 'string' && url.length > 0) return url;
+            if (res?.success && typeof res?.url === 'string') return res.url;
+            return null;
         } catch (e) { return null; } finally { setIsDataLoading(false); }
     };
 
@@ -619,9 +633,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const response = await fetch(`${syncUrl}?list=1`, {
                 headers: { 'Authorization': `Bearer ${adminPassword}` }
             });
-            const data = await response.json();
-            if (data.success) return data.files;
-            return [];
+            const data = await response.json().catch(() => ({} as any));
+            if (!response.ok) return [];
+
+            const rawFiles = Array.isArray(data?.files)
+                ? data.files
+                : Array.isArray(data?.data?.files)
+                    ? data.data.files
+                    : Array.isArray(data)
+                        ? data
+                        : [];
+
+            return rawFiles
+                .map((item: any, idx: number) => {
+                    if (typeof item === 'string') {
+                        const name = item.split('/').pop() || `file-${idx + 1}`;
+                        return { name, url: item };
+                    }
+                    const url = item?.url || item?.fileUrl || item?.file_url || item?.path || '';
+                    const name = item?.name || item?.filename || (typeof url === 'string' ? (url.split('/').pop() || `file-${idx + 1}`) : `file-${idx + 1}`);
+                    return url ? { name, url } : null;
+                })
+                .filter(Boolean) as { name: string; url: string }[];
         } catch (e) { return []; }
     };
 
