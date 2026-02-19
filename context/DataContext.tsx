@@ -76,7 +76,23 @@ export interface HomeSectionRepeats {
 export type HomeSectionType = 'hero' | 'instagramHighlights' | 'highlights' | 'features' | 'vibe' | 'battery' | 'testimonials' | 'info' | 'faq' | 'drinks' | 'gallery';
 export interface HomeSectionItem { id: string; type: HomeSectionType; title: string; enabled: boolean; }
 
-export interface BlogPost { id: string; title: string; date: string; excerpt: string; content: string; imageUrl: string; }
+export interface BlogPost {
+    id: string;
+    title: string;
+    slug?: string;
+    status?: 'draft' | 'published';
+    publishAt?: string;
+    date: string;
+    excerpt: string;
+    content: string;
+    imageUrl: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    canonical?: string;
+    ogImage?: string;
+    faqSchemaEnabled?: boolean;
+    faqSchema?: { question: string; answer: string }[];
+}
 export interface BlogData { heading: string; subtext: string; posts: BlogPost[]; }
 export interface Song { id: string; title: string; artist: string; genre?: string; fileUrl?: string; }
 export interface TestimonialItem { quote: string; name: string; avatar: string; rating?: number; date?: string; }

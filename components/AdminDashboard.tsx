@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { HomeSectionType, useData } from '../context/DataContext';
+import { NAV_LABELS, ROUTES } from '../lib/nav';
 
 const TABS = [
   'Dashboard',
@@ -39,6 +40,21 @@ const HOME_SECTION_TYPES: Array<{ type: HomeSectionType; label: string }> = [
 
 const labelByType = (type: HomeSectionType) => HOME_SECTION_TYPES.find(s => s.type === type)?.label || type;
 
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+const Card: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
+  <section className={`bg-zinc-900 border border-zinc-800 rounded-2xl p-5 ${className}`}>
+    <h3 className="text-sm font-black uppercase tracking-widest mb-4">{title}</h3>
+    {children}
+  </section>
+);
+
 const AdminDashboard: React.FC = () => {
   const [tab, setTab] = useState<string>('Homepage');
   const [syncStatus, setSyncStatus] = useState<'Idle' | 'Saving' | 'Error'>('Idle');
@@ -47,6 +63,8 @@ const AdminDashboard: React.FC = () => {
   const [passInput, setPassInput] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
+  const [selectedBlogId, setSelectedBlogId] = useState('');
+  const [addNavKey, setAddNavKey] = useState('');
 
   const {
     homeSections,
@@ -64,7 +82,11 @@ const AdminDashboard: React.FC = () => {
     testimonialsData,
     infoSectionData,
     faqData,
-    instagramHighlightsData
+    instagramHighlightsData,
+    headerData,
+    updateHeaderData,
+    blogData,
+    updateBlogData
   } = useData();
 
   const selectedSection = useMemo(() => {
@@ -79,6 +101,16 @@ const AdminDashboard: React.FC = () => {
     });
     return counts;
   }, [homeSections]);
+
+  const navOrder = headerData.navOrder || ['menu', 'gallery', 'blog', 'drinks', 'events', 'songs'];
+  const navCandidates = Object.keys(ROUTES).filter(k => k !== 'home');
+
+  const selectedBlog = useMemo(() => {
+    const posts = blogData.posts || [];
+    if (posts.length === 0) return null;
+    if (!selectedBlogId) return posts[0];
+    return posts.find(p => p.id === selectedBlogId) || posts[0];
+  }, [blogData.posts, selectedBlogId]);
 
   const canAddType = (type: HomeSectionType) => {
     const current = countsByType[type] || 0;
@@ -189,6 +221,25 @@ const AdminDashboard: React.FC = () => {
     return true;
   };
 
+  const updateBlogPost = (id: string, patch: Record<string, any>) => {
+    updateBlogData(prev => ({
+      ...prev,
+      posts: prev.posts.map(post => post.id === id ? { ...post, ...patch } : post)
+    }));
+  };
+
+  const ensureUniqueSlug = (title: string, currentId: string) => {
+    const base = slugify(title || 'post');
+    let candidate = base;
+    let i = 1;
+    const used = new Set((blogData.posts || []).filter(p => p.id !== currentId).map(p => p.slug || slugify(p.title)));
+    while (used.has(candidate)) {
+      candidate = `${base}-${i}`;
+      i += 1;
+    }
+    return candidate;
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
@@ -255,25 +306,21 @@ const AdminDashboard: React.FC = () => {
         </aside>
 
         <main className="p-5 lg:p-8">
-          {tab === 'Homepage' ? (
+          {tab === 'Homepage' && (
             <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
               <div className="space-y-6">
-                <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-sm font-black uppercase tracking-widest">Homepage Builder</h2>
-                    <div className="flex gap-2">
-                      {HOME_SECTION_TYPES.map(typeItem => (
-                        <button
-                          key={typeItem.type}
-                          onClick={() => addSection(typeItem.type)}
-                          disabled={!canAddType(typeItem.type)}
-                          className="px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30"
-                          title={`Add ${typeItem.label}`}
-                        >
-                          + {typeItem.label}
-                        </button>
-                      ))}
-                    </div>
+                <Card title="Homepage Builder">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {HOME_SECTION_TYPES.map(typeItem => (
+                      <button
+                        key={typeItem.type}
+                        onClick={() => addSection(typeItem.type)}
+                        disabled={!canAddType(typeItem.type)}
+                        className="px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30"
+                      >
+                        + {typeItem.label}
+                      </button>
+                    ))}
                   </div>
 
                   <div className="space-y-2">
@@ -307,11 +354,10 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </section>
+                </Card>
 
                 {selectedSection && (
-                  <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                    <h3 className="text-sm font-black uppercase tracking-widest mb-4">Section Editor</h3>
+                  <Card title="Section Editor">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Title</label>
@@ -346,11 +392,10 @@ const AdminDashboard: React.FC = () => {
                       <button onClick={() => duplicateSection(selectedSection.id)} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Duplicate</button>
                       <button onClick={() => deleteSection(selectedSection.id)} className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-black uppercase">Delete</button>
                     </div>
-                  </section>
+                  </Card>
                 )}
 
-                <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                  <h3 className="text-sm font-black uppercase tracking-widest mb-4">Reuse Limits (1-6)</h3>
+                <Card title="Reuse Limits (1-6)">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {HOME_SECTION_TYPES.map(typeItem => (
                       <div key={typeItem.type} className="bg-zinc-800/40 border border-zinc-700 rounded-xl p-3">
@@ -372,11 +417,10 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </section>
+                </Card>
               </div>
 
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 h-fit xl:sticky xl:top-24">
-                <h3 className="text-sm font-black uppercase tracking-widest mb-4">Live Preview</h3>
+              <Card title="Live Preview" className="h-fit xl:sticky xl:top-24">
                 <div className="space-y-2">
                   {homeSections.map((section, idx) => (
                     <div key={section.id} className={`rounded-lg border p-3 ${section.enabled ? 'border-zinc-700 bg-zinc-800/40' : 'border-zinc-800 bg-zinc-900/50 opacity-50'}`}>
@@ -388,12 +432,345 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             </div>
-          ) : (
+          )}
+
+          {tab === 'SEO' && (
+            <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
+              <div className="space-y-6">
+                <Card title="Global SEO">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Site Title</label>
+                      <input value={headerData.siteTitle} onChange={(e) => updateHeaderData(prev => ({ ...prev, siteTitle: e.target.value }))} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Favicon URL</label>
+                      <input value={headerData.faviconUrl} onChange={(e) => updateHeaderData(prev => ({ ...prev, faviconUrl: e.target.value }))} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Meta Description</label>
+                    <textarea value={headerData.siteDescription} onChange={(e) => updateHeaderData(prev => ({ ...prev, siteDescription: e.target.value }))} rows={5} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Logo URL</label>
+                    <input value={headerData.logoUrl} onChange={(e) => updateHeaderData(prev => ({ ...prev, logoUrl: e.target.value }))} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  </div>
+                </Card>
+
+                <Card title="Scripts (Head / Body)">
+                  <div>
+                    <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Head Scripts</label>
+                    <textarea
+                      value={headerData.customScripts?.header || ''}
+                      onChange={(e) => updateHeaderData(prev => ({ ...prev, customScripts: { ...prev.customScripts, header: e.target.value } }))}
+                      rows={6}
+                      className="w-full bg-black border border-zinc-700 rounded-xl px-3 py-2 text-xs font-mono text-green-400"
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Body Scripts</label>
+                    <textarea
+                      value={headerData.customScripts?.footer || ''}
+                      onChange={(e) => updateHeaderData(prev => ({ ...prev, customScripts: { ...prev.customScripts, footer: e.target.value } }))}
+                      rows={6}
+                      className="w-full bg-black border border-zinc-700 rounded-xl px-3 py-2 text-xs font-mono text-green-400"
+                    />
+                  </div>
+                  {((headerData.customScripts?.header || '').includes('<script') || (headerData.customScripts?.footer || '').includes('<script')) && (
+                    <p className="text-xs text-amber-400 mt-3 uppercase tracking-widest">Warning: script tags detected. Validate third-party injections before publish.</p>
+                  )}
+                </Card>
+              </div>
+
+              <Card title="Live SEO Preview" className="h-fit xl:sticky xl:top-24">
+                <p className="text-xs uppercase tracking-widest text-zinc-500">Title</p>
+                <p className="text-lg font-bold mt-1">{headerData.siteTitle || 'Untitled page'}</p>
+                <p className="text-xs text-zinc-500 mt-3 uppercase tracking-widest">URL</p>
+                <p className="text-sm text-emerald-400 mt-1">https://londonkaraoke.club</p>
+                <p className="text-sm text-zinc-300 mt-3 leading-relaxed">{headerData.siteDescription || 'No meta description yet.'}</p>
+              </Card>
+            </div>
+          )}
+
+          {tab === 'Nav' && (
+            <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
+              <div className="space-y-6">
+                <Card title="Navigation Items">
+                  <div className="space-y-2">
+                    {navOrder.map((key, idx) => (
+                      <div key={`${key}-${idx}`} className="bg-zinc-800/40 border border-zinc-700 rounded-xl p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-black uppercase tracking-widest">{NAV_LABELS[key as keyof typeof NAV_LABELS] || key}</p>
+                            <p className="text-[10px] text-zinc-500">{ROUTES[key as keyof typeof ROUTES] || '/'}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => {
+                                if (idx === 0) return;
+                                updateHeaderData(prev => {
+                                  const next = [...(prev.navOrder || [])];
+                                  [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+                                  return { ...prev, navOrder: next };
+                                });
+                              }}
+                              className="px-2 py-1 rounded bg-zinc-900 text-xs"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (idx >= navOrder.length - 1) return;
+                                updateHeaderData(prev => {
+                                  const next = [...(prev.navOrder || [])];
+                                  [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+                                  return { ...prev, navOrder: next };
+                                });
+                              }}
+                              className="px-2 py-1 rounded bg-zinc-900 text-xs"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              onClick={() => updateHeaderData(prev => ({ ...prev, navOrder: (prev.navOrder || []).filter((item, i) => !(i === idx && item === key)) }))}
+                              className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-xs"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                <Card title="Add Nav Item">
+                  <div className="flex gap-2">
+                    <select value={addNavKey} onChange={(e) => setAddNavKey(e.target.value)} className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm">
+                      <option value="">Select route key</option>
+                      {navCandidates.filter(key => !navOrder.includes(key)).map(key => (
+                        <option key={key} value={key}>{NAV_LABELS[key as keyof typeof NAV_LABELS] || key}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        if (!addNavKey) return;
+                        updateHeaderData(prev => ({ ...prev, navOrder: [...(prev.navOrder || []), addNavKey] }));
+                        setAddNavKey('');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </Card>
+              </div>
+
+              <Card title="Live Nav Preview" className="h-fit xl:sticky xl:top-24">
+                <div className="space-y-2">
+                  {navOrder.map((key, idx) => (
+                    <div key={`${key}-preview-${idx}`} className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-3">
+                      <p className="text-xs font-black uppercase tracking-widest">{NAV_LABELS[key as keyof typeof NAV_LABELS] || key}</p>
+                      <p className="text-[10px] text-zinc-500 mt-1">{ROUTES[key as keyof typeof ROUTES] || '/'}</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {tab === 'Blog' && (
+            <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
+              <div className="space-y-6">
+                <Card title="Blog Feed">
+                  <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4">
+                    <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                      {(blogData.posts || []).map(post => (
+                        <button
+                          key={post.id}
+                          onClick={() => setSelectedBlogId(post.id)}
+                          className={`w-full text-left rounded-xl border p-3 ${selectedBlog?.id === post.id ? 'border-pink-500 bg-pink-500/10' : 'border-zinc-700 bg-zinc-800/40'}`}
+                        >
+                          <p className="text-xs font-black uppercase tracking-widest">{post.title || 'Untitled Post'}</p>
+                          <p className="text-[10px] text-zinc-500 mt-1">/{post.slug || slugify(post.title)}</p>
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          const id = `blog-${Date.now()}`;
+                          updateBlogData(prev => ({
+                            ...prev,
+                            posts: [
+                              {
+                                id,
+                                title: 'New Blog Post',
+                                slug: `new-blog-post-${(prev.posts || []).length + 1}`,
+                                status: 'draft',
+                                publishAt: '',
+                                date: new Date().toISOString().slice(0, 10),
+                                excerpt: '',
+                                content: '',
+                                imageUrl: '',
+                                metaTitle: '',
+                                metaDescription: '',
+                                canonical: '',
+                                ogImage: '',
+                                faqSchemaEnabled: false,
+                                faqSchema: []
+                              },
+                              ...(prev.posts || [])
+                            ]
+                          }));
+                          setSelectedBlogId(id);
+                        }}
+                        className="w-full rounded-xl border border-dashed border-zinc-700 p-3 text-xs font-black uppercase text-zinc-400 hover:text-white hover:border-pink-500"
+                      >
+                        + Add Post
+                      </button>
+                    </div>
+
+                    {selectedBlog ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Title</label>
+                            <input
+                              value={selectedBlog.title}
+                              onChange={(e) => {
+                                const title = e.target.value;
+                                updateBlogPost(selectedBlog.id, {
+                                  title,
+                                  slug: ensureUniqueSlug(title, selectedBlog.id)
+                                });
+                              }}
+                              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Slug</label>
+                            <input
+                              value={selectedBlog.slug || slugify(selectedBlog.title)}
+                              onChange={(e) => updateBlogPost(selectedBlog.id, { slug: slugify(e.target.value) })}
+                              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Status</label>
+                            <select
+                              value={selectedBlog.status || 'draft'}
+                              onChange={(e) => updateBlogPost(selectedBlog.id, { status: e.target.value as 'draft' | 'published' })}
+                              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                            >
+                              <option value="draft">Draft</option>
+                              <option value="published">Published</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Publish At</label>
+                            <input
+                              type="datetime-local"
+                              value={selectedBlog.publishAt || ''}
+                              onChange={(e) => updateBlogPost(selectedBlog.id, { publishAt: e.target.value })}
+                              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Featured Image URL</label>
+                            <input
+                              value={selectedBlog.imageUrl || ''}
+                              onChange={(e) => updateBlogPost(selectedBlog.id, { imageUrl: e.target.value })}
+                              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Excerpt</label>
+                          <textarea value={selectedBlog.excerpt} onChange={(e) => updateBlogPost(selectedBlog.id, { excerpt: e.target.value })} rows={3} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Content</label>
+                          <textarea value={selectedBlog.content} onChange={(e) => updateBlogPost(selectedBlog.id, { content: e.target.value })} rows={10} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                        </div>
+
+                        <div className="bg-zinc-800/30 border border-zinc-700 rounded-xl p-3 space-y-3">
+                          <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">SEO</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input value={selectedBlog.metaTitle || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { metaTitle: e.target.value })} placeholder="Meta title" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                            <input value={selectedBlog.canonical || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { canonical: e.target.value })} placeholder="Canonical URL" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                          </div>
+                          <textarea value={selectedBlog.metaDescription || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { metaDescription: e.target.value })} rows={3} placeholder="Meta description" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                          <input value={selectedBlog.ogImage || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { ogImage: e.target.value })} placeholder="OG image URL" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                          <label className="inline-flex items-center gap-2 text-xs uppercase text-zinc-400">
+                            <input
+                              type="checkbox"
+                              checked={selectedBlog.faqSchemaEnabled || false}
+                              onChange={(e) => updateBlogPost(selectedBlog.id, { faqSchemaEnabled: e.target.checked })}
+                            />
+                            Enable FAQ Schema
+                          </label>
+                          {selectedBlog.faqSchemaEnabled && (
+                            <textarea
+                              value={JSON.stringify(selectedBlog.faqSchema || [], null, 2)}
+                              onChange={(e) => {
+                                try {
+                                  const parsed = JSON.parse(e.target.value);
+                                  updateBlogPost(selectedBlog.id, { faqSchema: Array.isArray(parsed) ? parsed : [] });
+                                } catch {
+                                  // keep typing without breaking editor
+                                }
+                              }}
+                              rows={6}
+                              className="w-full bg-black border border-zinc-700 rounded-xl px-3 py-2 text-xs font-mono text-green-400"
+                            />
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            if (!window.confirm('Delete this post?')) return;
+                            updateBlogData(prev => ({ ...prev, posts: (prev.posts || []).filter(post => post.id !== selectedBlog.id) }));
+                            setSelectedBlogId('');
+                          }}
+                          className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-black uppercase"
+                        >
+                          Delete Post
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="bg-zinc-800/30 border border-zinc-700 rounded-xl p-4 text-sm text-zinc-400">No post selected.</div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+
+              <Card title="Post Preview" className="h-fit xl:sticky xl:top-24">
+                {selectedBlog ? (
+                  <article className="space-y-3">
+                    <p className="text-[10px] uppercase tracking-widest text-zinc-500">/{selectedBlog.slug || slugify(selectedBlog.title)}</p>
+                    <h4 className="text-2xl font-black leading-tight">{selectedBlog.title || 'Untitled Post'}</h4>
+                    <p className="text-xs uppercase tracking-widest text-zinc-500">{selectedBlog.status || 'draft'} {selectedBlog.publishAt ? `· ${selectedBlog.publishAt}` : ''}</p>
+                    {selectedBlog.imageUrl && <img src={selectedBlog.imageUrl} alt={selectedBlog.title} className="w-full h-48 object-cover rounded-xl border border-zinc-800" />}
+                    <p className="text-sm text-zinc-300">{selectedBlog.excerpt}</p>
+                    <div className="text-sm text-zinc-400 whitespace-pre-line leading-relaxed">{selectedBlog.content}</div>
+                  </article>
+                ) : (
+                  <p className="text-sm text-zinc-500">Create/select a blog post to preview.</p>
+                )}
+              </Card>
+            </div>
+          )}
+
+          {!['Homepage', 'SEO', 'Nav', 'Blog'].includes(tab) && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
               <h2 className="text-xl font-black uppercase tracking-tighter">{tab}</h2>
-              <p className="text-sm text-zinc-400 mt-3">Tab scaffold is ready in the new control-room layout. Homepage builder is fully implemented first to keep this release stable.</p>
+              <p className="text-sm text-zinc-400 mt-3">Tab scaffold is ready in the new control-room layout. `SEO`, `Nav`, and `Blog` are now fully wired. Remaining tabs can be implemented next in the same non-breaking style.</p>
             </div>
           )}
         </main>
