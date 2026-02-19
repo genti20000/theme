@@ -14,7 +14,7 @@ import { useData } from '../context/DataContext';
 
 const HomePage: React.FC = () => {
   const {
-    homeSectionRepeats,
+    homeSections,
     highlightsData,
     featuresData,
     vibeData,
@@ -25,40 +25,45 @@ const HomePage: React.FC = () => {
     instagramHighlightsData,
   } = useData();
 
-  const repeatCount = (n: number) => Math.max(1, Math.floor(Number(n) || 1));
-  const renderRepeated = (count: number, render: (index: number) => React.ReactNode) =>
-    Array.from({ length: repeatCount(count) }, (_, index) => (
-      <React.Fragment key={index}>{render(index)}</React.Fragment>
-    ));
+  const orderedSections = Array.isArray(homeSections) && homeSections.length > 0
+    ? homeSections
+    : [
+        { id: 'fallback-hero', type: 'hero', title: 'Hero', enabled: true },
+        { id: 'fallback-instagram', type: 'instagramHighlights', title: 'Instagram Highlights', enabled: instagramHighlightsData.enabled !== false },
+        { id: 'fallback-highlights', type: 'highlights', title: 'Highlights', enabled: highlightsData.enabled !== false },
+        { id: 'fallback-features', type: 'features', title: 'Features', enabled: featuresData.enabled !== false },
+        { id: 'fallback-vibe', type: 'vibe', title: 'Vibe', enabled: vibeData.enabled !== false },
+        { id: 'fallback-battery', type: 'battery', title: 'Stats', enabled: batteryData.enabled !== false },
+        { id: 'fallback-testimonials', type: 'testimonials', title: 'Testimonials', enabled: testimonialsData.enabled !== false },
+        { id: 'fallback-info', type: 'info', title: 'Info', enabled: infoSectionData.enabled !== false },
+        { id: 'fallback-faq', type: 'faq', title: 'FAQ', enabled: faqData.enabled !== false },
+        { id: 'fallback-drinks', type: 'drinks', title: 'Drinks', enabled: true },
+        { id: 'fallback-gallery', type: 'gallery', title: 'Gallery', enabled: true }
+      ];
 
   return (
     <>
-      {renderRepeated(homeSectionRepeats.hero, (i) => <Hero key={`hero-${i}`} />)}
-      {instagramHighlightsData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.instagramHighlights, (i) => <InstagramHighlights key={`instagram-${i}`} />)}
-      {highlightsData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.highlights, (i) => <Highlights key={`highlights-${i}`} />)}
-      <div id="special-offers" className="h-0 overflow-hidden" aria-hidden="true"></div>
-      {featuresData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.features, (i) => <Features key={`features-${i}`} />)}
-      {vibeData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.vibe, (i) => <Fitness key={`vibe-${i}`} />)}
-      {batteryData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.battery, (i) => <Battery key={`battery-${i}`} />)}
-      {testimonialsData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.testimonials, (i) => <Testimonials key={`testimonials-${i}`} />)}
-      {infoSectionData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.info, (i) => <InfoSection key={`info-${i}`} />)}
-      {faqData.enabled !== false &&
-        renderRepeated(homeSectionRepeats.faq, (i) => <FAQ key={`faq-${i}`} />)}
-      {renderRepeated(homeSectionRepeats.drinks, (i) => (
-        <section id={i === 0 ? "drinks" : undefined} key={`drinks-${i}`}>
-          <DrinksMenu />
-        </section>
-      ))}
-      {renderRepeated(homeSectionRepeats.gallery, (i) => (
-        <PageGallerySection pageKey="home" className="mt-20" key={`gallery-${i}`} />
-      ))}
+      {orderedSections.map((section, index) => {
+        if (!section.enabled) return null;
+        if (section.type === 'hero') return <Hero key={section.id} />;
+        if (section.type === 'instagramHighlights') return instagramHighlightsData.enabled !== false ? <InstagramHighlights key={section.id} /> : null;
+        if (section.type === 'highlights') return highlightsData.enabled !== false ? <Highlights key={section.id} /> : null;
+        if (section.type === 'features') return featuresData.enabled !== false ? <Features key={section.id} /> : null;
+        if (section.type === 'vibe') return vibeData.enabled !== false ? <Fitness key={section.id} /> : null;
+        if (section.type === 'battery') return batteryData.enabled !== false ? <Battery key={section.id} /> : null;
+        if (section.type === 'testimonials') return testimonialsData.enabled !== false ? <Testimonials key={section.id} /> : null;
+        if (section.type === 'info') return infoSectionData.enabled !== false ? <InfoSection key={section.id} /> : null;
+        if (section.type === 'faq') return faqData.enabled !== false ? <FAQ key={section.id} /> : null;
+        if (section.type === 'drinks') {
+          return (
+            <section id={index === 0 ? "drinks" : undefined} key={section.id}>
+              <DrinksMenu />
+            </section>
+          );
+        }
+        if (section.type === 'gallery') return <PageGallerySection pageKey="home" className="mt-20" key={section.id} />;
+        return null;
+      })}
     </>
   );
 };

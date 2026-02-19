@@ -1,912 +1,402 @@
+import React, { useMemo, useState } from 'react';
+import { HomeSectionType, useData } from '../context/DataContext';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useData, DrinkCategory, PageGalleryKey } from '../context/DataContext';
+const TABS = [
+  'Dashboard',
+  'Homepage',
+  'SEO',
+  'Nav',
+  'Hero',
+  'About',
+  'Features',
+  'Vibe',
+  'Stats',
+  'Food',
+  'Drinks',
+  'Events',
+  'Blog',
+  'Instagram',
+  'FAQ',
+  'Info',
+  'Gallery',
+  'Terms',
+  'Config'
+] as const;
 
-const SectionCard: React.FC<{ title: string; children: React.ReactNode; enabled?: boolean; onToggle?: (v: boolean) => void }> = ({ title, children, enabled, onToggle }) => (
-  <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-sm">
-    <div className="flex justify-between items-center mb-8 border-b border-zinc-800 pb-4">
-      <h3 className="text-2xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-          <span className={`w-3 h-3 ${enabled !== false ? 'bg-pink-500 animate-pulse' : 'bg-zinc-600'} rounded-full`}></span>
-          {title}
-      </h3>
-      {onToggle && (
-        <Toggle label="Enabled" checked={enabled !== false} onChange={onToggle} />
-      )}
-    </div>
-    <div className={enabled === false ? 'opacity-40 grayscale pointer-events-none' : ''}>
-      {children}
-    </div>
-  </div>
-);
+const HOME_SECTION_TYPES: Array<{ type: HomeSectionType; label: string }> = [
+  { type: 'hero', label: 'Hero' },
+  { type: 'instagramHighlights', label: 'Instagram' },
+  { type: 'highlights', label: 'Highlights' },
+  { type: 'features', label: 'Features' },
+  { type: 'vibe', label: 'Vibe' },
+  { type: 'battery', label: 'Stats' },
+  { type: 'testimonials', label: 'Testimonials' },
+  { type: 'info', label: 'Info' },
+  { type: 'faq', label: 'FAQ' },
+  { type: 'drinks', label: 'Drinks' },
+  { type: 'gallery', label: 'Gallery' }
+];
 
-const Toggle: React.FC<{ label: string; checked: boolean; onChange: (v: boolean) => void }> = ({ label, checked, onChange }) => (
-  <label className="flex items-center gap-3 cursor-pointer group">
-    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">{label}</span>
-    <div 
-      onClick={() => onChange(!checked)}
-      className={`w-12 h-6 rounded-full relative transition-all duration-300 ${checked ? 'bg-pink-600 shadow-[0_0_10px_rgba(219,39,119,0.4)]' : 'bg-zinc-800'}`}
-    >
-      <div className={`absolute top-1 bottom-1 w-4 rounded-full bg-white transition-all duration-300 ${checked ? 'left-7' : 'left-1'}`} />
-    </div>
-  </label>
-);
-
-const Input: React.FC<{ label: string; value: string; onChange: (v: string) => void; type?: string }> = ({ label, value, onChange, type = 'text' }) => (
-  <div className="mb-6">
-    <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-    <input type={type} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium text-sm" value={value || ''} onChange={(e) => onChange(e.target.value)} />
-  </div>
-);
-
-const TextArea: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
-  <div className="mb-6">
-    <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-    <textarea rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none focus:border-pink-500 transition-all font-medium leading-relaxed text-sm" value={value || ''} onChange={(e) => onChange(e.target.value)} />
-  </div>
-);
-
-const CodeArea: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
-    <div className="mb-6">
-      <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-      <textarea rows={6} className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-green-500 font-mono outline-none focus:border-pink-500 transition-all text-xs leading-tight" value={value || ''} onChange={(v) => onChange(v.target.value)} />
-    </div>
-  );
+const labelByType = (type: HomeSectionType) => HOME_SECTION_TYPES.find(s => s.type === type)?.label || type;
 
 const AdminDashboard: React.FC = () => {
+  const [tab, setTab] = useState<string>('Homepage');
+  const [syncStatus, setSyncStatus] = useState<'Idle' | 'Saving' | 'Error'>('Idle');
+  const [syncError, setSyncError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passInput, setPassInput] = useState('');
-  const [tab, setTab] = useState('seo');
-  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [activeLibraryCallback, setActiveLibraryCallback] = useState<(url: string) => void>(() => (url: string) => {});
-  const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
-  const [selectedGalleryId, setSelectedGalleryId] = useState<string>('');
+  const [selectedId, setSelectedId] = useState('');
+  const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
 
-  const { 
-    isDataLoading, headerData, updateHeaderData, heroData, updateHeroData, highlightsData, updateHighlightsData,
-    batteryData, updateBatteryData, galleryData, updateGalleryData, blogData, updateBlogData, 
-    faqData, updateFaqData, songs, updateSongs, adminPassword, updateAdminPassword, syncUrl, updateSyncUrl,
-    firebaseConfig, updateFirebaseConfig, saveToHostinger, uploadFile, purgeCache,
-    featuresData, updateFeaturesData, vibeData, updateVibeData, foodMenu, updateFoodMenu,
-    drinksData, updateDrinksData, testimonialsData, updateTestimonialsData,
-    infoSectionData, updateInfoSectionData, eventsData, updateEventsData,
-    instagramHighlightsData, updateInstagramHighlightsData,
-    termsData, updateTermsData, fetchServerFiles, homeSectionRepeats, updateHomeSectionRepeats,
-    pageGallerySettings, updatePageGallerySettings
+  const {
+    homeSections,
+    updateHomeSections,
+    homeSectionRepeats,
+    updateHomeSectionRepeats,
+    adminPassword,
+    syncUrl,
+    exportDatabase,
+    purgeCache,
+    highlightsData,
+    featuresData,
+    vibeData,
+    batteryData,
+    testimonialsData,
+    infoSectionData,
+    faqData,
+    instagramHighlightsData
   } = useData();
 
-  const batchFileRef = useRef<HTMLInputElement>(null);
+  const selectedSection = useMemo(() => {
+    if (!selectedId) return homeSections[0];
+    return homeSections.find(s => s.id === selectedId) || homeSections[0];
+  }, [homeSections, selectedId]);
 
-  useEffect(() => {
-    if (isLibraryOpen) {
-      fetchServerFiles().then(setStorageFiles);
+  const countsByType = useMemo(() => {
+    const counts: Record<string, number> = {};
+    homeSections.forEach(section => {
+      counts[section.type] = (counts[section.type] || 0) + 1;
+    });
+    return counts;
+  }, [homeSections]);
+
+  const canAddType = (type: HomeSectionType) => {
+    const current = countsByType[type] || 0;
+    const max = Math.max(1, Math.min(6, Number(homeSectionRepeats[type] || 1)));
+    return current < max;
+  };
+
+  const addSection = (type: HomeSectionType) => {
+    if (!canAddType(type)) {
+      alert(`Max reuse reached for ${labelByType(type)}.`);
+      return;
     }
-  }, [isLibraryOpen, fetchServerFiles]);
+    const next = {
+      id: `${type}-${Date.now()}`,
+      type,
+      title: `${labelByType(type)} Section`,
+      enabled: true
+    };
+    updateHomeSections(prev => [...prev, next]);
+    setSelectedId(next.id);
+  };
 
-  const galleryCollections = (galleryData.collections && galleryData.collections.length > 0)
-    ? galleryData.collections
-    : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [], defaultViewMode: 'carousel' as const }];
-  const activeGallery = galleryCollections.find(g => g.id === selectedGalleryId)
-    || galleryCollections.find(g => g.id === galleryData.activeCollectionId)
-    || galleryCollections[0];
-
-  useEffect(() => {
-    if (!selectedGalleryId && activeGallery?.id) {
-      setSelectedGalleryId(activeGallery.id);
+  const duplicateSection = (id: string) => {
+    const original = homeSections.find(s => s.id === id);
+    if (!original) return;
+    if (!canAddType(original.type)) {
+      alert(`Max reuse reached for ${labelByType(original.type)}.`);
+      return;
     }
-  }, [selectedGalleryId, activeGallery]);
+    const copy = { ...original, id: `${original.type}-${Date.now()}`, title: `${original.title} Copy` };
+    const idx = homeSections.findIndex(s => s.id === id);
+    updateHomeSections(prev => {
+      const next = [...prev];
+      next.splice(idx + 1, 0, copy);
+      return next;
+    });
+    setSelectedId(copy.id);
+  };
 
-  const updateActiveGalleryImages = (updater: (images: any[]) => any[]) => {
-    const activeId = activeGallery?.id;
-    if (!activeId) return;
-    updateGalleryData(prev => {
-      const collections = (prev.collections && prev.collections.length > 0)
-        ? prev.collections
-        : [{ id: 'default', name: 'Main Gallery', subtext: prev.subtext, images: prev.images || [], defaultViewMode: 'carousel' as const }];
-      const nextCollections = collections.map(col =>
-        col.id === activeId ? { ...col, images: updater(col.images || []) } : col
-      );
-      const nextActive = nextCollections.find(col => col.id === activeId) || nextCollections[0];
-      return {
-        ...prev,
-        collections: nextCollections,
-        activeCollectionId: activeId,
-        images: nextActive.images
-      };
+  const deleteSection = (id: string) => {
+    if (!window.confirm('Delete this section?')) return;
+    updateHomeSections(prev => prev.filter(s => s.id !== id));
+    setSelectedId('');
+  };
+
+  const moveSection = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= homeSections.length || to >= homeSections.length) return;
+    updateHomeSections(prev => {
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
     });
   };
 
-  const MediaPicker: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [uploading, setUploading] = useState(false);
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      setUploading(true);
-      const url = await uploadFile(file);
-      if (url) onChange(url);
-      setUploading(false);
-    };
-
-    const openLibrary = () => {
-      setActiveLibraryCallback(() => (url: string) => {
-        onChange(url);
-        setIsLibraryOpen(false);
+  const handleSync = async (mode: 'save' | 'publish') => {
+    setSyncStatus('Saving');
+    setSyncError('');
+    try {
+      const response = await fetch(syncUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminPassword}`
+        },
+        body: exportDatabase()
       });
-      setIsLibraryOpen(true);
-    };
 
-    const isVideo = value?.toLowerCase().match(/\.(mp4|webm|mov)$/);
+      if (response.status === 401) {
+        setSyncStatus('Error');
+        setSyncError('Unauthorized (401). Re-enter admin key.');
+        setIsAuthenticated(false);
+        return;
+      }
 
+      if (!response.ok) {
+        setSyncStatus('Error');
+        setSyncError(`Sync failed (${response.status}).`);
+        return;
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (data && data.success === false) {
+        setSyncStatus('Error');
+        setSyncError(data.error || 'Sync failed.');
+        return;
+      }
+
+      setSyncStatus('Idle');
+      if (mode === 'publish') {
+        window.open('/', '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      setSyncStatus('Error');
+      setSyncError(`Sync failed: ${String(error)}`);
+    }
+  };
+
+  const sectionVisible = (type: HomeSectionType) => {
+    if (type === 'instagramHighlights') return instagramHighlightsData.enabled !== false;
+    if (type === 'highlights') return highlightsData.enabled !== false;
+    if (type === 'features') return featuresData.enabled !== false;
+    if (type === 'vibe') return vibeData.enabled !== false;
+    if (type === 'battery') return batteryData.enabled !== false;
+    if (type === 'testimonials') return testimonialsData.enabled !== false;
+    if (type === 'info') return infoSectionData.enabled !== false;
+    if (type === 'faq') return faqData.enabled !== false;
+    return true;
+  };
+
+  if (!isAuthenticated) {
     return (
-      <div className="mb-6">
-        <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">{label}</label>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-full sm:w-32 h-32 bg-zinc-800 rounded-2xl border border-zinc-700 flex-shrink-0 overflow-hidden relative group">
-            {value ? (
-              isVideo ? (
-                <video src={value} className="w-full h-full object-cover" />
-              ) : (
-                <img src={value} className="w-full h-full object-cover" alt="Preview" />
-              )
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-zinc-600 text-[10px] uppercase font-bold px-2 text-center">No Media</div>
-            )}
-            {uploading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><div className="w-5 h-5 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>}
-          </div>
-          <div className="flex-1 space-y-2">
-            <input className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white outline-none focus:border-pink-500 transition-all font-medium text-xs" placeholder="URL Address" value={value || ''} onChange={(e) => onChange(e.target.value)} />
-            <div className="flex gap-2">
-              <button onClick={() => inputRef.current?.click()} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-black uppercase py-2.5 rounded-xl border border-zinc-700 transition-all">Upload Local</button>
-              <button onClick={openLibrary} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-black uppercase py-2.5 rounded-xl border border-zinc-700 transition-all">From Storage</button>
-            </div>
-            <input type="file" ref={inputRef} onChange={handleUpload} className="hidden" />
-          </div>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 p-10 shadow-2xl">
+          <h2 className="text-3xl font-black uppercase tracking-tighter mb-6">LKC Admin</h2>
+          <p className="text-sm text-zinc-400 mb-4">Enter admin key to unlock control room.</p>
+          <input
+            type="password"
+            value={passInput}
+            onChange={(e) => setPassInput(e.target.value)}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white"
+            placeholder="Admin key"
+          />
+          <button
+            onClick={() => {
+              if (passInput === adminPassword) {
+                setIsAuthenticated(true);
+                setSyncError('');
+              } else {
+                setSyncError('Invalid admin key.');
+              }
+            }}
+            className="w-full mt-4 bg-pink-600 hover:bg-pink-500 text-white font-black py-3 rounded-xl uppercase text-sm"
+          >
+            Unlock
+          </button>
+          {syncError && <p className="text-xs text-red-400 mt-3">{syncError}</p>}
         </div>
       </div>
     );
-  };
-
-  const handleBatchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    for (let i = 0; i < files.length; i++) {
-        const url = await uploadFile(files[i]);
-        if (url) {
-            updateActiveGalleryImages(images => [...images, { id: Date.now().toString() + i, url, caption: 'LKC Soho' }]);
-        }
-    }
-  };
-
-  const phpSnippet = `<?php
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Content-Type: application/json; charset=utf-8");
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-
-$auth_key = 'Bearer ${adminPassword}';
-$headers = getallheaders();
-$auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-if ($auth !== $auth_key) { http_response_code(401); die(json_encode(['success'=>false, 'error'=>'Auth Failed'])); }
-
-$db = new mysqli('localhost', 'DB_USER', 'DB_PASS', 'DB_NAME');
-if ($db->connect_error) { http_response_code(500); die(json_encode(['success'=>false, 'error'=>'DB connection failed'])); }
-$db->set_charset('utf8mb4');
-$db->query("CREATE TABLE IF NOT EXISTS lkc_site_data (id INT PRIMARY KEY, payload LONGTEXT NOT NULL, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)");
-
-$upload_dir = __DIR__.'/uploads/';
-if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
-$base = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http').'://'.$_SERVER['HTTP_HOST'];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (isset($_FILES['file'])) {
-    $name = time().'_'.preg_replace('/[^A-Za-z0-9._-]/', '_', basename($_FILES['file']['name']));
-    if (move_uploaded_file($_FILES['file']['tmp_name'], $upload_dir.$name)) {
-      echo json_encode(['success'=>true, 'url'=>$base.'/uploads/'.$name]); exit;
-    }
-    echo json_encode(['success'=>false, 'error'=>'Upload failed']); exit;
   }
-  $input = file_get_contents('php://input');
-  $stmt = $db->prepare("REPLACE INTO lkc_site_data (id, payload) VALUES (1, ?)");
-  $stmt->bind_param('s', $input);
-  $ok = $stmt->execute();
-  echo json_encode(['success'=>$ok]); exit;
-}
-
-if (isset($_GET['list'])) {
-  $files = array_values(array_filter(scandir($upload_dir), fn($f) => $f !== '.' && $f !== '..'));
-  $result = array_map(fn($f) => ['name'=>$f, 'url'=>$base.'/uploads/'.$f], $files);
-  echo json_encode(['success'=>true, 'files'=>$result]); exit;
-}
-
-$res = $db->query("SELECT payload FROM lkc_site_data WHERE id = 1 LIMIT 1");
-if (!$res || $res->num_rows === 0) { echo json_encode(['error'=>'no data']); exit; }
-$row = $res->fetch_assoc();
-echo $row['payload'];
-?>`;
-
-  const moveNavItem = (index: number, direction: 'up' | 'down') => {
-      const nextOrder = [...(headerData.navOrder || [])];
-      if (direction === 'up' && index > 0) {
-          [nextOrder[index], nextOrder[index - 1]] = [nextOrder[index - 1], nextOrder[index]];
-      } else if (direction === 'down' && index < nextOrder.length - 1) {
-          [nextOrder[index], nextOrder[index + 1]] = [nextOrder[index + 1], nextOrder[index]];
-      }
-      updateHeaderData(prev => ({...prev, navOrder: nextOrder}));
-  };
-
-  const homeSectionOptions = [
-    { key: 'hero', label: 'Hero' },
-    { key: 'instagramHighlights', label: 'Instagram Highlights' },
-    { key: 'highlights', label: 'Highlights' },
-    { key: 'features', label: 'Features' },
-    { key: 'vibe', label: 'Vibe' },
-    { key: 'battery', label: 'Stats/Battery' },
-    { key: 'testimonials', label: 'Testimonials' },
-    { key: 'info', label: 'Info Section' },
-    { key: 'faq', label: 'FAQ' },
-    { key: 'drinks', label: 'Drinks Menu' },
-    { key: 'gallery', label: 'Gallery (Home Feature)' }
-  ] as const;
-
-  const galleryPageOptions = [
-    { key: 'home', label: 'Home Page' },
-    { key: 'drinks', label: 'Drinks Page' },
-    { key: 'food', label: 'Food Page' },
-    { key: 'blog', label: 'Blog Page' },
-    { key: 'events', label: 'Events Page' },
-    { key: 'songs', label: 'Songs Page' },
-    { key: 'instagram', label: 'Instagram Page' }
-  ] as const;
-
-  const setSectionRepeat = (key: typeof homeSectionOptions[number]['key'], value: number) => {
-    const clamped = Math.max(1, Math.min(6, Math.floor(Number(value) || 1)));
-    updateHomeSectionRepeats(prev => ({ ...prev, [key]: clamped }));
-  };
-
-  const DrinkCategoryEditor = ({ title, data, setter }: { title: string, data: DrinkCategory[], setter: (val: DrinkCategory[]) => void }) => (
-    <div className="mb-10">
-        <h4 className="text-lg font-black text-pink-500 uppercase mb-4">{title}</h4>
-        {data.map((cat, ci) => (
-            <div key={ci} className="bg-zinc-800/30 p-4 rounded-2xl mb-4 border border-zinc-800">
-                <div className="flex gap-4 items-end mb-4">
-                    <Input label="Category" value={cat.category} onChange={v => {
-                        const next = [...data]; next[ci].category = v; setter(next);
-                    }} />
-                    <button onClick={() => setter(data.filter((_, idx) => idx !== ci))} className="mb-6 bg-red-900/20 text-red-500 p-3 rounded-xl">×</button>
-                </div>
-                {cat.items.map((item, ii) => (
-                    <div key={ii} className="grid grid-cols-12 gap-2 mb-2 items-center">
-                        <div className="col-span-4"><input className="w-full bg-zinc-900 p-2 rounded text-xs text-white" value={item.name} onChange={e => {
-                            const next = [...data]; next[ci].items[ii].name = e.target.value; setter(next);
-                        }} placeholder="Name" /></div>
-                        <div className="col-span-5"><input className="w-full bg-zinc-900 p-2 rounded text-xs text-white" value={item.description || ''} onChange={e => {
-                            const next = [...data]; next[ci].items[ii].description = e.target.value; setter(next);
-                        }} placeholder="Desc" /></div>
-                        <div className="col-span-2"><input className="w-full bg-zinc-900 p-2 rounded text-xs text-white" value={typeof item.price === 'object' ? JSON.stringify(item.price) : item.price} onChange={e => {
-                            const next = [...data];
-                            try {
-                                next[ci].items[ii].price = e.target.value.startsWith('{') ? JSON.parse(e.target.value) : e.target.value;
-                            } catch(err) { next[ci].items[ii].price = e.target.value; }
-                            setter(next);
-                        }} placeholder="Price" /></div>
-                        <button onClick={() => {
-                            const next = [...data]; next[ci].items = next[ci].items.filter((_, idx) => idx !== ii); setter(next);
-                        }} className="col-span-1 text-red-500">×</button>
-                    </div>
-                ))}
-                <button onClick={() => {
-                    const next = [...data]; next[ci].items.push({name: 'New Item', price: '0.00'}); setter(next);
-                }} className="text-[10px] font-black uppercase text-zinc-500 mt-2 hover:text-white">+ Add Item</button>
-            </div>
-        ))}
-        <button onClick={() => setter([...data, {category: 'New Cat', items: []}])} className="w-full py-2 border border-zinc-700 rounded-xl text-[10px] uppercase font-black text-zinc-500">+ Add Category</button>
-    </div>
-  );
-
-  if (!isAuthenticated) return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white">
-      <div className="bg-zinc-900 p-12 rounded-[3rem] border border-zinc-800 w-full max-w-md shadow-2xl">
-        <h2 className="text-4xl font-black text-white mb-8 text-center uppercase tracking-tighter italic">LKC <span className="text-pink-500">CMS</span></h2>
-        <input type="password" value={passInput} autoFocus onChange={e => setPassInput(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 p-5 rounded-2xl outline-none focus:border-pink-500 text-white mb-6 text-center text-xl tracking-[0.5em]" placeholder="••••••••" />
-        <button onClick={() => passInput === adminPassword ? setIsAuthenticated(true) : alert("Invalid Pass")} className="w-full bg-pink-600 text-white font-black py-5 rounded-2xl hover:bg-pink-500 transition-all uppercase tracking-widest text-sm shadow-lg active:scale-95">Enter Control Room</button>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-20 font-sans">
-      {/* Media Library Modal - IMPROVED GRID: Not Stacked */}
-      {isLibraryOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10">
-          <div className="bg-zinc-900 w-full max-w-6xl h-[85vh] rounded-[3rem] border border-zinc-800 flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-8 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50 backdrop-blur-md">
-              <h3 className="text-2xl font-black uppercase tracking-tighter italic">LKC <span className="text-pink-500">Media Library</span></h3>
-              <button onClick={() => setIsLibraryOpen(false)} className="bg-zinc-800 p-3 rounded-full hover:bg-zinc-700 transition-colors">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-              </button>
-            </div>
-            {/* Robust Grid Layout: Ensures horizontal layout across all viewports */}
-            <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-6">
-              {storageFiles.map((file, idx) => (
-                <button 
-                  key={idx} 
-                  onClick={() => activeLibraryCallback(file.url)}
-                  className="aspect-square bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-pink-500 transition-all relative group shadow-lg hover:shadow-pink-500/20"
-                >
-                  {file.url.toLowerCase().match(/\.(mp4|webm|mov)$/) ? (
-                    <video src={file.url} className="w-full h-full object-cover" />
-                  ) : (
-                    <img src={file.url} className="w-full h-full object-cover" alt={file.name} loading="lazy" />
-                  )}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
-                    <span className="bg-pink-500 text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-full mb-2">Select</span>
-                    <span className="text-white text-[8px] font-bold truncate w-full px-1">{file.name}</span>
-                  </div>
-                </button>
-              ))}
-              {storageFiles.length === 0 && <div className="col-span-full py-20 text-center text-zinc-500 font-bold uppercase tracking-widest text-sm">No assets found on server.</div>}
-            </div>
+    <div className="min-h-screen bg-zinc-950 text-white">
+      <header className="sticky top-0 z-50 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl font-black uppercase tracking-tighter">Website Admin</h1>
+          <div className="flex flex-wrap gap-2 items-center">
+            <button onClick={() => handleSync('save')} className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Save All Changes</button>
+            <button onClick={() => handleSync('publish')} className="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase">Publish</button>
+            <button onClick={() => window.open('/', '_blank', 'noopener,noreferrer')} className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Preview</button>
+            <span className={`px-3 py-2 rounded-xl text-xs font-black uppercase ${syncStatus === 'Saving' ? 'bg-yellow-500/20 text-yellow-300' : syncStatus === 'Error' ? 'bg-red-500/20 text-red-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
+              {syncStatus}
+            </span>
+            <button onClick={purgeCache} className="px-4 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-black uppercase">Reset Local Cache</button>
           </div>
         </div>
-      )}
+        {syncError && <p className="text-xs text-red-400 mt-2">{syncError}</p>}
+      </header>
 
-      <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800 sticky top-0 z-50 p-6 flex justify-between items-center px-10">
-        <h2 className="text-2xl font-black uppercase tracking-tighter">London <span className="text-pink-500">Karaoke</span> Club</h2>
-        <div className="flex gap-4">
-            <button onClick={saveToHostinger} disabled={isDataLoading} className="bg-pink-600 hover:bg-pink-500 px-10 py-3 rounded-xl text-[12px] font-black uppercase tracking-widest animate-pulse shadow-xl">
-                {isDataLoading ? 'Syncing...' : 'Save All Changes'}
-            </button>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-[calc(100vh-78px)]">
+        <aside className="border-r border-zinc-800 bg-zinc-900 p-4">
+          <nav className="space-y-2 max-h-[calc(100vh-120px)] overflow-y-auto pr-1">
+            {TABS.map(tabName => (
+              <button
+                key={tabName}
+                onClick={() => setTab(tabName)}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${tab === tabName ? 'bg-pink-600 text-white' : 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300'}`}
+              >
+                {tabName}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-      <div className="flex bg-zinc-900/50 border-b border-zinc-800 overflow-x-auto scrollbar-hide px-8 sticky top-[88px] z-40 backdrop-blur-md">
-        {['seo', 'nav', 'hero', 'about', 'features', 'vibe', 'stats', 'food', 'drinks', 'events', 'blog', 'instagram', 'faq', 'info', 'gallery', 'terms', 'config'].map(t => (
-            <button key={t} onClick={() => setTab(t)} className={`px-4 py-5 uppercase font-black text-[10px] tracking-widest transition-all relative flex-shrink-0 ${tab === t ? 'text-pink-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                {t}
-                {tab === t && <div className="absolute bottom-0 left-0 right-0 h-1 bg-pink-500"></div>}
-            </button>
-        ))}
-      </div>
-
-      <div className="container mx-auto p-10 max-w-5xl">
-        {tab === 'seo' && (
-            <SectionCard title="Global Identity">
-                <Input label="Site Browser Title" value={headerData.siteTitle} onChange={v => updateHeaderData(prev => ({...prev, siteTitle: v}))} />
-                <TextArea label="SEO Meta Description" value={headerData.siteDescription} onChange={v => updateHeaderData(prev => ({...prev, siteDescription: v}))} />
-                <MediaPicker label="Logo Media" value={headerData.logoUrl} onChange={v => updateHeaderData(prev => ({...prev, logoUrl: v}))} />
-                <MediaPicker label="Favicon Media" value={headerData.faviconUrl} onChange={v => updateHeaderData(prev => ({...prev, faviconUrl: v}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'nav' && (
-            <SectionCard title="Header Navigation Order">
-                <p className="text-[10px] text-zinc-500 mb-8 uppercase tracking-widest">Reorder how links appear in the header "wings". The list is split automatically (left wing / right wing).</p>
-                <div className="space-y-3">
-                    {(headerData.navOrder || ["menu", "gallery", "blog", "drinks", "events", "songs"]).map((item, idx) => (
-                        <div key={item} className="flex items-center justify-between bg-zinc-800 p-4 rounded-2xl border border-zinc-700">
-                            <span className="font-black uppercase text-xs tracking-widest text-zinc-300">{item}</span>
-                            <div className="flex gap-2">
-                                <button onClick={() => moveNavItem(idx, 'up')} className="bg-zinc-700 p-2 rounded-lg hover:bg-pink-500 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 15l7-7 7 7" /></svg>
-                                </button>
-                                <button onClick={() => moveNavItem(idx, 'down')} className="bg-zinc-700 p-2 rounded-lg hover:bg-pink-500 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </SectionCard>
-        )}
-
-        {tab === 'hero' && (
-            <SectionCard title="Main Stage Hero">
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <Toggle label="Show Festive Badge" checked={heroData.showBadge !== false} onChange={v => updateHeroData(prev => ({...prev, showBadge: v}))} />
-                  <Toggle label="Show Action Buttons" checked={heroData.showButtons !== false} onChange={v => updateHeroData(prev => ({...prev, showButtons: v}))} />
-                </div>
-                <Input label="Festive Badge Text" value={heroData.badgeText} onChange={v => updateHeroData(prev => ({...prev, badgeText: v}))} />
-                <Input label="Hero Title" value={heroData.headingText} onChange={v => updateHeroData(prev => ({...prev, headingText: v}))} />
-                <TextArea label="Subheading" value={heroData.subText} onChange={v => updateHeroData(prev => ({...prev, subText: v}))} />
-                <div className="space-y-4">
-                    <label className="text-[11px] font-black text-zinc-500 uppercase">Slide Backgrounds</label>
-                    {heroData.slides.map((s, i) => (
-                        <div key={i} className="bg-zinc-800/20 p-4 rounded-2xl border border-zinc-800">
-                            <MediaPicker label={`Slide ${i + 1} (Desktop)`} value={s} onChange={v => {
-                                updateHeroData(prev => {
-                                  const next = [...prev.slides];
-                                  next[i] = v;
-                                  return { ...prev, slides: next };
-                                });
-                            }} />
-                            <MediaPicker label={`Slide ${i + 1} (Mobile Version)`} value={heroData.mobileSlides?.[i] || ''} onChange={v => {
-                                updateHeroData(prev => {
-                                    const next = [...(prev.mobileSlides || [])];
-                                    next[i] = v;
-                                    return {...prev, mobileSlides: next};
-                                });
-                            }} />
-                            <button onClick={() => updateHeroData(prev => ({...prev, slides: prev.slides.filter((_, idx) => idx !== i), mobileSlides: prev.mobileSlides?.filter((_, idx) => idx !== i)}))} className="text-red-500 text-[10px] font-black uppercase">Remove Slide</button>
-                        </div>
-                    ))}
-                    <button onClick={() => updateHeroData(prev => ({...prev, slides: [...prev.slides, ''], mobileSlides: [...(prev.mobileSlides || []), '']}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs text-zinc-500 font-black rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW SLIDE</button>
-                </div>
-            </SectionCard>
-        )}
-
-        {tab === 'about' && (
-            <SectionCard title="The Soho Highlights" enabled={highlightsData.enabled} onToggle={v => updateHighlightsData(prev => ({...prev, enabled: v}))}>
-                <Input label="Main Heading" value={highlightsData.heading} onChange={v => updateHighlightsData(prev => ({...prev, heading: v}))} />
-                <TextArea label="Subtext" value={highlightsData.subtext} onChange={v => updateHighlightsData(prev => ({...prev, subtext: v}))} />
-                <MediaPicker label="Main Section Image (Desktop)" value={highlightsData.mainImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, mainImageUrl: v}))} />
-                <MediaPicker label="Main Section Image (Mobile Version)" value={highlightsData.mobileMainImageUrl || ''} onChange={v => updateHighlightsData(prev => ({...prev, mobileMainImageUrl: v}))} />
-                <Input label="Features Title" value={highlightsData.featureListTitle} onChange={v => updateHighlightsData(prev => ({...prev, featureListTitle: v}))} />
-                <div className="space-y-4">
-                    <label className="text-[11px] font-black text-zinc-500 uppercase">Features List</label>
-                    {highlightsData.featureList.map((f, i) => (
-                        <div key={i} className="flex gap-4">
-                            <input className="flex-1 bg-zinc-800 border border-zinc-700 p-3 rounded-xl text-xs text-white" value={f} onChange={e => {
-                                updateHighlightsData(prev => {
-                                    const next = [...prev.featureList];
-                                    next[i] = e.target.value;
-                                    return {...prev, featureList: next};
-                                });
-                            }} />
-                            <button onClick={() => updateHighlightsData(prev => ({...prev, featureList: prev.featureList.filter((_, idx) => idx !== i)}))} className="bg-red-900/20 text-red-500 px-4 rounded-xl font-black">×</button>
-                        </div>
-                    ))}
-                    <button onClick={() => updateHighlightsData(prev => ({...prev, featureList: [...prev.featureList, '']}))} className="w-full py-2 bg-zinc-800 text-zinc-500 font-black rounded-xl text-[10px]">+ ADD FEATURE</button>
-                </div>
-                <MediaPicker label="Side Circle Media" value={highlightsData.sideImageUrl} onChange={v => updateHighlightsData(prev => ({...prev, sideImageUrl: v}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'features' && (
-            <div className="space-y-12">
-                <SectionCard title="The Experience" enabled={featuresData.enabled} onToggle={v => updateFeaturesData(prev => ({...prev, enabled: v}))}>
-                    <Input label="Label" value={featuresData.experience.label} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, label: v}}))} />
-                    <Input label="Heading" value={featuresData.experience.heading} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, heading: v}}))} />
-                    <TextArea label="Text" value={featuresData.experience.text} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, text: v}}))} />
-                    <MediaPicker label="Section Media (Desktop)" value={featuresData.experience.image} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, image: v}}))} />
-                    <MediaPicker label="Section Media (Mobile Version)" value={featuresData.experience.mobileImage || ''} onChange={v => updateFeaturesData(prev => ({...prev, experience: {...prev.experience, mobileImage: v}}))} />
-                </SectionCard>
-                <SectionCard title="Feature Grid Items">
-                    {featuresData.grid.items.map((item, i) => (
-                        <div key={i} className="bg-zinc-800/30 p-6 rounded-2xl mb-4 border border-zinc-800">
-                             <Input label="Title" value={item.title} onChange={v => {
-                                 const next = [...featuresData.grid.items]; next[i].title = v; updateFeaturesData(prev => ({...prev, grid: {...prev.grid, items: next}}));
-                             }} />
-                             <MediaPicker label="Card Media" value={item.image} onChange={v => {
-                                 const next = [...featuresData.grid.items]; next[i].image = v; updateFeaturesData(prev => ({...prev, grid: {...prev.grid, items: next}}));
-                             }} />
-                        </div>
-                    ))}
-                </SectionCard>
-            </div>
-        )}
-
-        {tab === 'vibe' && (
-            <SectionCard title="The Vibe" enabled={vibeData.enabled} onToggle={v => updateVibeData(prev => ({...prev, enabled: v}))}>
-                <Input label="Heading" value={vibeData.heading} onChange={v => updateVibeData(prev => ({...prev, heading: v}))} />
-                <MediaPicker label="Circle Image 1" value={vibeData.image1} onChange={v => updateVibeData(prev => ({...prev, image1: v}))} />
-                <MediaPicker label="Circle Image 2" value={vibeData.image2} onChange={v => updateVibeData(prev => ({...prev, image2: v}))} />
-                <MediaPicker label="Background Video (Desktop MP4)" value={vibeData.videoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, videoUrl: v}))} />
-                <MediaPicker label="Background Video (Mobile Version)" value={vibeData.mobileVideoUrl || ''} onChange={v => updateVibeData(prev => ({...prev, mobileVideoUrl: v}))} />
-                <MediaPicker label="Bottom Full Width Media (Desktop)" value={vibeData.bigImage} onChange={v => updateVibeData(prev => ({...prev, bigImage: v}))} />
-                <MediaPicker label="Bottom Full Width Media (Mobile Version)" value={vibeData.mobileBigImage || ''} onChange={v => updateVibeData(prev => ({...prev, mobileBigImage: v}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'stats' && (
-            <SectionCard title="LKC Statistics" enabled={batteryData.enabled} onToggle={v => updateBatteryData(prev => ({...prev, enabled: v}))}>
-                <Input label="Prefix (e.g. Over)" value={batteryData.statPrefix} onChange={v => updateBatteryData(prev => ({...prev, statPrefix: v}))} />
-                <Input label="Number (e.g. 80K)" value={batteryData.statNumber} onChange={v => updateBatteryData(prev => ({...prev, statNumber: v}))} />
-                <Input label="Suffix (e.g. Songs)" value={batteryData.statSuffix} onChange={v => updateBatteryData(prev => ({...prev, statSuffix: v}))} />
-                <Input label="Subtext" value={batteryData.subText} onChange={v => updateBatteryData(prev => ({...prev, statSuffix: v}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'food' && (
-            <SectionCard title="Food Menu Control">
-                {foodMenu.map((cat, ci) => (
-                    <div key={ci} className="bg-zinc-800/30 p-6 rounded-2xl mb-6 border border-zinc-800">
-                        <div className="flex gap-4 items-end mb-4">
-                            <Input label="Category Name" value={cat.category} onChange={v => {
-                                const next = [...foodMenu]; next[ci].category = v; updateFoodMenu(next);
-                            }} />
-                            <button onClick={() => updateFoodMenu(foodMenu.filter((_, idx) => idx !== ci))} className="mb-6 bg-red-900/20 text-red-500 p-3 rounded-xl">×</button>
-                        </div>
-                        <div className="space-y-4">
-                            {cat.items.map((item, ii) => (
-                                <div key={ii} className="grid grid-cols-12 gap-3 items-start border-b border-zinc-800/50 pb-4">
-                                    <div className="col-span-4"><Input label="Item Name" value={item.name} onChange={v => { const next = [...foodMenu]; next[ci].items[ii].name = v; updateFoodMenu(next); }} /></div>
-                                    <div className="col-span-2"><Input label="Price" value={item.price} onChange={v => { const next = [...foodMenu]; next[ci].items[ii].price = v; updateFoodMenu(next); }} /></div>
-                                    <div className="col-span-5"><Input label="Description" value={item.description} onChange={v => { const next = [...foodMenu]; next[ci].items[ii].description = v; updateFoodMenu(next); }} /></div>
-                                    <button onClick={() => { const next = [...foodMenu]; next[ci].items = next[ci].items.filter((_, idx) => idx !== ii); updateFoodMenu(next); }} className="col-span-1 mt-7 text-red-500">×</button>
-                                </div>
-                            ))}
-                            <button onClick={() => { const next = [...foodMenu]; next[ci].items.push({name: 'New Item', description: '', price: '0.00'}); updateFoodMenu(next); }} className="text-xs font-black uppercase text-zinc-500">+ Add Item</button>
-                        </div>
+        <main className="p-5 lg:p-8">
+          {tab === 'Homepage' ? (
+            <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
+              <div className="space-y-6">
+                <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-black uppercase tracking-widest">Homepage Builder</h2>
+                    <div className="flex gap-2">
+                      {HOME_SECTION_TYPES.map(typeItem => (
+                        <button
+                          key={typeItem.type}
+                          onClick={() => addSection(typeItem.type)}
+                          disabled={!canAddType(typeItem.type)}
+                          className="px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30"
+                          title={`Add ${typeItem.label}`}
+                        >
+                          + {typeItem.label}
+                        </button>
+                      ))}
                     </div>
-                ))}
-                <button onClick={() => updateFoodMenu([...foodMenu, {category: 'New Section', items: []}])} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD MENU CATEGORY</button>
-            </SectionCard>
-        )}
+                  </div>
 
-        {tab === 'drinks' && (
-            <div className="space-y-12">
-                <SectionCard title="Drinks Hero & General">
-                    <MediaPicker label="Drinks Header Image" value={drinksData.headerImageUrl} onChange={v => updateDrinksData(prev => ({...prev, headerImageUrl: v}))} />
-                </SectionCard>
-                <SectionCard title="Packages (Special Box)">
-                    <Input label="Title" value={drinksData.packagesData.title} onChange={v => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, title: v}}))} />
-                    <Input label="Subtitle" value={drinksData.packagesData.subtitle} onChange={v => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, subtitle: v}}))} />
-                    {drinksData.packagesData.items.map((item, i) => (
-                        <div key={i} className="flex gap-4 mb-4 items-end bg-zinc-800/30 p-4 rounded-xl">
-                            <Input label="Package Name" value={item.name} onChange={v => { const next = [...drinksData.packagesData.items]; next[i].name = v; updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} />
-                            <Input label="Price" value={item.price} onChange={v => { const next = [...drinksData.packagesData.items]; next[i].price = v; updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} />
-                            <button onClick={() => { const next = drinksData.packagesData.items.filter((_, idx) => idx !== i); updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: next}})); }} className="text-red-500">×</button>
-                        </div>
-                    ))}
-                    <button onClick={() => updateDrinksData(prev => ({...prev, packagesData: {...prev.packagesData, items: [...prev.packagesData.items, {name: 'New Package', price: '£0'}]}}))} className="w-full py-2 bg-zinc-800 text-[10px] font-black uppercase rounded-xl">+ Add Package</button>
-                </SectionCard>
-                <DrinkCategoryEditor title="Cocktails" data={drinksData.cocktailsData} setter={v => updateDrinksData(prev => ({...prev, cocktailsData: v}))} />
-                <DrinkCategoryEditor title="Wines" data={drinksData.winesData} setter={v => updateDrinksData(prev => ({...prev, winesData: v}))} />
-                <DrinkCategoryEditor title="Bottle Service" data={drinksData.bottleServiceData} setter={v => updateDrinksData(prev => ({...prev, bottleServiceData: v}))} />
-                <DrinkCategoryEditor title="By The Glass" data={drinksData.byTheGlassData} setter={v => updateDrinksData(prev => ({...prev, byTheGlassData: v}))} />
-            </div>
-        )}
-
-        {tab === 'events' && (
-            <div className="space-y-12">
-                <SectionCard title="Events Hero">
-                    <Input label="Title" value={eventsData.hero.title} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, title: v}}))} />
-                    <Input label="Subtitle" value={eventsData.hero.subtitle} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, subtitle: v}}))} />
-                    <MediaPicker label="Hero Media" value={eventsData.hero.image} onChange={v => updateEventsData(prev => ({...prev, hero: {...prev.hero, image: v}}))} />
-                </SectionCard>
-                <SectionCard title="Event Types/Sections">
-                    {eventsData.sections.map((section, si) => (
-                        <div key={si} className="bg-zinc-800/30 p-6 rounded-2xl mb-8 border border-zinc-800">
-                             <div className="flex justify-between items-start mb-4">
-                                <h4 className="text-pink-500 font-black uppercase text-sm">Section {si+1}</h4>
-                                <button onClick={() => updateEventsData(prev => ({...prev, sections: prev.sections.filter((_, idx) => idx !== si)}))} className="text-red-500 font-bold">Delete</button>
-                             </div>
-                             <Input label="Section Title" value={section.title} onChange={v => { const next = [...eventsData.sections]; next[si].title = v; updateEventsData(prev => ({...prev, sections: next})); }} />
-                             <Input label="Subtitle" value={section.subtitle} onChange={v => { const next = [...eventsData.sections]; next[si].subtitle = v; updateEventsData(prev => ({...prev, sections: next})); }} />
-                             <TextArea label="Description" value={section.description} onChange={v => { const next = [...eventsData.sections]; next[si].description = v; updateEventsData(prev => ({...prev, sections: next})); }} />
-                             <MediaPicker label="Section Image" value={section.imageUrl} onChange={v => { const next = [...eventsData.sections]; next[si].imageUrl = v; updateEventsData(prev => ({...prev, sections: next})); }} />
-                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-zinc-500">Key Features</label>
-                                {section.features.map((f, fi) => (
-                                    <div key={fi} className="flex gap-2">
-                                        <input className="flex-1 bg-zinc-900 border border-zinc-800 p-2 rounded text-xs text-white" value={f} onChange={e => {
-                                            const next = [...eventsData.sections]; next[si].features[fi] = e.target.value; updateEventsData(prev => ({...prev, sections: next}));
-                                        }} />
-                                        <button onClick={() => { const next = [...eventsData.sections]; next[si].features = next[si].features.filter((_, idx) => idx !== fi); updateEventsData(prev => ({...prev, sections: next})); }} className="text-red-500">×</button>
-                                    </div>
-                                ))}
-                                <button onClick={() => { const next = [...eventsData.sections]; next[si].features.push('New Feature'); updateEventsData(prev => ({...prev, sections: next})); }} className="text-[10px] uppercase font-black text-zinc-600">+ Add Feature</button>
-                             </div>
-                        </div>
-                    ))}
-                    <button onClick={() => updateEventsData(prev => ({...prev, sections: [...prev.sections, {id: Date.now().toString(), title: 'New Event', subtitle: 'Celebrate', description: '', imageUrl: '', features: []}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD EVENT SECTION</button>
-                </SectionCard>
-            </div>
-        )}
-
-        {tab === 'blog' && (
-            <SectionCard title="LKC Blog/Stories Feed">
-                <Input label="Main Heading" value={blogData.heading} onChange={v => updateBlogData(prev => ({...prev, heading: v}))} />
-                <TextArea label="Subheading" value={blogData.subtext} onChange={v => updateBlogData(prev => ({...prev, subtext: v}))} />
-                <div className="space-y-8 mt-10">
-                    {blogData.posts.map((post, pi) => (
-                        <div key={pi} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
-                            <button onClick={() => updateBlogData(prev => ({...prev, posts: prev.posts.filter((_, idx) => idx !== pi)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Post</button>
-                            <Input label="Post Title" value={post.title} onChange={v => { const next = [...blogData.posts]; next[pi].title = v; updateBlogData(prev => ({...prev, posts: next})); }} />
-                            <div className="grid grid-cols-2 gap-4">
-                                <Input label="Date" value={post.date} onChange={v => { const next = [...blogData.posts]; next[pi].date = v; updateBlogData(prev => ({...prev, posts: next})); }} />
-                                <MediaPicker label="Featured Media" value={post.imageUrl} onChange={v => { const next = [...blogData.posts]; next[pi].imageUrl = v; updateBlogData(prev => ({...prev, posts: next})); }} />
-                            </div>
-                            <TextArea label="Excerpt (Summary)" value={post.excerpt} onChange={v => { const next = [...blogData.posts]; next[pi].excerpt = v; updateBlogData(prev => ({...prev, posts: next})); }} />
-                            <TextArea label="Full Article Content" value={post.content} onChange={v => { const next = [...blogData.posts]; next[pi].content = v; updateBlogData(prev => ({...prev, posts: next})); }} />
-                        </div>
-                    ))}
-                    <button onClick={() => updateBlogData(prev => ({...prev, posts: [...prev.posts, {id: Date.now().toString(), title: 'New Story', date: '2024-XX-XX', excerpt: '', content: '', imageUrl: ''}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ CREATE NEW BLOG POST</button>
-                </div>
-            </SectionCard>
-        )}
-
-        {tab === 'instagram' && (
-            <div className="space-y-12">
-                <SectionCard title="Instagram Highlights" enabled={instagramHighlightsData.enabled} onToggle={v => updateInstagramHighlightsData(prev => ({...prev, enabled: v}))}>
-                    <Input label="Section Heading" value={instagramHighlightsData.heading} onChange={v => updateInstagramHighlightsData(prev => ({...prev, heading: v}))} />
-                    <Input label="Instagram Username" value={instagramHighlightsData.username} onChange={v => updateInstagramHighlightsData(prev => ({...prev, username: v}))} />
-                    <div className="space-y-6">
-                        {instagramHighlightsData.highlights.map((h, i) => (
-                            <div key={h.id} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
-                                <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: prev.highlights.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Highlight</button>
-                                <Input label="Bubble Title" value={h.title} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].title = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
-                                <Input label="Instagram URL Link" value={h.link} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].link = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
-                                <MediaPicker label="Cover Image" value={h.imageUrl} onChange={v => { const next = [...instagramHighlightsData.highlights]; next[i].imageUrl = v; updateInstagramHighlightsData(prev => ({...prev, highlights: next})); }} />
-                            </div>
-                        ))}
-                        <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, highlights: [...prev.highlights, {id: Date.now().toString(), title: 'New Highlight', imageUrl: '', link: ''}]}))} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW BUBBLE</button>
-                    </div>
-                </SectionCard>
-
-                <SectionCard title="Social Posts Feed">
-                    <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">These posts populate the Instagram-style grid on the Social page.</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {(instagramHighlightsData.posts || []).map((post, i) => (
-                            <div key={post.id} className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 relative group">
-                                <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, posts: prev.posts.filter((_, idx) => idx !== i)}))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">Delete Post</button>
-                                <MediaPicker label="Post Media" value={post.imageUrl} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].imageUrl = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Input label="Likes Count" value={post.likes} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].likes = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
-                                    <Input label="Comments" value={post.comments} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].comments = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
-                                </div>
-                                <TextArea label="Caption" value={post.caption || ''} onChange={v => { const next = [...instagramHighlightsData.posts]; next[i].caption = v; updateInstagramHighlightsData(prev => ({...prev, posts: next})); }} />
-                            </div>
-                        ))}
-                    </div>
-                    <button onClick={() => updateInstagramHighlightsData(prev => ({...prev, posts: [...(prev.posts || []), {id: Date.now().toString(), imageUrl: '', likes: '0', comments: '0', caption: ''}]}))} className="w-full py-4 mt-6 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW SOCIAL POST</button>
-                </SectionCard>
-            </div>
-        )}
-
-        {tab === 'info' && (
-            <SectionCard title="Information Sections" enabled={infoSectionData.enabled} onToggle={v => updateInfoSectionData(prev => ({...prev, enabled: v}))}>
-                <Input label="Main Section Heading" value={infoSectionData.heading} onChange={v => updateInfoSectionData(prev => ({...prev, heading: v}))} />
-                {infoSectionData.sections.map((sec, si) => (
-                    <div key={si} className="bg-zinc-800/30 p-4 rounded-xl mb-4 border border-zinc-800">
-                        <Input label="Title" value={sec.title} onChange={v => { const next = [...infoSectionData.sections]; next[si].title = v; updateInfoSectionData(prev => ({...prev, sections: next})); }} />
-                        {/* Fixed: Added missing 'const' for 'next' variable */}
-                        <TextArea label="Content" value={sec.content} onChange={v => { const next = [...infoSectionData.sections]; next[si].content = v; updateInfoSectionData(prev => ({...prev, sections: next})); }} />
-                        <button onClick={() => updateInfoSectionData(prev => ({...prev, sections: prev.sections.filter((_, idx) => idx !== si)}))} className="text-red-500 text-[10px] uppercase font-bold">Remove Section</button>
-                    </div>
-                ))}
-                <button onClick={() => updateInfoSectionData(prev => ({...prev, sections: [...prev.sections, {title: 'New Info', content: ''}]}))} className="w-full py-2 bg-zinc-800 mb-8 rounded-xl text-[10px] font-black">+ Add Section</button>
-                <Input label="Footer Title" value={infoSectionData.footerTitle} onChange={v => updateInfoSectionData(prev => ({...prev, footerTitle: v}))} />
-                <TextArea label="Footer Text" value={infoSectionData.footerText} onChange={v => updateInfoSectionData(prev => ({...prev, footerText: v}))} />
-                <Input label="Footer Highlight" value={infoSectionData.footerHighlight} onChange={v => updateInfoSectionData(prev => ({...prev, footerHighlight: v}))} />
-            </SectionCard>
-        )}
-
-        {tab === 'terms' && (
-            <SectionCard title="Terms & Conditions Management">
-                {termsData.map((term, ti) => (
-                    <div key={ti} className="bg-zinc-800/30 p-6 rounded-2xl mb-6 border border-zinc-800 relative group">
-                        <button onClick={() => updateTermsData(termsData.filter((_, idx) => idx !== ti))} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">Delete</button>
-                        <Input label="Clause Title" value={term.title} onChange={v => { const next = [...termsData]; next[ti].title = v; updateTermsData(next); }} />
-                        <TextArea label="Clause Content" value={term.content} onChange={v => { const next = [...termsData]; next[ti].content = v; updateTermsData(next); }} />
-                    </div>
-                ))}
-                <button onClick={() => updateTermsData([...termsData, {title: 'New Term', content: ''}])} className="w-full py-4 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all">+ ADD NEW TERM</button>
-            </SectionCard>
-        )}
-
-        {tab === 'faq' && (
-            <SectionCard title="Frequently Asked Questions" enabled={faqData.enabled} onToggle={v => updateFaqData(prev => ({...prev, enabled: v}))}>
-                <Input label="Heading" value={faqData.heading} onChange={v => updateFaqData(prev => ({...prev, heading: v}))} />
-                <TextArea label="Subtext" value={faqData.subtext} onChange={v => updateFaqData(prev => ({...prev, subtext: v}))} />
-                {faqData.items.map((item, idx) => (
-                    <div key={idx} className="bg-zinc-800/30 p-4 rounded-xl mb-4 border border-zinc-800">
-                        <Input label="Question" value={item.question} onChange={v => {
-                            const next = [...faqData.items]; next[idx].question = v; updateFaqData(prev => ({...prev, items: next}));
-                        }} />
-                        <TextArea label="Answer" value={item.answer} onChange={v => {
-                            const next = [...faqData.items]; next[idx].answer = v; updateFaqData(prev => ({...prev, items: next}));
-                        }} />
-                        <button onClick={() => updateFaqData(prev => ({...prev, items: prev.items.filter((_, i) => i !== idx)}))} className="text-red-500 text-[10px] font-bold uppercase">Delete FAQ</button>
-                    </div>
-                ))}
-                <button onClick={() => updateFaqData(prev => ({...prev, items: [...prev.items, {question: 'New Question', answer: ''}]}))} className="w-full py-2 bg-zinc-800 rounded-xl text-[10px] font-black">+ Add FAQ Item</button>
-            </SectionCard>
-        )}
-
-        {tab === 'gallery' && (
-            <>
-            <SectionCard title="Gallery Placement By Page">
-                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Enable a gallery section on any page and pick which gallery collection should appear.</p>
-                <div className="space-y-3">
-                    {galleryPageOptions.map(({ key, label }) => {
-                        const pageKey = key as PageGalleryKey;
-                        const setting = pageGallerySettings[pageKey];
-                        return (
-                            <div key={key} className="bg-zinc-800/40 border border-zinc-700 rounded-xl p-4">
-                                <div className="flex items-center justify-between gap-4">
-                                    <span className="text-xs font-black uppercase tracking-widest text-zinc-300">{label}</span>
-                                    <Toggle
-                                        label="Show Gallery"
-                                        checked={setting?.enabled ?? false}
-                                        onChange={v => {
-                                            updatePageGallerySettings(prev => ({
-                                                ...prev,
-                                                [pageKey]: { ...(prev[pageKey] || { collectionId: galleryCollections[0]?.id }), enabled: v }
-                                            }));
-                                            if (pageKey === 'home') {
-                                                updateGalleryData(prev => ({ ...prev, homeFeatureEnabled: v, showOnHome: v }));
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className="mt-3">
-                                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Gallery Collection</label>
-                                    <select
-                                        value={setting?.collectionId || galleryCollections[0]?.id || ''}
-                                        onChange={e => updatePageGallerySettings(prev => ({
-                                            ...prev,
-                                            [pageKey]: { ...(prev[pageKey] || { enabled: false }), collectionId: e.target.value }
-                                        }))}
-                                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-white outline-none focus:border-pink-500 text-sm"
-                                    >
-                                        {galleryCollections.map(col => (
-                                            <option key={col.id} value={col.id}>{col.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </SectionCard>
-            <SectionCard title="Gallery Collections">
-                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Create separate galleries, set default mode (grid/slide), and switch which one you are editing.</p>
-                <div className="space-y-4">
-                    {galleryCollections.map((collection, ci) => (
-                        <div key={collection.id} className={`p-4 rounded-2xl border ${activeGallery?.id === collection.id ? 'border-pink-500 bg-pink-500/5' : 'border-zinc-800 bg-zinc-900/40'}`}>
-                            <div className="flex flex-col md:flex-row gap-3 md:items-end">
-                                <div className="flex-1">
-                                    <Input
-                                        label="Gallery Name"
-                                        value={collection.name}
-                                        onChange={v => updateGalleryData(prev => ({
-                                            ...prev,
-                                            collections: (prev.collections || []).map(c => c.id === collection.id ? { ...c, name: v } : c)
-                                        }))}
-                                    />
-                                </div>
-                                <div className="w-full md:w-56 mb-6">
-                                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Default View</label>
-                                    <select
-                                        value={collection.defaultViewMode || 'carousel'}
-                                        onChange={e => updateGalleryData(prev => ({
-                                            ...prev,
-                                            collections: (prev.collections || []).map(c => c.id === collection.id ? { ...c, defaultViewMode: e.target.value === 'grid' ? 'grid' : 'carousel' } : c)
-                                        }))}
-                                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-white outline-none focus:border-pink-500 text-sm"
-                                    >
-                                        <option value="carousel">Slide (Carousel)</option>
-                                        <option value="grid">Grid</option>
-                                    </select>
-                                </div>
-                                <div className="flex gap-2 mb-6">
-                                    <button
-                                        onClick={() => {
-                                            setSelectedGalleryId(collection.id);
-                                            updateGalleryData(prev => ({ ...prev, activeCollectionId: collection.id }));
-                                        }}
-                                        className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            updateGalleryData(prev => {
-                                                const collections = (prev.collections || []).filter(c => c.id !== collection.id);
-                                                if (collections.length === 0) return prev;
-                                                const nextActive = prev.activeCollectionId === collection.id ? collections[0].id : prev.activeCollectionId;
-                                                return { ...prev, collections, activeCollectionId: nextActive, images: collections[0].images || [] };
-                                            });
-                                            updatePageGallerySettings(prev => {
-                                                const next = { ...prev };
-                                                (Object.keys(next) as PageGalleryKey[]).forEach(pageKey => {
-                                                    if (next[pageKey]?.collectionId === collection.id) {
-                                                        next[pageKey] = { ...next[pageKey], collectionId: galleryCollections.find(c => c.id !== collection.id)?.id || '' };
-                                                    }
-                                                });
-                                                return next;
-                                            });
-                                            if (activeGallery?.id === collection.id) {
-                                                const next = galleryCollections.find(c => c.id !== collection.id);
-                                                if (next) setSelectedGalleryId(next.id);
-                                            }
-                                        }}
-                                        disabled={galleryCollections.length <= 1}
-                                        className="px-4 py-2 rounded-xl bg-red-600/20 disabled:opacity-40 text-red-400 text-[10px] font-black uppercase"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                            <TextArea
-                                label="Gallery Subtext"
-                                value={collection.subtext || ''}
-                                onChange={v => updateGalleryData(prev => ({
-                                    ...prev,
-                                    collections: (prev.collections || []).map(c => c.id === collection.id ? { ...c, subtext: v } : c)
-                                }))}
+                  <div className="space-y-2">
+                    {homeSections.map((section, index) => (
+                      <div
+                        key={section.id}
+                        draggable
+                        onDragStart={() => setDragFromIndex(index)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => {
+                          if (dragFromIndex !== null) moveSection(dragFromIndex, index);
+                          setDragFromIndex(null);
+                        }}
+                        onClick={() => setSelectedId(section.id)}
+                        className={`p-3 rounded-xl border cursor-move ${selectedSection?.id === section.id ? 'border-pink-500 bg-pink-500/10' : 'border-zinc-800 bg-zinc-800/40'}`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-black uppercase tracking-widest">{section.title}</p>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{labelByType(section.type)}</p>
+                          </div>
+                          <label className="inline-flex items-center gap-2 text-[10px] uppercase text-zinc-400">
+                            Enabled
+                            <input
+                              type="checkbox"
+                              checked={section.enabled}
+                              onChange={(e) => updateHomeSections(prev => prev.map(s => s.id === section.id ? { ...s, enabled: e.target.checked } : s))}
                             />
+                          </label>
                         </div>
+                      </div>
                     ))}
-                </div>
-                <button
-                    onClick={() => {
-                        const newId = Date.now().toString();
-                        updateGalleryData(prev => ({
-                            ...prev,
-                            collections: [...(prev.collections || []), { id: newId, name: `Gallery ${(prev.collections || []).length + 1}`, subtext: '', images: [], defaultViewMode: 'carousel' }],
-                            activeCollectionId: newId
-                        }));
-                        setSelectedGalleryId(newId);
-                    }}
-                    className="w-full py-4 mt-6 border-2 border-dashed border-zinc-800 text-xs font-black text-zinc-500 rounded-2xl hover:border-pink-500 hover:text-pink-500 transition-all"
-                >
-                    + ADD NEW GALLERY
-                </button>
-            </SectionCard>
-            <SectionCard title="Visual Archive">
-                <p className="text-[10px] text-zinc-500 mb-4 uppercase tracking-widest">Editing: {activeGallery?.name || 'Gallery'}</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-                    {(activeGallery?.images || []).map((img, i) => (
-                        <div key={img.id} className="relative group aspect-square rounded-2xl overflow-hidden border border-zinc-800 shadow-xl">
-                            <img src={img.url} className="w-full h-full object-cover" alt="" />
-                            <button onClick={() => updateActiveGalleryImages(images => images.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                  </div>
+                </section>
+
+                {selectedSection && (
+                  <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                    <h3 className="text-sm font-black uppercase tracking-widest mb-4">Section Editor</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Title</label>
+                        <input
+                          value={selectedSection.title}
+                          onChange={(e) => updateHomeSections(prev => prev.map(s => s.id === selectedSection.id ? { ...s, title: e.target.value } : s))}
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Type</label>
+                        <select
+                          value={selectedSection.type}
+                          onChange={(e) => {
+                            const nextType = e.target.value as HomeSectionType;
+                            if (nextType !== selectedSection.type && !canAddType(nextType)) {
+                              alert(`Max reuse reached for ${labelByType(nextType)}.`);
+                              return;
+                            }
+                            updateHomeSections(prev => prev.map(s => s.id === selectedSection.id ? { ...s, type: nextType, title: labelByType(nextType) } : s));
+                          }}
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                        >
+                          {HOME_SECTION_TYPES.map(typeItem => (
+                            <option key={typeItem.type} value={typeItem.type}>{typeItem.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-4">
+                      <button onClick={() => duplicateSection(selectedSection.id)} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Duplicate</button>
+                      <button onClick={() => deleteSection(selectedSection.id)} className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-black uppercase">Delete</button>
+                    </div>
+                  </section>
+                )}
+
+                <section className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                  <h3 className="text-sm font-black uppercase tracking-widest mb-4">Reuse Limits (1-6)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {HOME_SECTION_TYPES.map(typeItem => (
+                      <div key={typeItem.type} className="bg-zinc-800/40 border border-zinc-700 rounded-xl p-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-black uppercase">{typeItem.label}</span>
+                          <span className="text-[10px] text-zinc-500 uppercase">Used {countsByType[typeItem.type] || 0}</span>
                         </div>
+                        <input
+                          type="number"
+                          min={1}
+                          max={6}
+                          value={homeSectionRepeats[typeItem.type]}
+                          onChange={(e) => {
+                            const value = Math.max(1, Math.min(6, Math.floor(Number(e.target.value) || 1)));
+                            updateHomeSectionRepeats(prev => ({ ...prev, [typeItem.type]: value }));
+                          }}
+                          className="w-full mt-2 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm"
+                        />
+                      </div>
                     ))}
-                    <div className="aspect-square border-2 border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center bg-zinc-900/50 hover:border-pink-500 group transition-all">
-                        <input type="file" multiple ref={batchFileRef} className="hidden" onChange={handleBatchUpload} />
-                        <button onClick={() => batchFileRef.current?.click()} className="text-[11px] font-black uppercase text-zinc-500 group-hover:text-pink-500 transition-colors">Batch Upload</button>
+                  </div>
+                </section>
+              </div>
+
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 h-fit xl:sticky xl:top-24">
+                <h3 className="text-sm font-black uppercase tracking-widest mb-4">Live Preview</h3>
+                <div className="space-y-2">
+                  {homeSections.map((section, idx) => (
+                    <div key={section.id} className={`rounded-lg border p-3 ${section.enabled ? 'border-zinc-700 bg-zinc-800/40' : 'border-zinc-800 bg-zinc-900/50 opacity-50'}`}>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-black uppercase tracking-widest">{idx + 1}. {section.title}</p>
+                        <span className="text-[10px] uppercase tracking-widest text-zinc-400">{section.enabled && sectionVisible(section.type) ? 'Visible' : 'Hidden'}</span>
+                      </div>
+                      <p className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">{labelByType(section.type)}</p>
                     </div>
+                  ))}
                 </div>
-            </SectionCard>
-            </>
-        )}
-
-        {tab === 'config' && (
-            <div className="space-y-12">
-                <SectionCard title="Custom Scripts (Head/Body)">
-                    <CodeArea label="Header Scripts (Inside <head>)" value={headerData.customScripts?.header || ''} onChange={v => updateHeaderData(prev => ({...prev, customScripts: {...prev.customScripts, header: v}}))} />
-                    <CodeArea label="Footer Scripts (Before </body>)" value={headerData.customScripts?.footer || ''} onChange={v => updateHeaderData(prev => ({...prev, customScripts: {...prev.customScripts, footer: v}}))} />
-                </SectionCard>
-
-                <SectionCard title="Server PHP Snippet">
-                    <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest leading-relaxed">Ensure your subdomain db.php script matches the snippet below for proper media handling.</p>
-                    <div className="bg-black p-8 rounded-[2rem] border border-zinc-800 overflow-x-auto relative mb-6">
-                        <pre className="text-[10px] text-green-500 font-mono leading-tight">{phpSnippet}</pre>
-                        <button onClick={() => { navigator.clipboard.writeText(phpSnippet); alert("Copied!"); }} className="absolute top-6 right-6 bg-zinc-800 hover:bg-zinc-700 px-5 py-2 rounded-xl text-[10px] font-black">COPY PHP</button>
-                    </div>
-                </SectionCard>
-
-                <SectionCard title="Connectivity">
-                    <Input label="PHP Sync URL" value={syncUrl} onChange={v => updateSyncUrl(v)} />
-                    <Input label="Auth Key (Admin Password)" value={adminPassword} onChange={v => updateAdminPassword(v)} type="password" />
-                </SectionCard>
-
-                <SectionCard title="Homepage Section Reuse">
-                    <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Set how many times each section appears on the home page (1 to 6).</p>
-                    <div className="space-y-3">
-                        {homeSectionOptions.map(({ key, label }) => (
-                            <div key={key} className="flex items-center justify-between bg-zinc-800/40 border border-zinc-700 rounded-xl px-4 py-3">
-                                <span className="text-xs font-black uppercase tracking-widest text-zinc-300">{label}</span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={6}
-                                    value={homeSectionRepeats[key] ?? 1}
-                                    onChange={e => setSectionRepeat(key, Number(e.target.value))}
-                                    className="w-20 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm font-bold outline-none focus:border-pink-500"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </SectionCard>
-
-                <button onClick={purgeCache} className="w-full py-5 bg-red-600/10 border border-red-600 text-red-500 rounded-2xl font-black uppercase tracking-widest">Reset Local Cache</button>
+              </div>
             </div>
-        )}
+          ) : (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+              <h2 className="text-xl font-black uppercase tracking-tighter">{tab}</h2>
+              <p className="text-sm text-zinc-400 mt-3">Tab scaffold is ready in the new control-room layout. Homepage builder is fully implemented first to keep this release stable.</p>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

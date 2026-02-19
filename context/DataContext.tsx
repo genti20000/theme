@@ -73,6 +73,8 @@ export interface HomeSectionRepeats {
     drinks: number;
     gallery: number;
 }
+export type HomeSectionType = 'hero' | 'instagramHighlights' | 'highlights' | 'features' | 'vibe' | 'battery' | 'testimonials' | 'info' | 'faq' | 'drinks' | 'gallery';
+export interface HomeSectionItem { id: string; type: HomeSectionType; title: string; enabled: boolean; }
 
 export interface BlogPost { id: string; title: string; date: string; excerpt: string; content: string; imageUrl: string; }
 export interface BlogData { heading: string; subtext: string; posts: BlogPost[]; }
@@ -132,6 +134,8 @@ interface DataContextType {
     updateGalleryData: React.Dispatch<React.SetStateAction<GalleryData>>;
     pageGallerySettings: PageGallerySettings;
     updatePageGallerySettings: React.Dispatch<React.SetStateAction<PageGallerySettings>>;
+    homeSections: HomeSectionItem[];
+    updateHomeSections: React.Dispatch<React.SetStateAction<HomeSectionItem[]>>;
     homeSectionRepeats: HomeSectionRepeats;
     updateHomeSectionRepeats: React.Dispatch<React.SetStateAction<HomeSectionRepeats>>;
     blogData: BlogData;
@@ -308,6 +312,19 @@ const INITIAL_HOME_SECTION_REPEATS: HomeSectionRepeats = {
     drinks: 1,
     gallery: 1
 };
+const INITIAL_HOME_SECTIONS: HomeSectionItem[] = [
+    { id: 'home-hero-1', type: 'hero', title: 'Hero', enabled: true },
+    { id: 'home-instagram-1', type: 'instagramHighlights', title: 'Instagram Highlights', enabled: true },
+    { id: 'home-highlights-1', type: 'highlights', title: 'Highlights', enabled: true },
+    { id: 'home-features-1', type: 'features', title: 'Features', enabled: true },
+    { id: 'home-vibe-1', type: 'vibe', title: 'Vibe', enabled: true },
+    { id: 'home-battery-1', type: 'battery', title: 'Stats', enabled: true },
+    { id: 'home-testimonials-1', type: 'testimonials', title: 'Testimonials', enabled: true },
+    { id: 'home-info-1', type: 'info', title: 'Info', enabled: true },
+    { id: 'home-faq-1', type: 'faq', title: 'FAQ', enabled: true },
+    { id: 'home-drinks-1', type: 'drinks', title: 'Drinks', enabled: true },
+    { id: 'home-gallery-1', type: 'gallery', title: 'Gallery', enabled: true }
+];
 
 const INITIAL_TERMS: TermItem[] = [
     { title: "Age Policy", content: "– Our Soho venue is strictly for guests aged 18 and over." },
@@ -331,6 +348,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_STATS));
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY));
     const [pageGallerySettings, setPageGallerySettings] = useState<PageGallerySettings>(() => init('pageGallerySettings', INITIAL_PAGE_GALLERY_SETTINGS));
+    const [homeSections, setHomeSections] = useState<HomeSectionItem[]>(() => init('homeSections', INITIAL_HOME_SECTIONS));
     const [homeSectionRepeats, setHomeSectionRepeats] = useState<HomeSectionRepeats>(() => init('homeSectionRepeats', INITIAL_HOME_SECTION_REPEATS));
     const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG));
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
@@ -440,6 +458,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     useEffect(() => {
+        setHomeSections(prev => {
+            const safe = Array.isArray(prev) ? prev : [];
+            if (safe.length === 0) return INITIAL_HOME_SECTIONS;
+            return safe.map((item, idx) => ({
+                id: item.id || `home-${item.type || 'hero'}-${idx + 1}`,
+                type: (item.type || 'hero') as HomeSectionType,
+                title: item.title || item.type || `Section ${idx + 1}`,
+                enabled: item.enabled !== false
+            }));
+        });
+    }, []);
+
+    useEffect(() => {
         document.title = headerData.siteTitle;
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) metaDesc.setAttribute('content', headerData.siteDescription);
@@ -456,6 +487,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
     useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
     useEffect(() => { persist('pageGallerySettings', pageGallerySettings); }, [pageGallerySettings]);
+    useEffect(() => { persist('homeSections', homeSections); }, [homeSections]);
     useEffect(() => { persist('homeSectionRepeats', homeSectionRepeats); }, [homeSectionRepeats]);
     useEffect(() => { persist('blogData', blogData); }, [blogData]);
     useEffect(() => { persist('faqData', faqData); }, [faqData]);
@@ -473,7 +505,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
-        galleryData, pageGallerySettings, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData, 
+        galleryData, pageGallerySettings, homeSections, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData, 
         infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.3" 
     }, null, 2);
 
@@ -488,6 +520,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.batteryData) setBatteryData(c.batteryData);
             if (c.galleryData) setGalleryData(c.galleryData);
             if (c.pageGallerySettings) setPageGallerySettings(c.pageGallerySettings);
+            if (c.homeSections) setHomeSections(c.homeSections);
             if (c.homeSectionRepeats) setHomeSectionRepeats(c.homeSectionRepeats);
             if (c.blogData) setBlogData(c.blogData);
             if (c.faqData) setFaqData(c.faqData);
@@ -588,6 +621,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             vibeData, updateVibeData: setVibeData, batteryData, updateBatteryData: setBatteryData,
             footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
             pageGallerySettings, updatePageGallerySettings: setPageGallerySettings,
+            homeSections, updateHomeSections: setHomeSections,
             homeSectionRepeats, updateHomeSectionRepeats: setHomeSectionRepeats,
             blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
