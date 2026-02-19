@@ -1,5 +1,6 @@
 import React from 'react';
 import DrinksMenu from '../components/DrinksMenu';
+import PageGallerySection from '../components/PageGallerySection';
 
 const DrinksPage: React.FC = () => {
   return (
@@ -8,6 +9,7 @@ const DrinksPage: React.FC = () => {
         <h1 className="text-4xl md:text-6xl font-bold">Drinks Menu</h1>
       </div>
       <DrinksMenu />
+      <PageGallerySection pageKey="drinks" />
     </div>
   );
 };

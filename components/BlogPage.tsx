@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
 import { useData, BlogPost } from '../context/DataContext';
+import PageGallerySection from './PageGallerySection';
 
 const BlogPage: React.FC = () => {
   const { blogData } = useData();
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
 
   return (
+    <>
     <div className="bg-black min-h-screen text-white pt-24 pb-24">
       <div className="container mx-auto px-6">
         {!selectedPost ? (
@@ -77,6 +79,8 @@ const BlogPage: React.FC = () => {
         )}
       </div>
     </div>
+    <PageGallerySection pageKey="blog" />
+    </>
   );
 };
 

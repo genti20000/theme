@@ -1,11 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { useData } from '../context/DataContext';
+import { GalleryViewMode, useData } from '../context/DataContext';
 
-const Gallery: React.FC = () => {
+interface GalleryProps {
+  embedded?: boolean;
+  forcedCollectionId?: string;
+}
+
+const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId }) => {
   const { galleryData, isDataLoading } = useData();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
+  const [viewMode, setViewMode] = useState<GalleryViewMode>('carousel');
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeCollectionId, setActiveCollectionId] = useState<string>('');
@@ -13,14 +18,21 @@ const Gallery: React.FC = () => {
   const collections = (galleryData.collections && galleryData.collections.length > 0)
     ? galleryData.collections
     : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [] }];
-  const activeCollection = collections.find(c => c.id === activeCollectionId)
+  const activeCollection = collections.find(c => c.id === forcedCollectionId)
+    || collections.find(c => c.id === activeCollectionId)
     || collections.find(c => c.id === galleryData.activeCollectionId)
     || collections[0];
   const images = activeCollection?.images || [];
 
   useEffect(() => {
+    if (forcedCollectionId) return;
     if (!activeCollectionId && activeCollection?.id) setActiveCollectionId(activeCollection.id);
-  }, [activeCollectionId, activeCollection]);
+  }, [forcedCollectionId, activeCollectionId, activeCollection]);
+
+  useEffect(() => {
+    const nextMode = activeCollection?.defaultViewMode === 'grid' ? 'grid' : 'carousel';
+    setViewMode(nextMode);
+  }, [activeCollection?.id, activeCollection?.defaultViewMode]);
 
   const handleImageLoad = (id: string) => {
       setLoadedImages(prev => ({ ...prev, [id]: true }));
@@ -51,7 +63,7 @@ const Gallery: React.FC = () => {
 
   if (isDataLoading && images.length === 0) {
       return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white">
+        <div className={`${embedded ? 'py-12' : 'min-h-screen'} bg-black flex flex-col items-center justify-center text-white`}>
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mb-4"></div>
             <p className="text-gray-400 font-bold tracking-widest uppercase text-xs">Loading Gallery...</p>
         </div>
@@ -69,7 +81,7 @@ const Gallery: React.FC = () => {
   };
 
   return (
-    <div className="bg-black min-h-screen text-white pt-24 pb-24 relative select-none">
+    <div className={`bg-black text-white relative select-none ${embedded ? 'py-16' : 'min-h-screen pt-24 pb-24'}`}>
       <style>{`
         @keyframes fadeInScale {
             from { opacity: 0; transform: scale(0.95); }
@@ -132,7 +144,7 @@ const Gallery: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tighter uppercase italic">{galleryData.heading}</h2>
           <p className="text-gray-400 text-lg mb-8">{activeCollection?.subtext || galleryData.subtext}</p>
-          {collections.length > 1 && (
+          {!forcedCollectionId && collections.length > 1 && (
             <div className="flex flex-wrap justify-center gap-2 mb-6">
               {collections.map((collection) => (
                 <button
@@ -149,6 +161,7 @@ const Gallery: React.FC = () => {
               ))}
             </div>
           )}
+          {!embedded && (
           <div className="flex justify-center gap-4 bg-zinc-900/50 p-1 rounded-full w-max mx-auto border border-zinc-800">
               <button 
                 onClick={() => setViewMode('carousel')} 
@@ -163,6 +176,7 @@ const Gallery: React.FC = () => {
                 Grid
               </button>
           </div>
+          )}
         </div>
 
         {viewMode === 'grid' && (

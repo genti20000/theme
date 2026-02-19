@@ -45,7 +45,8 @@ export interface BatteryData { enabled?: boolean; statPrefix: string; statNumber
 export interface FooterData { ctaHeading: string; ctaText: string; ctaButtonText: string; }
 
 export interface GalleryImage { id: string; url: string; caption: string; }
-export interface GalleryCollection { id: string; name: string; subtext?: string; images: GalleryImage[]; }
+export type GalleryViewMode = 'carousel' | 'grid';
+export interface GalleryCollection { id: string; name: string; subtext?: string; images: GalleryImage[]; defaultViewMode?: GalleryViewMode; }
 export interface GalleryData {
     heading: string;
     subtext: string;
@@ -56,6 +57,9 @@ export interface GalleryData {
     collections?: GalleryCollection[];
     activeCollectionId?: string;
 }
+export type PageGalleryKey = 'home' | 'drinks' | 'food' | 'blog' | 'events' | 'songs' | 'instagram';
+export interface PageGalleryConfig { enabled: boolean; collectionId?: string; }
+export type PageGallerySettings = Record<PageGalleryKey, PageGalleryConfig>;
 export interface HomeSectionRepeats {
     hero: number;
     instagramHighlights: number;
@@ -126,6 +130,8 @@ interface DataContextType {
     updateFooterData: React.Dispatch<React.SetStateAction<FooterData>>;
     galleryData: GalleryData;
     updateGalleryData: React.Dispatch<React.SetStateAction<GalleryData>>;
+    pageGallerySettings: PageGallerySettings;
+    updatePageGallerySettings: React.Dispatch<React.SetStateAction<PageGallerySettings>>;
     homeSectionRepeats: HomeSectionRepeats;
     updateHomeSectionRepeats: React.Dispatch<React.SetStateAction<HomeSectionRepeats>>;
     blogData: BlogData;
@@ -192,10 +198,20 @@ const INITIAL_GALLERY: GalleryData = {
             id: 'default',
             name: 'Main Gallery',
             subtext: 'A glimpse inside our luxury private booths.',
-            images: []
+            images: [],
+            defaultViewMode: 'carousel'
         }
     ],
     activeCollectionId: 'default'
+};
+const INITIAL_PAGE_GALLERY_SETTINGS: PageGallerySettings = {
+    home: { enabled: false, collectionId: 'default' },
+    drinks: { enabled: false, collectionId: 'default' },
+    food: { enabled: false, collectionId: 'default' },
+    blog: { enabled: false, collectionId: 'default' },
+    events: { enabled: false, collectionId: 'default' },
+    songs: { enabled: false, collectionId: 'default' },
+    instagram: { enabled: false, collectionId: 'default' }
 };
 const INITIAL_BLOG: BlogData = {
     heading: "London Karaoke News",
@@ -314,6 +330,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [vibeData, setVibeData] = useState<VibeData>(() => init('vibeData', INITIAL_VIBE));
     const [batteryData, setBatteryData] = useState<BatteryData>(() => init('batteryData', INITIAL_STATS));
     const [galleryData, setGalleryData] = useState<GalleryData>(() => init('galleryData', INITIAL_GALLERY));
+    const [pageGallerySettings, setPageGallerySettings] = useState<PageGallerySettings>(() => init('pageGallerySettings', INITIAL_PAGE_GALLERY_SETTINGS));
     const [homeSectionRepeats, setHomeSectionRepeats] = useState<HomeSectionRepeats>(() => init('homeSectionRepeats', INITIAL_HOME_SECTION_REPEATS));
     const [blogData, setBlogData] = useState<BlogData>(() => init('blogData', INITIAL_BLOG));
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
@@ -358,8 +375,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setGalleryData(prev => {
             const hasCollections = Array.isArray(prev.collections) && prev.collections.length > 0;
             if (hasCollections) {
-                if (prev.activeCollectionId) return prev;
-                return { ...prev, activeCollectionId: prev.collections![0].id };
+                const normalizedCollections = prev.collections!.map(col => ({
+                    ...col,
+                    defaultViewMode: col.defaultViewMode === 'grid' ? 'grid' : 'carousel'
+                }));
+                if (prev.activeCollectionId) return { ...prev, collections: normalizedCollections };
+                return { ...prev, collections: normalizedCollections, activeCollectionId: normalizedCollections[0].id };
             }
             const migratedId = 'default';
             return {
@@ -368,12 +389,44 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     id: migratedId,
                     name: 'Main Gallery',
                     subtext: prev.subtext,
-                    images: Array.isArray(prev.images) ? prev.images : []
+                    images: Array.isArray(prev.images) ? prev.images : [],
+                    defaultViewMode: 'carousel'
                 }],
                 activeCollectionId: migratedId
             };
         });
     }, []);
+
+    useEffect(() => {
+        setPageGallerySettings(prev => {
+            const merged = { ...INITIAL_PAGE_GALLERY_SETTINGS, ...prev };
+            const legacyHomeEnabled = Boolean(galleryData.homeFeatureEnabled ?? galleryData.showOnHome);
+            if (legacyHomeEnabled && !merged.home.enabled) {
+                merged.home = { ...merged.home, enabled: true };
+            }
+            return merged;
+        });
+    }, [galleryData.homeFeatureEnabled, galleryData.showOnHome]);
+
+    useEffect(() => {
+        setPageGallerySettings(prev => {
+            const collections = (galleryData.collections && galleryData.collections.length > 0)
+                ? galleryData.collections
+                : [{ id: 'default' }];
+            const validIds = new Set(collections.map(c => c.id));
+            const fallbackId = collections[0].id;
+            let changed = false;
+            const next = { ...prev };
+            (Object.keys(next) as PageGalleryKey[]).forEach(key => {
+                const currentId = next[key]?.collectionId;
+                if (!currentId || !validIds.has(currentId)) {
+                    next[key] = { ...(next[key] || { enabled: false }), collectionId: fallbackId };
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
+    }, [galleryData.collections]);
 
     useEffect(() => {
         setHomeSectionRepeats(prev => {
@@ -402,6 +455,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('vibeData', vibeData); }, [vibeData]);
     useEffect(() => { persist('batteryData', batteryData); }, [batteryData]);
     useEffect(() => { persist('galleryData', galleryData); }, [galleryData]);
+    useEffect(() => { persist('pageGallerySettings', pageGallerySettings); }, [pageGallerySettings]);
     useEffect(() => { persist('homeSectionRepeats', homeSectionRepeats); }, [homeSectionRepeats]);
     useEffect(() => { persist('blogData', blogData); }, [blogData]);
     useEffect(() => { persist('faqData', faqData); }, [faqData]);
@@ -419,8 +473,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const exportDatabase = () => JSON.stringify({ 
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
-        galleryData, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.2" 
+        galleryData, pageGallerySettings, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData, 
+        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.3" 
     }, null, 2);
 
     const importDatabase = (json: any) => {
@@ -433,6 +487,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.vibeData) setVibeData(c.vibeData);
             if (c.batteryData) setBatteryData(c.batteryData);
             if (c.galleryData) setGalleryData(c.galleryData);
+            if (c.pageGallerySettings) setPageGallerySettings(c.pageGallerySettings);
             if (c.homeSectionRepeats) setHomeSectionRepeats(c.homeSectionRepeats);
             if (c.blogData) setBlogData(c.blogData);
             if (c.faqData) setFaqData(c.faqData);
@@ -532,6 +587,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             highlightsData, updateHighlightsData: setHighlightsData, featuresData, updateFeaturesData: setFeaturesData,
             vibeData, updateVibeData: setVibeData, batteryData, updateBatteryData: setBatteryData,
             footerData, updateFooterData: setFooterData, galleryData, updateGalleryData: setGalleryData,
+            pageGallerySettings, updatePageGallerySettings: setPageGallerySettings,
             homeSectionRepeats, updateHomeSectionRepeats: setHomeSectionRepeats,
             blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,

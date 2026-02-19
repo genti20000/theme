@@ -1,11 +1,13 @@
 
 import React from 'react';
 import { useData } from '../context/DataContext';
+import PageGallerySection from './PageGallerySection';
 
 const Menu: React.FC = () => {
   const { foodMenu } = useData();
 
   return (
+    <>
     <section className="py-16 md:py-24 bg-zinc-900 min-h-screen">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
@@ -40,6 +42,8 @@ const Menu: React.FC = () => {
         </div>
       </div>
     </section>
+    <PageGallerySection pageKey="food" />
+    </>
   );
 };
 

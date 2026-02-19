@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
+import PageGallerySection from './PageGallerySection';
 
 const SongLibrary: React.FC = () => {
   const { songs, isDataLoading } = useData();
@@ -26,6 +27,7 @@ const SongLibrary: React.FC = () => {
   };
 
   return (
+    <>
     <div className="bg-black min-h-screen text-white pt-24 pb-12">
         <div className="container mx-auto px-6">
             <div className="text-center mb-12">
@@ -83,6 +85,8 @@ const SongLibrary: React.FC = () => {
             )}
         </div>
     </div>
+    <PageGallerySection pageKey="songs" />
+    </>
   );
 };
 

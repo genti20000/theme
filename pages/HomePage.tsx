@@ -7,14 +7,13 @@ import Battery from '../components/Battery';
 import Testimonials from '../components/Testimonials';
 import InfoSection from '../components/InfoSection';
 import FAQ from '../components/FAQ';
-import Gallery from '../components/Gallery';
 import InstagramHighlights from '../components/InstagramHighlights';
 import DrinksMenu from '../components/DrinksMenu';
+import PageGallerySection from '../components/PageGallerySection';
 import { useData } from '../context/DataContext';
 
 const HomePage: React.FC = () => {
   const {
-    galleryData,
     homeSectionRepeats,
     highlightsData,
     featuresData,
@@ -57,12 +56,9 @@ const HomePage: React.FC = () => {
           <DrinksMenu />
         </section>
       ))}
-      {(galleryData.homeFeatureEnabled ?? galleryData.showOnHome ?? false) &&
-        renderRepeated(homeSectionRepeats.gallery, (i) => (
-          <div className="mt-20" key={`gallery-${i}`}>
-            <Gallery />
-          </div>
-        ))}
+      {renderRepeated(homeSectionRepeats.gallery, (i) => (
+        <PageGallerySection pageKey="home" className="mt-20" key={`gallery-${i}`} />
+      ))}
     </>
   );
 };

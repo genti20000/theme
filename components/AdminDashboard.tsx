@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useData, DrinkCategory } from '../context/DataContext';
+import { useData, DrinkCategory, PageGalleryKey } from '../context/DataContext';
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode; enabled?: boolean; onToggle?: (v: boolean) => void }> = ({ title, children, enabled, onToggle }) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-sm">
@@ -70,7 +70,8 @@ const AdminDashboard: React.FC = () => {
     drinksData, updateDrinksData, testimonialsData, updateTestimonialsData,
     infoSectionData, updateInfoSectionData, eventsData, updateEventsData,
     instagramHighlightsData, updateInstagramHighlightsData,
-    termsData, updateTermsData, fetchServerFiles, homeSectionRepeats, updateHomeSectionRepeats
+    termsData, updateTermsData, fetchServerFiles, homeSectionRepeats, updateHomeSectionRepeats,
+    pageGallerySettings, updatePageGallerySettings
   } = useData();
 
   const batchFileRef = useRef<HTMLInputElement>(null);
@@ -83,7 +84,7 @@ const AdminDashboard: React.FC = () => {
 
   const galleryCollections = (galleryData.collections && galleryData.collections.length > 0)
     ? galleryData.collections
-    : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [] }];
+    : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [], defaultViewMode: 'carousel' as const }];
   const activeGallery = galleryCollections.find(g => g.id === selectedGalleryId)
     || galleryCollections.find(g => g.id === galleryData.activeCollectionId)
     || galleryCollections[0];
@@ -100,7 +101,7 @@ const AdminDashboard: React.FC = () => {
     updateGalleryData(prev => {
       const collections = (prev.collections && prev.collections.length > 0)
         ? prev.collections
-        : [{ id: 'default', name: 'Main Gallery', subtext: prev.subtext, images: prev.images || [] }];
+        : [{ id: 'default', name: 'Main Gallery', subtext: prev.subtext, images: prev.images || [], defaultViewMode: 'carousel' as const }];
       const nextCollections = collections.map(col =>
         col.id === activeId ? { ...col, images: updater(col.images || []) } : col
       );
@@ -247,6 +248,16 @@ echo $row['payload'];
     { key: 'faq', label: 'FAQ' },
     { key: 'drinks', label: 'Drinks Menu' },
     { key: 'gallery', label: 'Gallery (Home Feature)' }
+  ] as const;
+
+  const galleryPageOptions = [
+    { key: 'home', label: 'Home Page' },
+    { key: 'drinks', label: 'Drinks Page' },
+    { key: 'food', label: 'Food Page' },
+    { key: 'blog', label: 'Blog Page' },
+    { key: 'events', label: 'Events Page' },
+    { key: 'songs', label: 'Songs Page' },
+    { key: 'instagram', label: 'Instagram Page' }
   ] as const;
 
   const setSectionRepeat = (key: typeof homeSectionOptions[number]['key'], value: number) => {
@@ -697,21 +708,52 @@ echo $row['payload'];
 
         {tab === 'gallery' && (
             <>
-            <SectionCard title="Gallery Options">
-                <div className="flex items-center justify-between gap-4">
-                    <div>
-                        <p className="text-xs font-black uppercase tracking-widest text-zinc-300">Separate Gallery Section on Home Page</p>
-                        <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">Turn this on to show the full gallery as its own home page feature block.</p>
-                    </div>
-                    <Toggle
-                        label="Homepage Gallery"
-                        checked={galleryData.homeFeatureEnabled ?? galleryData.showOnHome ?? false}
-                        onChange={v => updateGalleryData(prev => ({...prev, homeFeatureEnabled: v, showOnHome: v}))}
-                    />
+            <SectionCard title="Gallery Placement By Page">
+                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Enable a gallery section on any page and pick which gallery collection should appear.</p>
+                <div className="space-y-3">
+                    {galleryPageOptions.map(({ key, label }) => {
+                        const pageKey = key as PageGalleryKey;
+                        const setting = pageGallerySettings[pageKey];
+                        return (
+                            <div key={key} className="bg-zinc-800/40 border border-zinc-700 rounded-xl p-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-xs font-black uppercase tracking-widest text-zinc-300">{label}</span>
+                                    <Toggle
+                                        label="Show Gallery"
+                                        checked={setting?.enabled ?? false}
+                                        onChange={v => {
+                                            updatePageGallerySettings(prev => ({
+                                                ...prev,
+                                                [pageKey]: { ...(prev[pageKey] || { collectionId: galleryCollections[0]?.id }), enabled: v }
+                                            }));
+                                            if (pageKey === 'home') {
+                                                updateGalleryData(prev => ({ ...prev, homeFeatureEnabled: v, showOnHome: v }));
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className="mt-3">
+                                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Gallery Collection</label>
+                                    <select
+                                        value={setting?.collectionId || galleryCollections[0]?.id || ''}
+                                        onChange={e => updatePageGallerySettings(prev => ({
+                                            ...prev,
+                                            [pageKey]: { ...(prev[pageKey] || { enabled: false }), collectionId: e.target.value }
+                                        }))}
+                                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-white outline-none focus:border-pink-500 text-sm"
+                                    >
+                                        {galleryCollections.map(col => (
+                                            <option key={col.id} value={col.id}>{col.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </SectionCard>
             <SectionCard title="Gallery Collections">
-                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Create separate galleries and switch which one you are editing.</p>
+                <p className="text-[10px] text-zinc-500 mb-6 uppercase tracking-widest">Create separate galleries, set default mode (grid/slide), and switch which one you are editing.</p>
                 <div className="space-y-4">
                     {galleryCollections.map((collection, ci) => (
                         <div key={collection.id} className={`p-4 rounded-2xl border ${activeGallery?.id === collection.id ? 'border-pink-500 bg-pink-500/5' : 'border-zinc-800 bg-zinc-900/40'}`}>
@@ -725,6 +767,20 @@ echo $row['payload'];
                                             collections: (prev.collections || []).map(c => c.id === collection.id ? { ...c, name: v } : c)
                                         }))}
                                     />
+                                </div>
+                                <div className="w-full md:w-56 mb-6">
+                                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Default View</label>
+                                    <select
+                                        value={collection.defaultViewMode || 'carousel'}
+                                        onChange={e => updateGalleryData(prev => ({
+                                            ...prev,
+                                            collections: (prev.collections || []).map(c => c.id === collection.id ? { ...c, defaultViewMode: e.target.value === 'grid' ? 'grid' : 'carousel' } : c)
+                                        }))}
+                                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-white outline-none focus:border-pink-500 text-sm"
+                                    >
+                                        <option value="carousel">Slide (Carousel)</option>
+                                        <option value="grid">Grid</option>
+                                    </select>
                                 </div>
                                 <div className="flex gap-2 mb-6">
                                     <button
@@ -743,6 +799,15 @@ echo $row['payload'];
                                                 if (collections.length === 0) return prev;
                                                 const nextActive = prev.activeCollectionId === collection.id ? collections[0].id : prev.activeCollectionId;
                                                 return { ...prev, collections, activeCollectionId: nextActive, images: collections[0].images || [] };
+                                            });
+                                            updatePageGallerySettings(prev => {
+                                                const next = { ...prev };
+                                                (Object.keys(next) as PageGalleryKey[]).forEach(pageKey => {
+                                                    if (next[pageKey]?.collectionId === collection.id) {
+                                                        next[pageKey] = { ...next[pageKey], collectionId: galleryCollections.find(c => c.id !== collection.id)?.id || '' };
+                                                    }
+                                                });
+                                                return next;
                                             });
                                             if (activeGallery?.id === collection.id) {
                                                 const next = galleryCollections.find(c => c.id !== collection.id);
@@ -772,7 +837,7 @@ echo $row['payload'];
                         const newId = Date.now().toString();
                         updateGalleryData(prev => ({
                             ...prev,
-                            collections: [...(prev.collections || []), { id: newId, name: `Gallery ${(prev.collections || []).length + 1}`, subtext: '', images: [] }],
+                            collections: [...(prev.collections || []), { id: newId, name: `Gallery ${(prev.collections || []).length + 1}`, subtext: '', images: [], defaultViewMode: 'carousel' }],
                             activeCollectionId: newId
                         }));
                         setSelectedGalleryId(newId);

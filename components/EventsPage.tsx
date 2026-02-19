@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useData } from '../context/DataContext';
+import PageGallerySection from './PageGallerySection';
 
 const FadeInScrollSection: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -126,6 +127,7 @@ const EventsPage: React.FC = () => {
             </FadeInScrollSection>
         ))}
       </div>
+      <PageGallerySection pageKey="events" />
     </div>
   );
 };

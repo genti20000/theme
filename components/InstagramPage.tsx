@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
+import PageGallerySection from './PageGallerySection';
 
 interface StoryViewerProps {
   highlight: { title: string; imageUrl: string; link: string };
@@ -98,6 +99,7 @@ const InstagramPage: React.FC = () => {
   const posts = instagramHighlightsData.posts || [];
 
   return (
+    <>
     <div className="bg-black min-h-screen text-white pt-24 pb-20 selection:bg-pink-500">
       {activeStory && <StoryViewer highlight={activeStory} onClose={() => setActiveStory(null)} />}
 
@@ -258,6 +260,8 @@ const InstagramPage: React.FC = () => {
         </div>
       </div>
     </div>
+    <PageGallerySection pageKey="instagram" />
+    </>
   );
 };
 
