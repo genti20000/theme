@@ -47,8 +47,14 @@ const EventsPage: React.FC = () => {
       {/* Hero Section */}
       <div className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-            <img src={eventsData.hero.image} alt="Events Hero" className="w-full h-full object-cover opacity-60" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black"></div>
+            {eventsData.hero.image ? (
+              <>
+                <img src={eventsData.hero.image} alt="Events Hero" className="w-full h-full object-cover opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black"></div>
+              </>
+            ) : (
+              <div className="w-full h-full bg-zinc-950"></div>
+            )}
         </div>
         <div className="relative z-10 text-center px-6">
             <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 mb-6 drop-shadow-lg animate-fade-in-up">
@@ -67,12 +73,20 @@ const EventsPage: React.FC = () => {
                 {/* Image Side */}
                 <div className="w-full md:w-1/2">
                     <div className="relative group rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-zinc-900">
-                        <img 
-                            src={section.imageUrl} 
-                            alt={section.title} 
-                            className="w-full h-[350px] md:h-[500px] object-cover transition-transform duration-1000 group-hover:scale-110" 
-                        />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                        {section.imageUrl ? (
+                          <>
+                            <img 
+                                src={section.imageUrl} 
+                                alt={section.title} 
+                                className="w-full h-[350px] md:h-[500px] object-cover transition-transform duration-1000 group-hover:scale-110" 
+                            />
+                            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                          </>
+                        ) : (
+                          <div className="w-full h-[350px] md:h-[500px] bg-zinc-950 flex items-center justify-center text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                            Add Event Image In Admin
+                          </div>
+                        )}
                     </div>
                 </div>
 

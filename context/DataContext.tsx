@@ -163,7 +163,7 @@ interface DataContextType {
 }
 
 const INITIAL_SEO: HeaderData = { 
-    logoUrl: "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png",
+    logoUrl: "",
     siteTitle: "London Karaoke Club | Private Karaoke Bar & Cocktails in Soho",
     siteDescription: "Luxury private karaoke suites in Soho, London. Over 80,000 songs, signature cocktails, and premium service. Perfect for hen parties and birthdays. Book online.",
     faviconUrl: "/favicon.svg",
@@ -171,20 +171,20 @@ const INITIAL_SEO: HeaderData = {
     customScripts: { header: "", footer: "" }
 };
 
-const INITIAL_HERO: HeroData = { backgroundImageUrl: "https://picsum.photos/seed/karaoke/1920/1080", slides: ["https://picsum.photos/seed/lkc1/1920/1080", "https://picsum.photos/seed/lkc2/1920/1080"], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Private Karaoke Bar in Soho", subText: "London's most exclusive private karaoke suites. 80,000+ songs and pro-audio sound.", buttonText: "Book Now", showBadge: true, showButtons: true };
-const INITIAL_HIGHLIGHTS: HighlightsData = { enabled: true, heading: "Best Karaoke in Soho", subtext: "Step into Soho's premier destination for private singing and celebrations.", mainImageUrl: "https://picsum.photos/seed/party/1200/800", featureListTitle: "The LKC Difference", featureList: ["Bespoke Private Booths", "80,000+ Global Hits", "Central Soho Location"], sideImageUrl: "https://picsum.photos/seed/mic/500/500" };
+const INITIAL_HERO: HeroData = { backgroundImageUrl: "", slides: [], mobileSlides: [], badgeText: "Winter Wonderland", headingText: "Private Karaoke Bar in Soho", subText: "London's most exclusive private karaoke suites. 80,000+ songs and pro-audio sound.", buttonText: "Book Now", showBadge: true, showButtons: true };
+const INITIAL_HIGHLIGHTS: HighlightsData = { enabled: true, heading: "Best Karaoke in Soho", subtext: "Step into Soho's premier destination for private singing and celebrations.", mainImageUrl: "", featureListTitle: "The LKC Difference", featureList: ["Bespoke Private Booths", "80,000+ Global Hits", "Central Soho Location"], sideImageUrl: "" };
 const INITIAL_FEATURES: FeaturesData = {
     enabled: true,
-    experience: { label: "The Experience", heading: "Bespoke Private Stage", text: "Luxury karaoke redefined in the heart of London.", image: "https://picsum.photos/seed/room/1200/800" },
+    experience: { label: "The Experience", heading: "Bespoke Private Stage", text: "Luxury karaoke redefined in the heart of London.", image: "" },
     occasions: { heading: "Parties & Occasions", text: "We specialize in unforgettable London events.", items: [{title: "Hen Parties", text: "Premium bubbles and your favorite anthems."}] },
-    grid: { heading: "Venue Highlights", items: [{title: "Smart Lighting", description: "Immersive mood lighting.", image: "https://picsum.photos/seed/neon/400/400"}] }
+    grid: { heading: "Venue Highlights", items: [{title: "Smart Lighting", description: "Immersive mood lighting.", image: ""}] }
 };
-const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nightlife", text: "Unmatched energy in London's most iconic district.", image1: "https://picsum.photos/seed/v1/500/500", image2: "https://picsum.photos/seed/v2/500/500", bigImage: "https://picsum.photos/seed/vb/1200/800", bottomHeading: "Sing Until 3AM", bottomText: "The party never stops at LKC Soho." };
+const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nightlife", text: "Unmatched energy in London's most iconic district.", image1: "", image2: "", bigImage: "", bottomHeading: "Sing Until 3AM", bottomText: "The party never stops at LKC Soho." };
 const INITIAL_STATS: BatteryData = { enabled: true, statPrefix: "Over", statNumber: "80,000", statSuffix: "Songs", subText: "Updated monthly with the latest hits." };
 const INITIAL_GALLERY: GalleryData = {
     heading: "Soho Karaoke Gallery",
     subtext: "A glimpse inside our luxury private booths.",
-    images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}],
+    images: [],
     showOnHome: false,
     homeFeatureEnabled: false,
     collections: [
@@ -192,7 +192,7 @@ const INITIAL_GALLERY: GalleryData = {
             id: 'default',
             name: 'Main Gallery',
             subtext: 'A glimpse inside our luxury private booths.',
-            images: [{id: '1', url: 'https://picsum.photos/seed/g1/800/800', caption: 'LKC Party'}]
+            images: []
         }
     ],
     activeCollectionId: 'default'
@@ -207,7 +207,7 @@ const INITIAL_BLOG: BlogData = {
             date: '2024-01-01',
             excerpt: 'Discover London\'s newest private karaoke experience.',
             content: 'Welcome to London Karaoke Club.',
-            imageUrl: 'https://picsum.photos/seed/blog/800/600'
+            imageUrl: ''
         },
         {
             id: '2',
@@ -234,7 +234,7 @@ From high heels to high notes, London Karaoke Club is where hen dos go to become
 Book Now
 Forget average. This is the hen party benchmark.
 Book your hen do karaoke party now: https://bookings.londonkaraoke.club`,
-            imageUrl: 'https://picsum.photos/seed/hen-do-soho/1200/800'
+            imageUrl: ''
         },
         {
             id: '3',
@@ -261,13 +261,13 @@ Why birthdays work so well at LKC
 Birthday nights should feel effortless. We help you set it up fast so your group can focus on having a great time.
 
 Book your birthday karaoke session now: https://bookings.londonkaraoke.club`,
-            imageUrl: 'https://picsum.photos/seed/birthday-karaoke-soho/1200/800'
+            imageUrl: ''
         }
     ]
 };
 const INITIAL_FAQ: FAQData = { enabled: true, heading: "Soho Karaoke FAQs", subtext: "Common questions about booking and our venue.", items: [{question: "Where is the club located?", answer: "We are located in the heart of Soho, London."}] };
 const INITIAL_DRINKS: DrinksData = {
-    headerImageUrl: "https://picsum.photos/seed/bar/1600/800",
+    headerImageUrl: "",
     packagesData: { title: "Party Packages", subtitle: "Bespoke group deals", items: [], notes: [] },
     bottleServiceData: [], byTheGlassData: [], shotsData: { title: "Shots", items: [], shooters: { title: "", prices: "", items: [] } },
     cocktailsData: [], winesData: []
@@ -321,7 +321,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
     const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { enabled: true, heading: "Client Reviews", subtext: "What people say about London's best karaoke.", items: [] }));
     const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { enabled: true, heading: "Luxury Private Karaoke Soho", sections: [], footerTitle: "Ready to Sing?", footerText: "Book your private suite in Soho today.", footerHighlight: "No chains, just the London Karaoke Club." }));
-    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Corporate & Private Events", subtitle: "The ultimate venue for London group bookings.", image: "https://picsum.photos/seed/eventhero/1600/800" }, sections: [] }));
+    const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Corporate & Private Events", subtitle: "The ultimate venue for London group bookings.", image: "" }, sections: [] }));
     const [instagramHighlightsData, setInstagramHighlightsData] = useState<InstagramHighlightsData>(() => init('instagramHighlightsData', INITIAL_INSTAGRAM));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));

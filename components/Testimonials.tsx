@@ -12,7 +12,7 @@ const Testimonials: React.FC = () => {
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
-             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-8 h-8" />
+             <div className="w-8 h-8 rounded-full bg-zinc-800 text-white text-xs font-black flex items-center justify-center">G</div>
              <h3 className="text-2xl md:text-3xl font-bold text-white">{testimonialsData.heading}</h3>
           </div>
           <p className="text-lg text-gray-400">
@@ -55,10 +55,23 @@ interface TestimonialCardProps {
 }
 
 const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, name, avatar, rating = 5, date = 'a week ago' }) => {
+  const initials = (name || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('') || '?';
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col h-full border border-gray-200">
       <div className="flex items-center gap-4 mb-4">
-          <img src={avatar || `https://ui-avatars.com/api/?name=${name}&background=random`} alt={name} className="w-10 h-10 rounded-full" />
+          {avatar ? (
+            <img src={avatar} alt={name} className="w-10 h-10 rounded-full" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-zinc-800 text-white text-xs font-black flex items-center justify-center">
+              {initials}
+            </div>
+          )}
           <div>
               <p className="font-bold text-gray-900 text-sm">{name}</p>
               <div className="flex text-yellow-400 text-xs">
@@ -68,7 +81,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, name, avatar, 
                 <span className="text-gray-400 ml-2">{date}</span>
               </div>
           </div>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5 ml-auto opacity-50" />
+          <div className="w-5 h-5 rounded-full bg-zinc-200 text-zinc-700 text-[10px] font-black flex items-center justify-center ml-auto opacity-80">G</div>
       </div>
       <p className="text-gray-600 text-sm leading-relaxed flex-grow">
         "{quote}"

@@ -42,11 +42,15 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ highlight, onClose }) => {
         <div className="absolute top-8 left-4 right-4 z-10 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full border-2 border-pink-500 overflow-hidden bg-zinc-900">
-              <img 
-                src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png" 
-                alt="LKC" 
-                className="w-full h-full object-contain p-1"
-              />
+              {highlight.imageUrl ? (
+                <img 
+                  src={highlight.imageUrl}
+                  alt={highlight.title} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-bold">LKC</div>
+              )}
             </div>
             <div>
               <p className="text-white text-sm font-bold">londonkaraoke.club</p>
@@ -59,11 +63,17 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ highlight, onClose }) => {
         </div>
 
         {/* Story Content */}
-        <img 
-          src={highlight.imageUrl || 'https://picsum.photos/seed/insta/800/1200'} 
-          alt={highlight.title} 
-          className="w-full h-full object-cover"
-        />
+        {highlight.imageUrl ? (
+          <img 
+            src={highlight.imageUrl}
+            alt={highlight.title} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-zinc-900 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase tracking-widest">
+            No Story Image
+          </div>
+        )}
 
         {/* Footer Link */}
         <a 
@@ -81,7 +91,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ highlight, onClose }) => {
 };
 
 const InstagramPage: React.FC = () => {
-  const { instagramHighlightsData } = useData();
+  const { instagramHighlightsData, headerData } = useData();
   const [activeStory, setActiveStory] = useState<any>(null);
 
   const username = instagramHighlightsData.username || "@londonkaraoke.club";
@@ -97,11 +107,17 @@ const InstagramPage: React.FC = () => {
             <div className="relative group cursor-pointer">
                 <div className="relative p-1 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 animate-pulse-slow">
                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-black overflow-hidden bg-zinc-900">
-                        <img 
-                            src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/m7V3XokxQ0Hbg2KE/new-YNq2gqz36OInJMrE.png" 
-                            alt="Profile" 
-                            className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
-                        />
+                        {headerData.logoUrl ? (
+                            <img 
+                                src={headerData.logoUrl}
+                                alt="Profile" 
+                                className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-500 text-xs font-black uppercase tracking-widest">
+                                Logo
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="absolute bottom-2 right-2 bg-pink-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border-2 border-black tracking-tighter">Live</div>
@@ -158,11 +174,17 @@ const InstagramPage: React.FC = () => {
                         >
                             <div className="relative p-0.5 rounded-full border border-zinc-800 transition-transform duration-300 group-hover:scale-105 active:scale-95">
                                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-black overflow-hidden bg-zinc-900 ring-2 ring-zinc-800 ring-offset-2 ring-offset-black group-hover:ring-pink-500">
-                                    <img 
-                                        src={h.imageUrl || 'https://picsum.photos/seed/insta/200/200'} 
-                                        alt={h.title} 
-                                        className="w-full h-full object-cover"
-                                    />
+                                    {h.imageUrl ? (
+                                      <img 
+                                          src={h.imageUrl}
+                                          alt={h.title} 
+                                          className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
+                                        No Image
+                                      </div>
+                                    )}
                                 </div>
                             </div>
                             <span className="text-[10px] font-black text-zinc-400 group-hover:text-white transition-colors uppercase tracking-widest">
@@ -201,7 +223,13 @@ const InstagramPage: React.FC = () => {
                 {posts.length > 0 ? (
                     posts.map((post) => (
                         <div key={post.id} className="aspect-square relative group cursor-pointer overflow-hidden bg-zinc-900 border border-zinc-800/30">
-                            <img src={post.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                            {post.imageUrl ? (
+                              <img src={post.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                                No Image
+                              </div>
+                            )}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 md:gap-8">
                                 <div className="flex items-center gap-1 md:gap-2">
                                     <svg className="w-4 h-4 md:w-6 md:h-6 fill-white" viewBox="0 0 24 24">

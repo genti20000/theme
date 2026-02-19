@@ -17,18 +17,26 @@ const Highlights: React.FC = () => {
       </div>
 
       {/* Full Width Image */}
-      <div className="w-full h-[60vh] md:h-[80vh] mb-16 relative">
-          <img 
-            src={highlightsData.mainImageUrl} 
-            alt="Friends singing karaoke" 
-            className="hidden md:block w-full h-full object-cover"
-          />
-          <img 
-            src={highlightsData.mobileMainImageUrl || highlightsData.mainImageUrl} 
-            alt="Friends singing karaoke" 
-            className="md:hidden block w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/10"></div>
+      <div className="w-full h-[60vh] md:h-[80vh] mb-16 relative bg-zinc-950">
+          {highlightsData.mainImageUrl ? (
+            <>
+              <img 
+                src={highlightsData.mainImageUrl} 
+                alt="Friends singing karaoke" 
+                className="hidden md:block w-full h-full object-cover"
+              />
+              <img 
+                src={highlightsData.mobileMainImageUrl || highlightsData.mainImageUrl} 
+                alt="Friends singing karaoke" 
+                className="md:hidden block w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/10"></div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase tracking-widest">
+              Add Main Image In Admin
+            </div>
+          )}
       </div>
 
       <div className="container mx-auto px-6">
@@ -45,7 +53,13 @@ const Highlights: React.FC = () => {
             </ul>
           </div>
           <div className="flex justify-center">
-            <img src={highlightsData.sideImageUrl} alt="Karaoke Detail" className="rounded-full w-[300px] h-[300px] md:w-[500px] md:h-[500px] object-cover border-8 border-zinc-800 shadow-2xl" />
+            {highlightsData.sideImageUrl ? (
+              <img src={highlightsData.sideImageUrl} alt="Karaoke Detail" className="rounded-full w-[300px] h-[300px] md:w-[500px] md:h-[500px] object-cover border-8 border-zinc-800 shadow-2xl" />
+            ) : (
+              <div className="rounded-full w-[300px] h-[300px] md:w-[500px] md:h-[500px] border-8 border-zinc-800 shadow-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 text-xs font-bold uppercase tracking-widest text-center px-6">
+                Add Side Image In Admin
+              </div>
+            )}
           </div>
         </div>
       </div>

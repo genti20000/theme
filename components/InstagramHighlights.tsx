@@ -42,11 +42,17 @@ const InstagramHighlights: React.FC = () => {
             >
               <div className="relative p-1 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 transition-transform duration-300 group-hover:scale-110 active:scale-95 shadow-[0_0_20px_rgba(236,72,153,0.3)]">
                 <div className="w-20 h-20 md:w-28 md:h-28 rounded-full border-4 border-black overflow-hidden bg-zinc-900">
-                  <img 
-                    src={h.imageUrl || 'https://picsum.photos/seed/insta/200/200'} 
-                    alt={h.title} 
-                    className="w-full h-full object-cover"
-                  />
+                  {h.imageUrl ? (
+                    <img 
+                      src={h.imageUrl}
+                      alt={h.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
+                      No Image
+                    </div>
+                  )}
                 </div>
               </div>
               <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors">

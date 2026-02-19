@@ -16,17 +16,25 @@ const Features: React.FC = () => {
           
           {/* Image Section */}
           <div className="w-full h-[40vh] md:absolute md:inset-0 md:h-full z-0">
-            <img 
-                src={experience?.image} 
-                alt="Interior of a stylish karaoke room" 
-                className="hidden md:block w-full h-full object-cover md:opacity-40"
-            />
-            <img 
-                src={experience?.mobileImage || experience?.image} 
-                alt="Interior of a stylish karaoke room" 
-                className="md:hidden block w-full h-full object-cover md:opacity-40"
-            />
-            <div className="hidden md:block absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black"></div>
+            {experience?.image ? (
+              <>
+                <img 
+                    src={experience?.image} 
+                    alt="Interior of a stylish karaoke room" 
+                    className="hidden md:block w-full h-full object-cover md:opacity-40"
+                />
+                <img 
+                    src={experience?.mobileImage || experience?.image} 
+                    alt="Interior of a stylish karaoke room" 
+                    className="md:hidden block w-full h-full object-cover md:opacity-40"
+                />
+                <div className="hidden md:block absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black"></div>
+              </>
+            ) : (
+              <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase tracking-widest">
+                Add Experience Image In Admin
+              </div>
+            )}
           </div>
 
           {/* Content Section */}
@@ -115,11 +123,17 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, imgSrc, c
             {children}
         </div>
         <div className="mt-8 flex justify-center items-end flex-grow rounded-2xl overflow-hidden">
-            <img 
-              src={imgSrc} 
-              alt={title} 
-              className={`rounded-2xl max-h-64 w-full object-cover shadow-lg ${interactiveImage ? 'transition-all duration-500 ease-in-out group-hover:scale-105 group-hover:drop-shadow-[0_0_15px_rgba(236,72,153,0.5)]' : ''}`}
-            />
+            {imgSrc ? (
+              <img 
+                src={imgSrc} 
+                alt={title} 
+                className={`rounded-2xl max-h-64 w-full object-cover shadow-lg ${interactiveImage ? 'transition-all duration-500 ease-in-out group-hover:scale-105 group-hover:drop-shadow-[0_0_15px_rgba(236,72,153,0.5)]' : ''}`}
+              />
+            ) : (
+              <div className="rounded-2xl w-full h-64 bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest text-center px-4">
+                Add Card Image In Admin
+              </div>
+            )}
         </div>
     </div>
 );

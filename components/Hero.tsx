@@ -8,7 +8,7 @@ const Hero: React.FC = () => {
   const { heroData } = useData();
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  const slides = heroData.slides && heroData.slides.length > 0 ? heroData.slides : [heroData.backgroundImageUrl];
+  const slides = (heroData.slides && heroData.slides.length > 0 ? heroData.slides : [heroData.backgroundImageUrl]).filter(Boolean);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -45,7 +45,7 @@ const Hero: React.FC = () => {
         className="absolute inset-x-0 h-[110%] md:h-[140%] -top-[5%] md:-top-[20%] z-0 will-change-transform motion-reduce:transform-none" 
         style={{ transform: `translateY(${scrollY * 0.15}px)` }}
       >
-        {slides.map((slide, index) => {
+        {slides.length > 0 ? slides.map((slide, index) => {
              const active = index === currentSlide;
              const mobileSlide = heroData.mobileSlides?.[index] || slide;
              return (
@@ -98,7 +98,7 @@ const Hero: React.FC = () => {
                     </div>
                 </div>
              );
-        })}
+        }) : <div className="absolute inset-0 bg-zinc-950"></div>}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black"></div>
       </div>
       

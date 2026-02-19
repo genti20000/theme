@@ -33,8 +33,20 @@ const Fitness: React.FC = () => {
                 </>
             ) : (
                 <>
-                    <img src={vibeData.image1} alt="Vibe Image 1" className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full object-cover rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl"/>
-                    <img src={vibeData.image2} alt="Vibe Image 2" className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full object-cover rounded-full border-[10px] border-zinc-900 shadow-2xl"/>
+                    {vibeData.image1 ? (
+                      <img src={vibeData.image1} alt="Vibe Image 1" className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full object-cover rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl"/>
+                    ) : (
+                      <div className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest text-center px-4">
+                        Add Image 1 In Admin
+                      </div>
+                    )}
+                    {vibeData.image2 ? (
+                      <img src={vibeData.image2} alt="Vibe Image 2" className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full object-cover rounded-full border-[10px] border-zinc-900 shadow-2xl"/>
+                    ) : (
+                      <div className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full rounded-full border-[10px] border-zinc-900 shadow-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest text-center px-4">
+                        Add Image 2 In Admin
+                      </div>
+                    )}
                 </>
             )}
         </div>
@@ -45,17 +57,25 @@ const Fitness: React.FC = () => {
             
             {/* Image Section */}
             <div className="w-full h-[40vh] md:absolute md:inset-0 md:h-full z-0">
-                <img 
-                    src={vibeData.bigImage} 
-                    alt="Party Atmosphere" 
-                    className="hidden md:block w-full h-full object-cover md:opacity-60"
-                />
-                <img 
-                    src={vibeData.mobileBigImage || vibeData.bigImage} 
-                    alt="Party Atmosphere" 
-                    className="md:hidden block w-full h-full object-cover md:opacity-60"
-                />
-                <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent"></div>
+                {vibeData.bigImage ? (
+                  <>
+                    <img 
+                        src={vibeData.bigImage} 
+                        alt="Party Atmosphere" 
+                        className="hidden md:block w-full h-full object-cover md:opacity-60"
+                    />
+                    <img 
+                        src={vibeData.mobileBigImage || vibeData.bigImage} 
+                        alt="Party Atmosphere" 
+                        className="md:hidden block w-full h-full object-cover md:opacity-60"
+                    />
+                    <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent"></div>
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase tracking-widest">
+                    Add Bottom Image In Admin
+                  </div>
+                )}
             </div>
             
             {/* Content Section */}

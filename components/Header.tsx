@@ -87,7 +87,13 @@ const Header: React.FC = () => {
         <div className="flex justify-center items-center">
           <Link to="/" className="focus:outline-none z-10 transition-transform duration-300 hover:scale-105">
             <div className="w-[99px] h-[99px] md:w-32 md:h-32 relative flex items-center justify-center">
-              <img src={headerData.logoUrl} alt="London Karaoke Club Logo" className="w-full h-full object-contain drop-shadow-lg" />
+              {headerData.logoUrl ? (
+                <img src={headerData.logoUrl} alt="London Karaoke Club Logo" className="w-full h-full object-contain drop-shadow-lg" />
+              ) : (
+                <div className="w-full h-full rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-400 text-[10px] font-black tracking-wider uppercase text-center px-2">
+                  Add Logo
+                </div>
+              )}
             </div>
           </Link>
         </div>

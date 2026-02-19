@@ -26,8 +26,16 @@ const BlogPage: React.FC = () => {
                             className="bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-zinc-800 group cursor-pointer transition-all hover:border-pink-500/50 hover:shadow-[0_0_30px_rgba(236,72,153,0.1)]"
                         >
                             <div className="aspect-video relative overflow-hidden">
-                                <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
+                                {post.imageUrl ? (
+                                  <>
+                                    <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
+                                  </>
+                                ) : (
+                                  <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-zinc-500 text-xs font-bold uppercase tracking-widest text-center px-6">
+                                    Add Blog Image In Admin
+                                  </div>
+                                )}
                             </div>
                             <div className="p-8">
                                 <span className="text-xs font-bold text-pink-500 uppercase tracking-widest">{post.date}</span>
@@ -51,7 +59,13 @@ const BlogPage: React.FC = () => {
                     Back to Feed
                 </button>
                 
-                <img src={selectedPost.imageUrl} className="w-full h-[50vh] object-cover rounded-[3rem] mb-12 shadow-2xl border border-zinc-800" alt="" />
+                {selectedPost.imageUrl ? (
+                  <img src={selectedPost.imageUrl} className="w-full h-[50vh] object-cover rounded-[3rem] mb-12 shadow-2xl border border-zinc-800" alt="" />
+                ) : (
+                  <div className="w-full h-[50vh] rounded-[3rem] mb-12 shadow-2xl border border-zinc-800 bg-zinc-950 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase tracking-widest">
+                    No Image
+                  </div>
+                )}
                 
                 <span className="text-pink-500 font-black tracking-widest uppercase">{selectedPost.date}</span>
                 <h1 className="text-4xl md:text-6xl font-black mt-4 mb-8 leading-tight">{selectedPost.title}</h1>

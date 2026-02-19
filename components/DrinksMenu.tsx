@@ -15,11 +15,15 @@ const DrinksMenu: React.FC<DrinksMenuProps> = ({ showReadyToBookCta = false }) =
     <div className="bg-black text-white min-h-screen">
       <div className="relative text-center py-20 md:py-28 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img
-            src={headerImageUrl || "https://picsum.photos/seed/barvibes/1600/800"}
-            alt="Vibrant cocktail bar atmosphere"
-            className="w-full h-full object-cover opacity-20"
-          />
+          {headerImageUrl ? (
+            <img
+              src={headerImageUrl}
+              alt="Vibrant cocktail bar atmosphere"
+              className="w-full h-full object-cover opacity-20"
+            />
+          ) : (
+            <div className="w-full h-full bg-zinc-950"></div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black"></div>
         </div>
         <div className="relative z-10 container mx-auto px-6">
@@ -37,7 +41,7 @@ const DrinksMenu: React.FC<DrinksMenuProps> = ({ showReadyToBookCta = false }) =
 
           {/* Packages */}
           <div className="mb-20">
-            <div className="max-w-4xl mx-auto bg-zinc-900/50 border-2 border-yellow-400 p-8 rounded-lg shadow-[0_0_20px_rgba(250,204,21,0.5)] bg-cover bg-center" style={{backgroundImage: "url('https://www.transparenttextures.com/patterns/shattered.png')"}}>
+            <div className="max-w-4xl mx-auto bg-zinc-900/50 border-2 border-yellow-400 p-8 rounded-lg shadow-[0_0_20px_rgba(250,204,21,0.5)] bg-cover bg-center">
               <h4 className="text-3xl font-bold text-center mb-2">{packagesData.title}</h4>
               <p className="text-center text-gray-400 mb-8">{packagesData.subtitle}</p>
               <div className="space-y-6">

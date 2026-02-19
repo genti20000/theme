@@ -4,9 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 import { useData } from '../context/DataContext';
 
 const sampleImages = [
-  { name: 'Microphone', url: 'https://picsum.photos/seed/karaokemic/512/512' },
-  { name: 'Cocktail', url: 'https://picsum.photos/seed/karaokecocktail/512/512' },
-  { name: 'Party Scene', url: 'https://picsum.photos/seed/karaokeparty/512/512' },
+  // Intentionally empty: only admin/gallery images should be used.
 ];
 
 const blobToBase64 = (blob: Blob): Promise<string> =>
@@ -411,7 +409,7 @@ const ImageEditor: React.FC = () => {
   }, [showGalleryModal, galleryTab, fetchServerFiles]);
 
   return (
-    <section className="relative py-16 md:py-24" style={{backgroundImage: "url('https://picsum.photos/seed/darkclub/1600/900')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed'}}>
+    <section className="relative py-16 md:py-24 bg-zinc-950">
         <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-sm"></div>
         <div className="relative container mx-auto px-6">
             <div className="text-center max-w-3xl mx-auto mb-12">
@@ -456,15 +454,17 @@ const ImageEditor: React.FC = () => {
                 <div className="bg-black/70 backdrop-blur-md p-8 rounded-2xl flex flex-col gap-6 border border-zinc-700">
                     <div>
                     <label className="block text-lg font-semibold mb-3 text-gray-200">1. Choose an Image</label>
-                    <div className="grid grid-cols-3 gap-4 mb-4">
-                        {sampleImages.map((img) => (
-                        <button key={img.url} onClick={() => handleSelectSample(img.url)} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedSample === img.url ? 'border-pink-500 scale-105' : 'border-zinc-700 hover:border-pink-400'}`}>
-                            <img src={img.url} alt={img.name} className="aspect-square object-cover" />
-                            <div className="absolute inset-0 bg-black/40"></div>
-                            <span className="absolute bottom-2 left-2 text-white text-xs font-bold">{img.name}</span>
-                        </button>
-                        ))}
-                    </div>
+                    {sampleImages.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                          {sampleImages.map((img) => (
+                          <button key={img.url} onClick={() => handleSelectSample(img.url)} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedSample === img.url ? 'border-pink-500 scale-105' : 'border-zinc-700 hover:border-pink-400'}`}>
+                              <img src={img.url} alt={img.name} className="aspect-square object-cover" />
+                              <div className="absolute inset-0 bg-black/40"></div>
+                              <span className="absolute bottom-2 left-2 text-white text-xs font-bold">{img.name}</span>
+                          </button>
+                          ))}
+                      </div>
+                    )}
                     
                     <div className="grid grid-cols-2 gap-4">
                         <button onClick={() => fileInputRef.current?.click()} className="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-gray-300 font-semibold py-3 px-4 rounded-lg transition-colors">
