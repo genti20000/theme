@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { HomeSectionType, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
 
@@ -65,6 +65,10 @@ const AdminDashboard: React.FC = () => {
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [selectedBlogId, setSelectedBlogId] = useState('');
   const [addNavKey, setAddNavKey] = useState('');
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<{ kind: 'blog-image' | 'blog-og' | 'gallery-add'; postId?: string; collectionId?: string } | null>(null);
+  const [storageFiles, setStorageFiles] = useState<{ name: string; url: string }[]>([]);
+  const [selectedGalleryId, setSelectedGalleryId] = useState('');
 
   const {
     homeSections,
@@ -86,7 +90,11 @@ const AdminDashboard: React.FC = () => {
     headerData,
     updateHeaderData,
     blogData,
-    updateBlogData
+    updateBlogData,
+    galleryData,
+    updateGalleryData,
+    uploadFile,
+    fetchServerFiles
   } = useData();
 
   const selectedSection = useMemo(() => {
@@ -111,6 +119,17 @@ const AdminDashboard: React.FC = () => {
     if (!selectedBlogId) return posts[0];
     return posts.find(p => p.id === selectedBlogId) || posts[0];
   }, [blogData.posts, selectedBlogId]);
+
+  const galleryCollections = (galleryData.collections && galleryData.collections.length > 0)
+    ? galleryData.collections
+    : [{ id: 'default', name: 'Main Gallery', subtext: galleryData.subtext, images: galleryData.images || [], defaultViewMode: 'carousel' as const }];
+  const activeGallery = galleryCollections.find(g => g.id === selectedGalleryId)
+    || galleryCollections.find(g => g.id === galleryData.activeCollectionId)
+    || galleryCollections[0];
+
+  useEffect(() => {
+    if (!selectedGalleryId && activeGallery?.id) setSelectedGalleryId(activeGallery.id);
+  }, [selectedGalleryId, activeGallery]);
 
   const canAddType = (type: HomeSectionType) => {
     const current = countsByType[type] || 0;
@@ -240,6 +259,49 @@ const AdminDashboard: React.FC = () => {
     return candidate;
   };
 
+  const refreshStorageFiles = async () => {
+    try {
+      const files = await fetchServerFiles();
+      setStorageFiles(files);
+    } catch {
+      setStorageFiles([]);
+    }
+  };
+
+  const openMediaModal = async (target: { kind: 'blog-image' | 'blog-og' | 'gallery-add'; postId?: string; collectionId?: string }) => {
+    setMediaTarget(target);
+    setIsMediaModalOpen(true);
+    await refreshStorageFiles();
+  };
+
+  const applyMediaSelection = (url: string) => {
+    if (!mediaTarget) return;
+    if (mediaTarget.kind === 'blog-image' && mediaTarget.postId) {
+      updateBlogPost(mediaTarget.postId, { imageUrl: url });
+    } else if (mediaTarget.kind === 'blog-og' && mediaTarget.postId) {
+      updateBlogPost(mediaTarget.postId, { ogImage: url });
+    } else if (mediaTarget.kind === 'gallery-add') {
+      const targetCollectionId = mediaTarget.collectionId || activeGallery?.id || 'default';
+      updateGalleryData(prev => {
+        const collections = (prev.collections && prev.collections.length > 0)
+          ? prev.collections
+          : [{ id: 'default', name: 'Main Gallery', subtext: prev.subtext, images: prev.images || [], defaultViewMode: 'carousel' as const }];
+        const nextCollections = collections.map(col =>
+          col.id === targetCollectionId
+            ? {
+                ...col,
+                images: [...(col.images || []), { id: `g-${Date.now()}`, url, caption: col.name }]
+              }
+            : col
+        );
+        const nextActive = nextCollections.find(col => col.id === targetCollectionId) || nextCollections[0];
+        return { ...prev, collections: nextCollections, activeCollectionId: targetCollectionId, images: nextActive.images };
+      });
+    }
+    setIsMediaModalOpen(false);
+    setMediaTarget(null);
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
@@ -274,6 +336,53 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
+      {isMediaModalOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm p-4 flex items-center justify-center">
+          <div className="w-full max-w-5xl h-[80vh] bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
+              <h3 className="text-sm font-black uppercase tracking-widest">Media Library</h3>
+              <button onClick={() => setIsMediaModalOpen(false)} className="px-3 py-1 rounded-lg bg-zinc-800 text-xs uppercase font-black">Close</button>
+            </div>
+            <div className="p-4 border-b border-zinc-800 flex items-center gap-2">
+              <label className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase cursor-pointer">
+                Upload Media
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const url = await uploadFile(file);
+                    if (url) {
+                      await refreshStorageFiles();
+                      applyMediaSelection(url);
+                    }
+                  }}
+                />
+              </label>
+              <button onClick={refreshStorageFiles} className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Refresh</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {storageFiles.map((file, i) => (
+                <button
+                  key={`${file.url}-${i}`}
+                  onClick={() => applyMediaSelection(file.url)}
+                  className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden text-left hover:border-pink-500 transition-colors"
+                >
+                  <img src={file.url} alt={file.name} className="w-full aspect-square object-cover" />
+                  <div className="p-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 truncate">{file.name}</p>
+                  </div>
+                </button>
+              ))}
+              {storageFiles.length === 0 && (
+                <div className="col-span-full text-center py-16 text-zinc-500 text-sm">No files on server yet.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="sticky top-0 z-50 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 px-6 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-black uppercase tracking-tighter">Website Admin</h1>
@@ -687,6 +796,27 @@ const AdminDashboard: React.FC = () => {
                               onChange={(e) => updateBlogPost(selectedBlog.id, { imageUrl: e.target.value })}
                               className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
                             />
+                            <div className="flex gap-2 mt-2">
+                              <label className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase cursor-pointer">
+                                Upload
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const url = await uploadFile(file);
+                                    if (url) updateBlogPost(selectedBlog.id, { imageUrl: url });
+                                  }}
+                                />
+                              </label>
+                              <button
+                                onClick={() => openMediaModal({ kind: 'blog-image', postId: selectedBlog.id })}
+                                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase"
+                              >
+                                From Server
+                              </button>
+                            </div>
                           </div>
                         </div>
 
@@ -706,7 +836,30 @@ const AdminDashboard: React.FC = () => {
                             <input value={selectedBlog.canonical || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { canonical: e.target.value })} placeholder="Canonical URL" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                           </div>
                           <textarea value={selectedBlog.metaDescription || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { metaDescription: e.target.value })} rows={3} placeholder="Meta description" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                          <input value={selectedBlog.ogImage || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { ogImage: e.target.value })} placeholder="OG image URL" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                          <div>
+                            <input value={selectedBlog.ogImage || ''} onChange={(e) => updateBlogPost(selectedBlog.id, { ogImage: e.target.value })} placeholder="OG image URL" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                            <div className="flex gap-2 mt-2">
+                              <label className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase cursor-pointer">
+                                Upload
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const url = await uploadFile(file);
+                                    if (url) updateBlogPost(selectedBlog.id, { ogImage: url });
+                                  }}
+                                />
+                              </label>
+                              <button
+                                onClick={() => openMediaModal({ kind: 'blog-og', postId: selectedBlog.id })}
+                                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase"
+                              >
+                                From Server
+                              </button>
+                            </div>
+                          </div>
                           <label className="inline-flex items-center gap-2 text-xs uppercase text-zinc-400">
                             <input
                               type="checkbox"
@@ -767,7 +920,138 @@ const AdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {!['Homepage', 'SEO', 'Nav', 'Blog'].includes(tab) && (
+          {tab === 'Gallery' && (
+            <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
+              <div className="space-y-6">
+                <Card title="Gallery Collections">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {galleryCollections.map(collection => (
+                      <button
+                        key={collection.id}
+                        onClick={() => setSelectedGalleryId(collection.id)}
+                        className={`px-3 py-2 rounded-xl text-xs font-black uppercase ${activeGallery?.id === collection.id ? 'bg-pink-600 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'}`}
+                      >
+                        {collection.name}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const id = `gallery-${Date.now()}`;
+                        updateGalleryData(prev => ({
+                          ...prev,
+                          collections: [...(prev.collections || []), { id, name: `Gallery ${(prev.collections || []).length + 1}`, subtext: '', images: [], defaultViewMode: 'carousel' }],
+                          activeCollectionId: id
+                        }));
+                        setSelectedGalleryId(id);
+                      }}
+                      className="px-3 py-2 rounded-xl text-xs font-black uppercase bg-zinc-800 hover:bg-zinc-700"
+                    >
+                      + Add Collection
+                    </button>
+                  </div>
+                  {activeGallery && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Collection Name</label>
+                        <input
+                          value={activeGallery.name}
+                          onChange={(e) => updateGalleryData(prev => ({ ...prev, collections: (prev.collections || []).map(c => c.id === activeGallery.id ? { ...c, name: e.target.value } : c) }))}
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Subtext</label>
+                        <input
+                          value={activeGallery.subtext || ''}
+                          onChange={(e) => updateGalleryData(prev => ({ ...prev, collections: (prev.collections || []).map(c => c.id === activeGallery.id ? { ...c, subtext: e.target.value } : c) }))}
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </Card>
+
+                <Card title="Gallery Media">
+                  <div className="flex gap-2 mb-4">
+                    <label className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase cursor-pointer">
+                      Upload
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !activeGallery) return;
+                          const url = await uploadFile(file);
+                          if (!url) return;
+                          updateGalleryData(prev => ({
+                            ...prev,
+                            collections: (prev.collections || []).map(c =>
+                              c.id === activeGallery.id ? { ...c, images: [...(c.images || []), { id: `g-${Date.now()}`, url, caption: c.name }] } : c
+                            )
+                          }));
+                        }}
+                      />
+                    </label>
+                    <button
+                      onClick={() => openMediaModal({ kind: 'gallery-add', collectionId: activeGallery?.id })}
+                      className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase"
+                    >
+                      From Server
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {(activeGallery?.images || []).map((image, idx) => (
+                      <div key={image.id} className="rounded-xl border border-zinc-800 bg-zinc-800/30 overflow-hidden">
+                        <img src={image.url} alt={image.caption} className="w-full aspect-square object-cover" />
+                        <div className="p-2">
+                          <input
+                            value={image.caption || ''}
+                            onChange={(e) => {
+                              if (!activeGallery) return;
+                              updateGalleryData(prev => ({
+                                ...prev,
+                                collections: (prev.collections || []).map(c =>
+                                  c.id === activeGallery.id
+                                    ? { ...c, images: (c.images || []).map((img, i) => i === idx ? { ...img, caption: e.target.value } : img) }
+                                    : c
+                                )
+                              }));
+                            }}
+                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-[11px]"
+                          />
+                          <button
+                            onClick={() => {
+                              if (!activeGallery) return;
+                              updateGalleryData(prev => ({
+                                ...prev,
+                                collections: (prev.collections || []).map(c =>
+                                  c.id === activeGallery.id ? { ...c, images: (c.images || []).filter((_, i) => i !== idx) } : c
+                                )
+                              }));
+                            }}
+                            className="w-full mt-2 px-2 py-1 rounded bg-red-600/20 hover:bg-red-600/30 text-red-300 text-[10px] font-black uppercase"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+
+              <Card title="Gallery Preview" className="h-fit xl:sticky xl:top-24">
+                <p className="text-xs uppercase tracking-widest text-zinc-500 mb-3">{activeGallery?.name || 'Gallery'}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(activeGallery?.images || []).slice(0, 8).map(image => (
+                    <img key={image.id} src={image.url} alt={image.caption} className="w-full aspect-square object-cover rounded-lg border border-zinc-800" />
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {!['Homepage', 'SEO', 'Nav', 'Blog', 'Gallery'].includes(tab) && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
               <h2 className="text-xl font-black uppercase tracking-tighter">{tab}</h2>
               <p className="text-sm text-zinc-400 mt-3">Tab scaffold is ready in the new control-room layout. `SEO`, `Nav`, and `Blog` are now fully wired. Remaining tabs can be implemented next in the same non-breaking style.</p>
