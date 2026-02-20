@@ -58,7 +58,7 @@ export interface GalleryData {
     activeCollectionId?: string;
 }
 export type PageGalleryKey = 'home' | 'drinks' | 'food' | 'blog' | 'events' | 'songs' | 'instagram';
-export interface PageGalleryConfig { enabled: boolean; collectionId?: string; }
+export interface PageGalleryConfig { enabled: boolean; collectionId?: string; viewMode?: GalleryViewMode; }
 export type PageGallerySettings = Record<PageGalleryKey, PageGalleryConfig>;
 export interface HomeSectionRepeats {
     hero: number;
@@ -225,13 +225,13 @@ const INITIAL_GALLERY: GalleryData = {
     activeCollectionId: 'default'
 };
 const INITIAL_PAGE_GALLERY_SETTINGS: PageGallerySettings = {
-    home: { enabled: false, collectionId: 'default' },
-    drinks: { enabled: false, collectionId: 'default' },
-    food: { enabled: false, collectionId: 'default' },
-    blog: { enabled: false, collectionId: 'default' },
-    events: { enabled: false, collectionId: 'default' },
-    songs: { enabled: false, collectionId: 'default' },
-    instagram: { enabled: false, collectionId: 'default' }
+    home: { enabled: false, collectionId: 'default', viewMode: 'carousel' },
+    drinks: { enabled: false, collectionId: 'default', viewMode: 'carousel' },
+    food: { enabled: false, collectionId: 'default', viewMode: 'carousel' },
+    blog: { enabled: false, collectionId: 'default', viewMode: 'carousel' },
+    events: { enabled: false, collectionId: 'default', viewMode: 'carousel' },
+    songs: { enabled: false, collectionId: 'default', viewMode: 'carousel' },
+    instagram: { enabled: false, collectionId: 'default', viewMode: 'carousel' }
 };
 const INITIAL_BLOG: BlogData = {
     heading: "London Karaoke News",
@@ -448,13 +448,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 ? galleryData.collections
                 : [{ id: 'default' }];
             const validIds = new Set(collections.map(c => c.id));
+            const modeById = new Map(collections.map(c => [c.id, c.defaultViewMode === 'grid' ? 'grid' : 'carousel'] as const));
             const fallbackId = collections[0].id;
             let changed = false;
             const next = { ...prev };
             (Object.keys(next) as PageGalleryKey[]).forEach(key => {
                 const currentId = next[key]?.collectionId;
-                if (!currentId || !validIds.has(currentId)) {
-                    next[key] = { ...(next[key] || { enabled: false }), collectionId: fallbackId };
+                const nextId = (!currentId || !validIds.has(currentId)) ? fallbackId : currentId;
+                const currentMode = next[key]?.viewMode;
+                const fallbackMode = modeById.get(nextId) || 'carousel';
+                const nextMode = currentMode === 'grid' || currentMode === 'carousel' ? currentMode : fallbackMode;
+                if (nextId !== currentId || nextMode !== currentMode) {
+                    next[key] = { ...(next[key] || { enabled: false }), collectionId: nextId, viewMode: nextMode };
                     changed = true;
                 }
             });

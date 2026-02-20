@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { HomeSectionType, useData } from '../context/DataContext';
+import { HomeSectionType, PageGalleryKey, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
 
 const TABS = [
@@ -39,6 +39,15 @@ const HOME_SECTION_TYPES: Array<{ type: HomeSectionType; label: string }> = [
 ];
 
 const labelByType = (type: HomeSectionType) => HOME_SECTION_TYPES.find(s => s.type === type)?.label || type;
+const pageGalleryLabels: Record<PageGalleryKey, string> = {
+  home: 'Home',
+  drinks: 'Drinks',
+  food: 'Food',
+  blog: 'Blog',
+  events: 'Events',
+  songs: 'Songs',
+  instagram: 'Instagram'
+};
 
 const slugify = (value: string) =>
   value
@@ -97,6 +106,8 @@ const AdminDashboard: React.FC = () => {
     updateBlogData,
     galleryData,
     updateGalleryData,
+    pageGallerySettings,
+    updatePageGallerySettings,
     uploadFile,
     fetchServerFiles
   } = useData();
@@ -1049,8 +1060,81 @@ const AdminDashboard: React.FC = () => {
                           className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
                         />
                       </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Default View Mode</label>
+                        <select
+                          value={activeGallery.defaultViewMode || 'carousel'}
+                          onChange={(e) => {
+                            const nextMode = e.target.value === 'grid' ? 'grid' : 'carousel';
+                            updateGalleryData(prev => ({
+                              ...prev,
+                              collections: (prev.collections || []).map(c => c.id === activeGallery.id ? { ...c, defaultViewMode: nextMode } : c)
+                            }));
+                          }}
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                        >
+                          <option value="carousel">Slideshow</option>
+                          <option value="grid">Grid</option>
+                        </select>
+                      </div>
                     </div>
                   )}
+                </Card>
+
+                <Card title="Page Gallery Display">
+                  <div className="space-y-3">
+                    {(Object.keys(pageGallerySettings) as PageGalleryKey[]).map((key) => (
+                      <div key={key} className="grid grid-cols-1 md:grid-cols-[110px_90px_1fr_130px] gap-2 p-2 rounded-xl border border-zinc-800 bg-zinc-900/40">
+                        <div className="text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center">{pageGalleryLabels[key] || key}</div>
+                        <label className="inline-flex items-center gap-2 text-xs uppercase text-zinc-300">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(pageGallerySettings[key]?.enabled)}
+                            onChange={(e) =>
+                              updatePageGallerySettings(prev => ({
+                                ...prev,
+                                [key]: { ...(prev[key] || {}), enabled: e.target.checked }
+                              }))
+                            }
+                          />
+                          Show
+                        </label>
+                        <select
+                          value={pageGallerySettings[key]?.collectionId || galleryCollections[0]?.id || 'default'}
+                          onChange={(e) => {
+                            const selectedCollectionId = e.target.value;
+                            const selectedCollection = galleryCollections.find(c => c.id === selectedCollectionId);
+                            updatePageGallerySettings(prev => ({
+                              ...prev,
+                              [key]: {
+                                ...(prev[key] || { enabled: false }),
+                                collectionId: selectedCollectionId,
+                                viewMode: prev[key]?.viewMode || selectedCollection?.defaultViewMode || 'carousel'
+                              }
+                            }));
+                          }}
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-xs"
+                        >
+                          {galleryCollections.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={pageGallerySettings[key]?.viewMode || 'carousel'}
+                          onChange={(e) =>
+                            updatePageGallerySettings(prev => ({
+                              ...prev,
+                              [key]: { ...(prev[key] || { enabled: false }), viewMode: e.target.value === 'grid' ? 'grid' : 'carousel' }
+                            }))
+                          }
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-xs"
+                        >
+                          <option value="carousel">Slideshow</option>
+                          <option value="grid">Grid</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
                 </Card>
 
                 <Card title="Gallery Media">

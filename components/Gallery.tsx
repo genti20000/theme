@@ -5,9 +5,10 @@ import { GalleryViewMode, useData } from '../context/DataContext';
 interface GalleryProps {
   embedded?: boolean;
   forcedCollectionId?: string;
+  forcedViewMode?: GalleryViewMode;
 }
 
-const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId }) => {
+const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId, forcedViewMode }) => {
   const { galleryData, isDataLoading } = useData();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('carousel');
@@ -30,9 +31,13 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId 
   }, [forcedCollectionId, activeCollectionId, activeCollection]);
 
   useEffect(() => {
+    if (forcedViewMode) {
+      setViewMode(forcedViewMode);
+      return;
+    }
     const nextMode = activeCollection?.defaultViewMode === 'grid' ? 'grid' : 'carousel';
     setViewMode(nextMode);
-  }, [activeCollection?.id, activeCollection?.defaultViewMode]);
+  }, [activeCollection?.id, activeCollection?.defaultViewMode, forcedViewMode]);
 
   const handleImageLoad = (id: string) => {
       setLoadedImages(prev => ({ ...prev, [id]: true }));

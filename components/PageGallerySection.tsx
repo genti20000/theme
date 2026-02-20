@@ -22,7 +22,7 @@ const PageGallerySection: React.FC<PageGallerySectionProps> = ({ pageKey, classN
 
   return (
     <section className={className}>
-      <Gallery embedded forcedCollectionId={selected.id} />
+      <Gallery embedded forcedCollectionId={selected.id} forcedViewMode={setting.viewMode} />
     </section>
   );
 };
