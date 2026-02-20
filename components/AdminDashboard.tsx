@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HomeSectionType, PageGalleryKey, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
 
@@ -79,9 +79,10 @@ const AdminDashboard: React.FC = () => {
   const [selectedBlogId, setSelectedBlogId] = useState('');
   const [addNavKey, setAddNavKey] = useState('');
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-  const [mediaTarget, setMediaTarget] = useState<{ kind: 'blog-image' | 'blog-og' | 'gallery-add'; postId?: string; collectionId?: string } | null>(null);
+  const [mediaTarget, setMediaTarget] = useState<{ kind: 'blog-image' | 'blog-og' | 'gallery-add' | 'generic'; postId?: string; collectionId?: string } | null>(null);
   const [storageFiles, setStorageFiles] = useState<{ name: string; url: string }[]>([]);
   const [selectedGalleryId, setSelectedGalleryId] = useState('');
+  const genericMediaSetterRef = useRef<((url: string) => void) | null>(null);
 
   const {
     heroData,
@@ -161,6 +162,35 @@ const AdminDashboard: React.FC = () => {
   const activeGallery = galleryCollections.find(g => g.id === selectedGalleryId)
     || galleryCollections.find(g => g.id === galleryData.activeCollectionId)
     || galleryCollections[0];
+  const tabMediaUrls = useMemo(() => {
+    const clean = (values: Array<string | undefined>) => Array.from(new Set(values.filter(Boolean) as string[]));
+    switch (tab) {
+      case 'SEO':
+        return clean([headerData.logoUrl, headerData.faviconUrl]);
+      case 'Hero':
+        return clean([heroData.backgroundImageUrl, ...(heroData.slides || []), ...(heroData.mobileSlides || [])]);
+      case 'About':
+        return clean([highlightsData.mainImageUrl, highlightsData.mobileMainImageUrl, highlightsData.sideImageUrl]);
+      case 'Features':
+        return clean([featuresData.experience.image, featuresData.experience.mobileImage, ...(featuresData.grid?.items || []).map(i => i.image)]);
+      case 'Vibe':
+        return clean([vibeData.videoUrl, vibeData.mobileVideoUrl, vibeData.image1, vibeData.image2, vibeData.bigImage, vibeData.mobileBigImage]);
+      case 'Stats':
+        return clean((testimonialsData.items || []).map(i => i.avatar));
+      case 'Drinks':
+        return clean([drinksData.headerImageUrl]);
+      case 'Events':
+        return clean([eventsData.hero?.image, ...(eventsData.sections || []).map(s => s.imageUrl)]);
+      case 'Blog':
+        return clean((blogData.posts || []).flatMap(p => [p.imageUrl, p.ogImage]));
+      case 'Instagram':
+        return clean([...(instagramHighlightsData.highlights || []).map(h => h.imageUrl), ...(instagramHighlightsData.posts || []).map(p => p.imageUrl)]);
+      case 'Gallery':
+        return clean((activeGallery?.images || []).map(i => i.url));
+      default:
+        return [];
+    }
+  }, [tab, headerData.logoUrl, headerData.faviconUrl, heroData.backgroundImageUrl, heroData.slides, heroData.mobileSlides, highlightsData.mainImageUrl, highlightsData.mobileMainImageUrl, highlightsData.sideImageUrl, featuresData.experience.image, featuresData.experience.mobileImage, featuresData.grid, vibeData.videoUrl, vibeData.mobileVideoUrl, vibeData.image1, vibeData.image2, vibeData.bigImage, vibeData.mobileBigImage, testimonialsData.items, drinksData.headerImageUrl, eventsData.hero, eventsData.sections, blogData.posts, instagramHighlightsData.highlights, instagramHighlightsData.posts, activeGallery]);
 
   useEffect(() => {
     if (!selectedGalleryId && activeGallery?.id) setSelectedGalleryId(activeGallery.id);
@@ -318,7 +348,11 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const openMediaModal = async (target: { kind: 'blog-image' | 'blog-og' | 'gallery-add'; postId?: string; collectionId?: string }) => {
+  const openMediaModal = async (
+    target: { kind: 'blog-image' | 'blog-og' | 'gallery-add' | 'generic'; postId?: string; collectionId?: string },
+    genericSetter?: (url: string) => void
+  ) => {
+    if (target.kind === 'generic') genericMediaSetterRef.current = genericSetter || null;
     setMediaTarget(target);
     setIsMediaModalOpen(true);
     await refreshStorageFiles();
@@ -381,10 +415,70 @@ const AdminDashboard: React.FC = () => {
         const nextActive = nextCollections.find(col => col.id === targetCollectionId) || nextCollections[0];
         return { ...prev, collections: nextCollections, activeCollectionId: targetCollectionId, images: nextActive.images };
       });
+    } else if (mediaTarget.kind === 'generic') {
+      genericMediaSetterRef.current?.(url);
     }
     setIsMediaModalOpen(false);
     setMediaTarget(null);
+    genericMediaSetterRef.current = null;
   };
+
+  const uploadToField = async (file: File, onSet: (value: string) => void, errorMessage = 'Upload failed.') => {
+    const url = await uploadFile(file);
+    if (url) {
+      onSet(url);
+      setSyncError('');
+      return;
+    }
+    setSyncStatus('Error');
+    setSyncError(errorMessage);
+  };
+
+  const renderMediaField = (
+    label: string,
+    value: string,
+    onSet: (value: string) => void,
+    placeholder = 'Image URL'
+  ) => (
+    <div className="space-y-2">
+      <label className="block text-[10px] uppercase font-black text-zinc-500">{label}</label>
+      <input
+        value={value || ''}
+        onChange={(e) => onSet(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+      />
+      <div className="flex gap-2">
+        <label className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase cursor-pointer">
+          Upload
+          <input
+            type="file"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              await uploadToField(file, onSet, `Upload failed for ${label.toLowerCase()}.`);
+            }}
+          />
+        </label>
+        <button
+          onClick={() => openMediaModal({ kind: 'generic' }, onSet)}
+          className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase"
+        >
+          From Server
+        </button>
+      </div>
+      {value && (
+        <div className="rounded-xl overflow-hidden border border-zinc-800 bg-black h-32">
+          {isVideoFile(value) ? (
+            <video src={value} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+          ) : (
+            <img src={value} alt={label} className="w-full h-full object-cover" />
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   if (!isAuthenticated) {
     return (
@@ -418,7 +512,16 @@ const AdminDashboard: React.FC = () => {
           <div className="w-full max-w-5xl h-[80vh] bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col">
             <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
               <h3 className="text-sm font-black uppercase tracking-widest">Media Library</h3>
-              <button onClick={() => setIsMediaModalOpen(false)} className="px-3 py-1 rounded-lg bg-zinc-800 text-xs uppercase font-black">Close</button>
+              <button
+                onClick={() => {
+                  setIsMediaModalOpen(false);
+                  setMediaTarget(null);
+                  genericMediaSetterRef.current = null;
+                }}
+                className="px-3 py-1 rounded-lg bg-zinc-800 text-xs uppercase font-black"
+              >
+                Close
+              </button>
             </div>
             <div className="p-4 border-b border-zinc-800 flex items-center gap-2">
               <label className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase cursor-pointer">
@@ -516,6 +619,24 @@ const AdminDashboard: React.FC = () => {
         </aside>
 
         <main className="p-5 lg:p-8">
+          <Card title={`Existing Media (${tab})`} className="mb-6">
+            {tabMediaUrls.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-8 gap-2">
+                {tabMediaUrls.slice(0, 32).map((url, idx) => (
+                  <div key={`${url}-${idx}`} className="rounded-lg overflow-hidden border border-zinc-800 bg-black h-20">
+                    {isVideoFile(url) ? (
+                      <video src={url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={url} alt={`media-${idx + 1}`} className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-500 uppercase tracking-widest">No media fields detected for this tab.</p>
+            )}
+          </Card>
+
           {tab === 'Homepage' && (
             <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
               <div className="space-y-6">
@@ -655,19 +776,18 @@ const AdminDashboard: React.FC = () => {
                       <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Site Title</label>
                       <input value={headerData.siteTitle} onChange={(e) => updateHeaderData(prev => ({ ...prev, siteTitle: e.target.value }))} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                     </div>
-                    <div>
-                      <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Favicon URL</label>
-                      <input value={headerData.faviconUrl} onChange={(e) => updateHeaderData(prev => ({ ...prev, faviconUrl: e.target.value }))} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                    </div>
+                    {renderMediaField(
+                      'Favicon URL',
+                      headerData.faviconUrl,
+                      (value) => updateHeaderData(prev => ({ ...prev, faviconUrl: value })),
+                      'Favicon URL'
+                    )}
                   </div>
                   <div className="mt-4">
                     <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Meta Description</label>
                     <textarea value={headerData.siteDescription} onChange={(e) => updateHeaderData(prev => ({ ...prev, siteDescription: e.target.value }))} rows={5} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                   </div>
-                  <div className="mt-4">
-                    <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Logo URL</label>
-                    <input value={headerData.logoUrl} onChange={(e) => updateHeaderData(prev => ({ ...prev, logoUrl: e.target.value }))} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                  </div>
+                  <div className="mt-4">{renderMediaField('Logo URL', headerData.logoUrl, (value) => updateHeaderData(prev => ({ ...prev, logoUrl: value })), 'Logo URL')}</div>
                 </Card>
 
                 <Card title="Scripts (Head / Body)">
@@ -1066,7 +1186,9 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input value={heroData.badgeText} onChange={(e) => updateHeroData(prev => ({ ...prev, badgeText: e.target.value }))} placeholder="Badge text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <input value={heroData.buttonText} onChange={(e) => updateHeroData(prev => ({ ...prev, buttonText: e.target.value }))} placeholder="Button text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <input value={heroData.backgroundImageUrl} onChange={(e) => updateHeroData(prev => ({ ...prev, backgroundImageUrl: e.target.value }))} placeholder="Fallback background URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
+                <div className="md:col-span-2">
+                  {renderMediaField('Fallback background URL', heroData.backgroundImageUrl, (value) => updateHeroData(prev => ({ ...prev, backgroundImageUrl: value })), 'Fallback background URL')}
+                </div>
                 <input value={heroData.headingText} onChange={(e) => updateHeroData(prev => ({ ...prev, headingText: e.target.value }))} placeholder="Hero headline" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
                 <textarea value={heroData.subText} onChange={(e) => updateHeroData(prev => ({ ...prev, subText: e.target.value }))} rows={3} placeholder="Subtext" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
                 <div className="md:col-span-2">
@@ -1089,9 +1211,9 @@ const AdminDashboard: React.FC = () => {
                 <input value={highlightsData.heading} onChange={(e) => updateHighlightsData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <textarea value={highlightsData.subtext} onChange={(e) => updateHighlightsData(prev => ({ ...prev, subtext: e.target.value }))} rows={3} placeholder="Subtext" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input value={highlightsData.mainImageUrl} onChange={(e) => updateHighlightsData(prev => ({ ...prev, mainImageUrl: e.target.value }))} placeholder="Main image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                  <input value={highlightsData.mobileMainImageUrl || ''} onChange={(e) => updateHighlightsData(prev => ({ ...prev, mobileMainImageUrl: e.target.value }))} placeholder="Mobile main image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                  <input value={highlightsData.sideImageUrl} onChange={(e) => updateHighlightsData(prev => ({ ...prev, sideImageUrl: e.target.value }))} placeholder="Side image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  {renderMediaField('Main image URL', highlightsData.mainImageUrl, (value) => updateHighlightsData(prev => ({ ...prev, mainImageUrl: value })), 'Main image URL')}
+                  {renderMediaField('Mobile main image URL', highlightsData.mobileMainImageUrl || '', (value) => updateHighlightsData(prev => ({ ...prev, mobileMainImageUrl: value })), 'Mobile main image URL')}
+                  {renderMediaField('Side image URL', highlightsData.sideImageUrl, (value) => updateHighlightsData(prev => ({ ...prev, sideImageUrl: value })), 'Side image URL')}
                   <input value={highlightsData.featureListTitle} onChange={(e) => updateHighlightsData(prev => ({ ...prev, featureListTitle: e.target.value }))} placeholder="Feature list title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 </div>
                 <textarea value={(highlightsData.featureList || []).join('\n')} onChange={(e) => updateHighlightsData(prev => ({ ...prev, featureList: splitLines(e.target.value) }))} rows={5} placeholder="Feature list (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
@@ -1105,8 +1227,8 @@ const AdminDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <input value={featuresData.experience.label} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, label: e.target.value } }))} placeholder="Experience label" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                   <input value={featuresData.experience.heading} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, heading: e.target.value } }))} placeholder="Experience heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                  <input value={featuresData.experience.image} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, image: e.target.value } }))} placeholder="Experience image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                  <input value={featuresData.experience.mobileImage || ''} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, mobileImage: e.target.value } }))} placeholder="Experience mobile image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  {renderMediaField('Experience image URL', featuresData.experience.image, (value) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, image: value } })), 'Experience image URL')}
+                  {renderMediaField('Experience mobile image URL', featuresData.experience.mobileImage || '', (value) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, mobileImage: value } })), 'Experience mobile image URL')}
                 </div>
                 <textarea value={featuresData.experience.text} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, text: e.target.value } }))} rows={3} placeholder="Experience text" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <input value={featuresData.occasions.heading} onChange={(e) => updateFeaturesData(prev => ({ ...prev, occasions: { ...prev.occasions, heading: e.target.value } }))} placeholder="Occasions heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
@@ -1121,12 +1243,12 @@ const AdminDashboard: React.FC = () => {
                 <input value={vibeData.label} onChange={(e) => updateVibeData(prev => ({ ...prev, label: e.target.value }))} placeholder="Label" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <input value={vibeData.heading} onChange={(e) => updateVibeData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <textarea value={vibeData.text} onChange={(e) => updateVibeData(prev => ({ ...prev, text: e.target.value }))} rows={3} placeholder="Intro text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
-                <input value={vibeData.videoUrl || ''} onChange={(e) => updateVibeData(prev => ({ ...prev, videoUrl: e.target.value }))} placeholder="Video URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <input value={vibeData.mobileVideoUrl || ''} onChange={(e) => updateVibeData(prev => ({ ...prev, mobileVideoUrl: e.target.value }))} placeholder="Mobile video URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <input value={vibeData.image1} onChange={(e) => updateVibeData(prev => ({ ...prev, image1: e.target.value }))} placeholder="Image 1 URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <input value={vibeData.image2} onChange={(e) => updateVibeData(prev => ({ ...prev, image2: e.target.value }))} placeholder="Image 2 URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <input value={vibeData.bigImage} onChange={(e) => updateVibeData(prev => ({ ...prev, bigImage: e.target.value }))} placeholder="Bottom image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <input value={vibeData.mobileBigImage || ''} onChange={(e) => updateVibeData(prev => ({ ...prev, mobileBigImage: e.target.value }))} placeholder="Mobile bottom image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                {renderMediaField('Video URL', vibeData.videoUrl || '', (value) => updateVibeData(prev => ({ ...prev, videoUrl: value })), 'Video URL')}
+                {renderMediaField('Mobile video URL', vibeData.mobileVideoUrl || '', (value) => updateVibeData(prev => ({ ...prev, mobileVideoUrl: value })), 'Mobile video URL')}
+                {renderMediaField('Image 1 URL', vibeData.image1, (value) => updateVibeData(prev => ({ ...prev, image1: value })), 'Image 1 URL')}
+                {renderMediaField('Image 2 URL', vibeData.image2, (value) => updateVibeData(prev => ({ ...prev, image2: value })), 'Image 2 URL')}
+                {renderMediaField('Bottom image URL', vibeData.bigImage, (value) => updateVibeData(prev => ({ ...prev, bigImage: value })), 'Bottom image URL')}
+                {renderMediaField('Mobile bottom image URL', vibeData.mobileBigImage || '', (value) => updateVibeData(prev => ({ ...prev, mobileBigImage: value })), 'Mobile bottom image URL')}
                 <input value={vibeData.bottomHeading} onChange={(e) => updateVibeData(prev => ({ ...prev, bottomHeading: e.target.value }))} placeholder="Bottom heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
                 <textarea value={vibeData.bottomText} onChange={(e) => updateVibeData(prev => ({ ...prev, bottomText: e.target.value }))} rows={3} placeholder="Bottom text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
               </div>
@@ -1182,7 +1304,7 @@ const AdminDashboard: React.FC = () => {
           {tab === 'Drinks' && (
             <Card title="Drinks Editor">
               <div className="space-y-3">
-                <input value={drinksData.headerImageUrl || ''} onChange={(e) => updateDrinksData(prev => ({ ...prev, headerImageUrl: e.target.value }))} placeholder="Header image URL" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                {renderMediaField('Header image URL', drinksData.headerImageUrl || '', (value) => updateDrinksData(prev => ({ ...prev, headerImageUrl: value })), 'Header image URL')}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <input value={drinksData.packagesData?.title || ''} onChange={(e) => updateDrinksData(prev => ({ ...prev, packagesData: { ...prev.packagesData, title: e.target.value } }))} placeholder="Packages title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                   <input value={drinksData.packagesData?.subtitle || ''} onChange={(e) => updateDrinksData(prev => ({ ...prev, packagesData: { ...prev.packagesData, subtitle: e.target.value } }))} placeholder="Packages subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
@@ -1200,8 +1322,24 @@ const AdminDashboard: React.FC = () => {
                   <input value={eventsData.hero?.title || ''} onChange={(e) => updateEventsData(prev => ({ ...prev, hero: { ...prev.hero, title: e.target.value } }))} placeholder="Hero title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                   <input value={eventsData.hero?.subtitle || ''} onChange={(e) => updateEventsData(prev => ({ ...prev, hero: { ...prev.hero, subtitle: e.target.value } }))} placeholder="Hero subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 </div>
-                <input value={eventsData.hero?.image || ''} onChange={(e) => updateEventsData(prev => ({ ...prev, hero: { ...prev.hero, image: e.target.value } }))} placeholder="Hero image URL" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <textarea value={(eventsData.sections || []).map(s => `${s.title}||${s.subtitle}||${s.description}||${s.imageUrl}||${(s.features || []).join(';')}`).join('\n')} onChange={(e) => updateEventsData(prev => ({ ...prev, sections: splitLines(e.target.value).map((line, idx) => { const [title = '', subtitle = '', description = '', imageUrl = '', features = ''] = line.split('||'); return { id: prev.sections?.[idx]?.id || `event-${Date.now()}-${idx}`, title, subtitle, description, imageUrl, features: features.split(';').map(v => v.trim()).filter(Boolean) }; }) }))} rows={8} placeholder="One event section per line: title||subtitle||description||imageUrl||feature1;feature2" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                {renderMediaField('Hero image URL', eventsData.hero?.image || '', (value) => updateEventsData(prev => ({ ...prev, hero: { ...prev.hero, image: value } })), 'Hero image URL')}
+                <div className="space-y-3">
+                  {(eventsData.sections || []).map((section, idx) => (
+                    <div key={section.id || `section-${idx}`} className="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <input value={section.title} onChange={(e) => updateEventsData(prev => ({ ...prev, sections: (prev.sections || []).map((s, i) => i === idx ? { ...s, title: e.target.value } : s) }))} placeholder="Section title" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                        <input value={section.subtitle} onChange={(e) => updateEventsData(prev => ({ ...prev, sections: (prev.sections || []).map((s, i) => i === idx ? { ...s, subtitle: e.target.value } : s) }))} placeholder="Section subtitle" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      </div>
+                      <textarea value={section.description} onChange={(e) => updateEventsData(prev => ({ ...prev, sections: (prev.sections || []).map((s, i) => i === idx ? { ...s, description: e.target.value } : s) }))} rows={2} placeholder="Description" className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      {renderMediaField('Section image URL', section.imageUrl, (value) => updateEventsData(prev => ({ ...prev, sections: (prev.sections || []).map((s, i) => i === idx ? { ...s, imageUrl: value } : s) })), 'Section image URL')}
+                      <textarea value={(section.features || []).join('\n')} onChange={(e) => updateEventsData(prev => ({ ...prev, sections: (prev.sections || []).map((s, i) => i === idx ? { ...s, features: splitLines(e.target.value) } : s) }))} rows={3} placeholder="Features (one per line)" className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      <button onClick={() => updateEventsData(prev => ({ ...prev, sections: (prev.sections || []).filter((_, i) => i !== idx) }))} className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black">Remove Section</button>
+                    </div>
+                  ))}
+                  <button onClick={() => updateEventsData(prev => ({ ...prev, sections: [...(prev.sections || []), { id: `event-${Date.now()}`, title: 'New Event', subtitle: '', description: '', imageUrl: '', features: [] }] }))} className="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase">
+                    + Add Event Section
+                  </button>
+                </div>
               </div>
             </Card>
           )}
@@ -1213,8 +1351,35 @@ const AdminDashboard: React.FC = () => {
                   <input value={instagramHighlightsData.heading || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                   <input value={instagramHighlightsData.username || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, username: e.target.value }))} placeholder="@username" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 </div>
-                <textarea value={(instagramHighlightsData.highlights || []).map(h => `${h.title}||${h.imageUrl}||${h.link}`).join('\n')} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, highlights: splitLines(e.target.value).map((line, idx) => { const [title = '', imageUrl = '', link = ''] = line.split('||'); return { id: prev.highlights?.[idx]?.id || `highlight-${Date.now()}-${idx}`, title, imageUrl, link }; }) }))} rows={6} placeholder="Highlights: title||imageUrl||link" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                <textarea value={(instagramHighlightsData.posts || []).map(p => `${p.imageUrl}||${p.likes}||${p.comments}||${p.caption || ''}`).join('\n')} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, posts: splitLines(e.target.value).map((line, idx) => { const [imageUrl = '', likes = '0', comments = '0', caption = ''] = line.split('||'); return { id: prev.posts?.[idx]?.id || `post-${Date.now()}-${idx}`, imageUrl, likes, comments, caption }; }) }))} rows={6} placeholder="Posts: imageUrl||likes||comments||caption" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <div className="space-y-3">
+                  <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Highlights</p>
+                  {(instagramHighlightsData.highlights || []).map((highlight, idx) => (
+                    <div key={highlight.id || `highlight-${idx}`} className="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <input value={highlight.title} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, highlights: (prev.highlights || []).map((h, i) => i === idx ? { ...h, title: e.target.value } : h) }))} placeholder="Highlight title" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                        <input value={highlight.link || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, highlights: (prev.highlights || []).map((h, i) => i === idx ? { ...h, link: e.target.value } : h) }))} placeholder="Highlight link" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      </div>
+                      {renderMediaField('Highlight image URL', highlight.imageUrl || '', (value) => updateInstagramHighlightsData(prev => ({ ...prev, highlights: (prev.highlights || []).map((h, i) => i === idx ? { ...h, imageUrl: value } : h) })), 'Highlight image URL')}
+                      <button onClick={() => updateInstagramHighlightsData(prev => ({ ...prev, highlights: (prev.highlights || []).filter((_, i) => i !== idx) }))} className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black">Remove Highlight</button>
+                    </div>
+                  ))}
+                  <button onClick={() => updateInstagramHighlightsData(prev => ({ ...prev, highlights: [...(prev.highlights || []), { id: `highlight-${Date.now()}`, title: 'New Highlight', imageUrl: '', link: '' }] }))} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">+ Add Highlight</button>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Posts</p>
+                  {(instagramHighlightsData.posts || []).map((post, idx) => (
+                    <div key={post.id || `post-${idx}`} className="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <input value={post.likes || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, posts: (prev.posts || []).map((p, i) => i === idx ? { ...p, likes: e.target.value } : p) }))} placeholder="Likes" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                        <input value={post.comments || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, posts: (prev.posts || []).map((p, i) => i === idx ? { ...p, comments: e.target.value } : p) }))} placeholder="Comments" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                        <input value={post.caption || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, posts: (prev.posts || []).map((p, i) => i === idx ? { ...p, caption: e.target.value } : p) }))} placeholder="Caption" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      </div>
+                      {renderMediaField('Post image URL', post.imageUrl || '', (value) => updateInstagramHighlightsData(prev => ({ ...prev, posts: (prev.posts || []).map((p, i) => i === idx ? { ...p, imageUrl: value } : p) })), 'Post image URL')}
+                      <button onClick={() => updateInstagramHighlightsData(prev => ({ ...prev, posts: (prev.posts || []).filter((_, i) => i !== idx) }))} className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black">Remove Post</button>
+                    </div>
+                  ))}
+                  <button onClick={() => updateInstagramHighlightsData(prev => ({ ...prev, posts: [...(prev.posts || []), { id: `post-${Date.now()}`, imageUrl: '', likes: '0', comments: '0', caption: '' }] }))} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">+ Add Post</button>
+                </div>
               </div>
             </Card>
           )}
