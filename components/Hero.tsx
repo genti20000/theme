@@ -40,9 +40,9 @@ const Hero: React.FC = () => {
         .animate-zoom-slow { animation: zoom-slow 20s ease-in-out infinite alternate; }
       `}</style>
       
-      {/* Background Container: Reduced height on mobile to 110% to ensure full width visibility */}
+      {/* Background Container */}
       <div 
-        className="absolute inset-x-0 h-[110%] md:h-[140%] -top-[5%] md:-top-[20%] z-0 will-change-transform motion-reduce:transform-none" 
+        className="absolute inset-0 md:inset-x-0 md:h-[140%] md:-top-[20%] z-0 will-change-transform motion-reduce:transform-none" 
         style={{ transform: `translateY(${scrollY * 0.15}px)` }}
       >
         {slides.length > 0 ? slides.map((slide, index) => {
@@ -84,7 +84,7 @@ const Hero: React.FC = () => {
                               playsInline 
                               width="1080"
                               height="1920"
-                              className="w-full h-full object-cover animate-zoom-slow" 
+                              className="w-full h-full object-contain bg-black" 
                             />
                         ) : (
                             <img 
@@ -92,7 +92,7 @@ const Hero: React.FC = () => {
                               alt="LKC Soho Interior Mobile" 
                               width="1080"
                               height="1920"
-                              className="w-full h-full object-cover object-center animate-zoom-slow" 
+                              className="w-full h-full object-contain bg-black" 
                             />
                         )}
                     </div>
