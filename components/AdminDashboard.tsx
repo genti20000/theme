@@ -59,6 +59,7 @@ const slugify = (value: string) =>
 
 const isVideoFile = (url: string) => /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url);
 const isImageFile = (url: string) => /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/i.test(url);
+const splitLines = (value: string) => value.split('\n').map(v => v.trim()).filter(Boolean);
 
 const Card: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
   <section className={`bg-zinc-900 border border-zinc-800 rounded-2xl p-5 ${className}`}>
@@ -83,6 +84,16 @@ const AdminDashboard: React.FC = () => {
   const [selectedGalleryId, setSelectedGalleryId] = useState('');
 
   const {
+    heroData,
+    updateHeroData,
+    foodMenu,
+    updateFoodMenu,
+    drinksData,
+    updateDrinksData,
+    eventsData,
+    updateEventsData,
+    termsData,
+    updateTermsData,
     homeSections,
     updateHomeSections,
     homeSectionRepeats,
@@ -90,16 +101,25 @@ const AdminDashboard: React.FC = () => {
     adminPassword,
     updateAdminPassword,
     syncUrl,
+    updateSyncUrl,
     exportDatabase,
     purgeCache,
     highlightsData,
+    updateHighlightsData,
     featuresData,
+    updateFeaturesData,
     vibeData,
+    updateVibeData,
     batteryData,
+    updateBatteryData,
     testimonialsData,
+    updateTestimonialsData,
     infoSectionData,
+    updateInfoSectionData,
     faqData,
+    updateFaqData,
     instagramHighlightsData,
+    updateInstagramHighlightsData,
     headerData,
     updateHeaderData,
     blogData,
@@ -1013,6 +1033,272 @@ const AdminDashboard: React.FC = () => {
             </div>
           )}
 
+          {tab === 'Dashboard' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card title="Home Sections">
+                  <p className="text-3xl font-black">{homeSections.length}</p>
+                </Card>
+                <Card title="Blog Posts">
+                  <p className="text-3xl font-black">{(blogData.posts || []).length}</p>
+                </Card>
+                <Card title="Galleries">
+                  <p className="text-3xl font-black">{galleryCollections.length}</p>
+                </Card>
+                <Card title="Food Categories">
+                  <p className="text-3xl font-black">{foodMenu.length}</p>
+                </Card>
+              </div>
+              <Card title="Quick Jump">
+                <div className="flex flex-wrap gap-2">
+                  {['Homepage', 'SEO', 'Nav', 'Hero', 'Blog', 'Gallery', 'Config'].map((target) => (
+                    <button key={target} onClick={() => setTab(target)} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">
+                      {target}
+                    </button>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {tab === 'Hero' && (
+            <Card title="Hero Editor">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input value={heroData.badgeText} onChange={(e) => updateHeroData(prev => ({ ...prev, badgeText: e.target.value }))} placeholder="Badge text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={heroData.buttonText} onChange={(e) => updateHeroData(prev => ({ ...prev, buttonText: e.target.value }))} placeholder="Button text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={heroData.backgroundImageUrl} onChange={(e) => updateHeroData(prev => ({ ...prev, backgroundImageUrl: e.target.value }))} placeholder="Fallback background URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
+                <input value={heroData.headingText} onChange={(e) => updateHeroData(prev => ({ ...prev, headingText: e.target.value }))} placeholder="Hero headline" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
+                <textarea value={heroData.subText} onChange={(e) => updateHeroData(prev => ({ ...prev, subText: e.target.value }))} rows={3} placeholder="Subtext" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Desktop Slides (one URL per line)</label>
+                  <textarea value={(heroData.slides || []).join('\n')} onChange={(e) => updateHeroData(prev => ({ ...prev, slides: splitLines(e.target.value) }))} rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Mobile Slides (one URL per line)</label>
+                  <textarea value={(heroData.mobileSlides || []).join('\n')} onChange={(e) => updateHeroData(prev => ({ ...prev, mobileSlides: splitLines(e.target.value) }))} rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <label className="inline-flex items-center gap-2 text-xs uppercase text-zinc-300"><input type="checkbox" checked={heroData.showBadge !== false} onChange={(e) => updateHeroData(prev => ({ ...prev, showBadge: e.target.checked }))} /> Show Badge</label>
+                <label className="inline-flex items-center gap-2 text-xs uppercase text-zinc-300"><input type="checkbox" checked={heroData.showButtons !== false} onChange={(e) => updateHeroData(prev => ({ ...prev, showButtons: e.target.checked }))} /> Show Buttons</label>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'About' && (
+            <Card title="About Editor">
+              <div className="space-y-4">
+                <input value={highlightsData.heading} onChange={(e) => updateHighlightsData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={highlightsData.subtext} onChange={(e) => updateHighlightsData(prev => ({ ...prev, subtext: e.target.value }))} rows={3} placeholder="Subtext" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={highlightsData.mainImageUrl} onChange={(e) => updateHighlightsData(prev => ({ ...prev, mainImageUrl: e.target.value }))} placeholder="Main image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={highlightsData.mobileMainImageUrl || ''} onChange={(e) => updateHighlightsData(prev => ({ ...prev, mobileMainImageUrl: e.target.value }))} placeholder="Mobile main image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={highlightsData.sideImageUrl} onChange={(e) => updateHighlightsData(prev => ({ ...prev, sideImageUrl: e.target.value }))} placeholder="Side image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={highlightsData.featureListTitle} onChange={(e) => updateHighlightsData(prev => ({ ...prev, featureListTitle: e.target.value }))} placeholder="Feature list title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <textarea value={(highlightsData.featureList || []).join('\n')} onChange={(e) => updateHighlightsData(prev => ({ ...prev, featureList: splitLines(e.target.value) }))} rows={5} placeholder="Feature list (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Features' && (
+            <Card title="Features Editor">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={featuresData.experience.label} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, label: e.target.value } }))} placeholder="Experience label" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={featuresData.experience.heading} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, heading: e.target.value } }))} placeholder="Experience heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={featuresData.experience.image} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, image: e.target.value } }))} placeholder="Experience image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={featuresData.experience.mobileImage || ''} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, mobileImage: e.target.value } }))} placeholder="Experience mobile image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <textarea value={featuresData.experience.text} onChange={(e) => updateFeaturesData(prev => ({ ...prev, experience: { ...prev.experience, text: e.target.value } }))} rows={3} placeholder="Experience text" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={featuresData.occasions.heading} onChange={(e) => updateFeaturesData(prev => ({ ...prev, occasions: { ...prev.occasions, heading: e.target.value } }))} placeholder="Occasions heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={featuresData.occasions.text} onChange={(e) => updateFeaturesData(prev => ({ ...prev, occasions: { ...prev.occasions, text: e.target.value } }))} rows={2} placeholder="Occasions text" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Vibe' && (
+            <Card title="Vibe Editor">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input value={vibeData.label} onChange={(e) => updateVibeData(prev => ({ ...prev, label: e.target.value }))} placeholder="Label" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={vibeData.heading} onChange={(e) => updateVibeData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={vibeData.text} onChange={(e) => updateVibeData(prev => ({ ...prev, text: e.target.value }))} rows={3} placeholder="Intro text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
+                <input value={vibeData.videoUrl || ''} onChange={(e) => updateVibeData(prev => ({ ...prev, videoUrl: e.target.value }))} placeholder="Video URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={vibeData.mobileVideoUrl || ''} onChange={(e) => updateVibeData(prev => ({ ...prev, mobileVideoUrl: e.target.value }))} placeholder="Mobile video URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={vibeData.image1} onChange={(e) => updateVibeData(prev => ({ ...prev, image1: e.target.value }))} placeholder="Image 1 URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={vibeData.image2} onChange={(e) => updateVibeData(prev => ({ ...prev, image2: e.target.value }))} placeholder="Image 2 URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={vibeData.bigImage} onChange={(e) => updateVibeData(prev => ({ ...prev, bigImage: e.target.value }))} placeholder="Bottom image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={vibeData.mobileBigImage || ''} onChange={(e) => updateVibeData(prev => ({ ...prev, mobileBigImage: e.target.value }))} placeholder="Mobile bottom image URL" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={vibeData.bottomHeading} onChange={(e) => updateVibeData(prev => ({ ...prev, bottomHeading: e.target.value }))} placeholder="Bottom heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
+                <textarea value={vibeData.bottomText} onChange={(e) => updateVibeData(prev => ({ ...prev, bottomText: e.target.value }))} rows={3} placeholder="Bottom text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Stats' && (
+            <div className="space-y-6">
+              <Card title="Stats Editor">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={batteryData.statPrefix} onChange={(e) => updateBatteryData(prev => ({ ...prev, statPrefix: e.target.value }))} placeholder="Prefix" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={batteryData.statNumber} onChange={(e) => updateBatteryData(prev => ({ ...prev, statNumber: e.target.value }))} placeholder="Number" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={batteryData.statSuffix} onChange={(e) => updateBatteryData(prev => ({ ...prev, statSuffix: e.target.value }))} placeholder="Suffix" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={batteryData.subText} onChange={(e) => updateBatteryData(prev => ({ ...prev, subText: e.target.value }))} placeholder="Subtext" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+              </Card>
+              <Card title="Testimonials">
+                <div className="space-y-3">
+                  <input value={testimonialsData.heading} onChange={(e) => updateTestimonialsData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <textarea value={testimonialsData.subtext} onChange={(e) => updateTestimonialsData(prev => ({ ...prev, subtext: e.target.value }))} rows={2} placeholder="Subtext" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <textarea value={(testimonialsData.items || []).map(i => `${i.quote}||${i.name}||${i.avatar || ''}`).join('\n')} onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: splitLines(e.target.value).map((line) => { const [quote = '', name = '', avatar = ''] = line.split('||'); return { quote, name, avatar }; }) }))} rows={6} placeholder="One testimonial per line: quote||name||avatarUrl" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {tab === 'Food' && (
+            <Card title="Food Menu">
+              <div className="space-y-4">
+                {(foodMenu || []).map((category, categoryIndex) => (
+                  <div key={`${category.category}-${categoryIndex}`} className="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
+                      <input value={category.category} onChange={(e) => updateFoodMenu(prev => prev.map((c, i) => i === categoryIndex ? { ...c, category: e.target.value } : c))} placeholder="Category" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      <input value={category.description || ''} onChange={(e) => updateFoodMenu(prev => prev.map((c, i) => i === categoryIndex ? { ...c, description: e.target.value } : c))} placeholder="Description" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      <button onClick={() => updateFoodMenu(prev => prev.filter((_, i) => i !== categoryIndex))} className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black">Remove</button>
+                    </div>
+                    {(category.items || []).map((item, itemIndex) => (
+                      <div key={`${item.name}-${itemIndex}`} className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                        <input value={item.name} onChange={(e) => updateFoodMenu(prev => prev.map((c, i) => i === categoryIndex ? { ...c, items: c.items.map((it, ii) => ii === itemIndex ? { ...it, name: e.target.value } : it) } : c))} placeholder="Item name" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                        <input value={item.price} onChange={(e) => updateFoodMenu(prev => prev.map((c, i) => i === categoryIndex ? { ...c, items: c.items.map((it, ii) => ii === itemIndex ? { ...it, price: e.target.value } : it) } : c))} placeholder="Price" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                        <input value={item.description} onChange={(e) => updateFoodMenu(prev => prev.map((c, i) => i === categoryIndex ? { ...c, items: c.items.map((it, ii) => ii === itemIndex ? { ...it, description: e.target.value } : it) } : c))} placeholder="Description" className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                        <button onClick={() => updateFoodMenu(prev => prev.map((c, i) => i === categoryIndex ? { ...c, items: c.items.filter((_, ii) => ii !== itemIndex) } : c))} className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black">Remove Item</button>
+                      </div>
+                    ))}
+                    <button onClick={() => updateFoodMenu(prev => prev.map((c, i) => i === categoryIndex ? { ...c, items: [...(c.items || []), { name: 'New item', description: '', price: '' }] } : c))} className="px-2 py-1 rounded bg-zinc-900 text-xs uppercase font-black">+ Add Item</button>
+                  </div>
+                ))}
+                <button onClick={() => updateFoodMenu(prev => [...(prev || []), { category: `Category ${(prev || []).length + 1}`, description: '', items: [] }])} className="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase">+ Add Category</button>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Drinks' && (
+            <Card title="Drinks Editor">
+              <div className="space-y-3">
+                <input value={drinksData.headerImageUrl || ''} onChange={(e) => updateDrinksData(prev => ({ ...prev, headerImageUrl: e.target.value }))} placeholder="Header image URL" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={drinksData.packagesData?.title || ''} onChange={(e) => updateDrinksData(prev => ({ ...prev, packagesData: { ...prev.packagesData, title: e.target.value } }))} placeholder="Packages title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={drinksData.packagesData?.subtitle || ''} onChange={(e) => updateDrinksData(prev => ({ ...prev, packagesData: { ...prev.packagesData, subtitle: e.target.value } }))} placeholder="Packages subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <textarea value={(drinksData.packagesData?.notes || []).join('\n')} onChange={(e) => updateDrinksData(prev => ({ ...prev, packagesData: { ...prev.packagesData, notes: splitLines(e.target.value) } }))} rows={4} placeholder="Package notes (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <p className="text-xs text-zinc-500">Deep menu arrays (cocktails/wines/shots) stay preserved and can still be edited from the existing JSON sync payload.</p>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Events' && (
+            <Card title="Events Editor">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={eventsData.hero?.title || ''} onChange={(e) => updateEventsData(prev => ({ ...prev, hero: { ...prev.hero, title: e.target.value } }))} placeholder="Hero title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={eventsData.hero?.subtitle || ''} onChange={(e) => updateEventsData(prev => ({ ...prev, hero: { ...prev.hero, subtitle: e.target.value } }))} placeholder="Hero subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <input value={eventsData.hero?.image || ''} onChange={(e) => updateEventsData(prev => ({ ...prev, hero: { ...prev.hero, image: e.target.value } }))} placeholder="Hero image URL" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(eventsData.sections || []).map(s => `${s.title}||${s.subtitle}||${s.description}||${s.imageUrl}||${(s.features || []).join(';')}`).join('\n')} onChange={(e) => updateEventsData(prev => ({ ...prev, sections: splitLines(e.target.value).map((line, idx) => { const [title = '', subtitle = '', description = '', imageUrl = '', features = ''] = line.split('||'); return { id: prev.sections?.[idx]?.id || `event-${Date.now()}-${idx}`, title, subtitle, description, imageUrl, features: features.split(';').map(v => v.trim()).filter(Boolean) }; }) }))} rows={8} placeholder="One event section per line: title||subtitle||description||imageUrl||feature1;feature2" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Instagram' && (
+            <Card title="Instagram Editor">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={instagramHighlightsData.heading || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={instagramHighlightsData.username || ''} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, username: e.target.value }))} placeholder="@username" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <textarea value={(instagramHighlightsData.highlights || []).map(h => `${h.title}||${h.imageUrl}||${h.link}`).join('\n')} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, highlights: splitLines(e.target.value).map((line, idx) => { const [title = '', imageUrl = '', link = ''] = line.split('||'); return { id: prev.highlights?.[idx]?.id || `highlight-${Date.now()}-${idx}`, title, imageUrl, link }; }) }))} rows={6} placeholder="Highlights: title||imageUrl||link" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(instagramHighlightsData.posts || []).map(p => `${p.imageUrl}||${p.likes}||${p.comments}||${p.caption || ''}`).join('\n')} onChange={(e) => updateInstagramHighlightsData(prev => ({ ...prev, posts: splitLines(e.target.value).map((line, idx) => { const [imageUrl = '', likes = '0', comments = '0', caption = ''] = line.split('||'); return { id: prev.posts?.[idx]?.id || `post-${Date.now()}-${idx}`, imageUrl, likes, comments, caption }; }) }))} rows={6} placeholder="Posts: imageUrl||likes||comments||caption" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+              </div>
+            </Card>
+          )}
+
+          {tab === 'FAQ' && (
+            <Card title="FAQ Editor">
+              <div className="space-y-3">
+                <input value={faqData.heading} onChange={(e) => updateFaqData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={faqData.subtext} onChange={(e) => updateFaqData(prev => ({ ...prev, subtext: e.target.value }))} rows={2} placeholder="Subtext" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(faqData.items || []).map(i => `${i.question}||${i.answer}`).join('\n')} onChange={(e) => updateFaqData(prev => ({ ...prev, items: splitLines(e.target.value).map((line) => { const [question = '', answer = ''] = line.split('||'); return { question, answer }; }) }))} rows={8} placeholder="One item per line: question||answer" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Info' && (
+            <Card title="Info Editor">
+              <div className="space-y-3">
+                <input value={infoSectionData.heading} onChange={(e) => updateInfoSectionData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(infoSectionData.sections || []).map(s => `${s.title}||${s.content}`).join('\n')} onChange={(e) => updateInfoSectionData(prev => ({ ...prev, sections: splitLines(e.target.value).map((line) => { const [title = '', content = ''] = line.split('||'); return { title, content }; }) }))} rows={10} placeholder="Sections: title||content" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input value={infoSectionData.footerTitle} onChange={(e) => updateInfoSectionData(prev => ({ ...prev, footerTitle: e.target.value }))} placeholder="Footer title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={infoSectionData.footerText} onChange={(e) => updateInfoSectionData(prev => ({ ...prev, footerText: e.target.value }))} placeholder="Footer text" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={infoSectionData.footerHighlight} onChange={(e) => updateInfoSectionData(prev => ({ ...prev, footerHighlight: e.target.value }))} placeholder="Footer highlight" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Terms' && (
+            <Card title="Terms Editor">
+              <div className="space-y-3">
+                {(termsData || []).map((term, idx) => (
+                  <div key={`${term.title}-${idx}`} className="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-2">
+                    <div className="flex gap-2">
+                      <input value={term.title} onChange={(e) => updateTermsData(prev => prev.map((t, i) => i === idx ? { ...t, title: e.target.value } : t))} placeholder="Title" className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                      <button onClick={() => updateTermsData(prev => prev.filter((_, i) => i !== idx))} className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black">Remove</button>
+                    </div>
+                    <textarea value={term.content} onChange={(e) => updateTermsData(prev => prev.map((t, i) => i === idx ? { ...t, content: e.target.value } : t))} rows={3} placeholder="Content" className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs" />
+                  </div>
+                ))}
+                <button onClick={() => updateTermsData(prev => [...(prev || []), { title: 'New Term', content: '' }])} className="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase">+ Add Term</button>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Config' && (
+            <div className="space-y-6">
+              <Card title="Sync Config">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={syncUrl} onChange={(e) => updateSyncUrl(e.target.value)} placeholder="Sync URL (db.php)" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={adminPassword} onChange={(e) => updateAdminPassword(e.target.value)} placeholder="Admin key" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+              </Card>
+              <Card title="JSON Backup">
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(exportDatabase());
+                      setSyncError('JSON copied to clipboard.');
+                    }}
+                    className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase"
+                  >
+                    Copy JSON Export
+                  </button>
+                  <button
+                    onClick={() => {
+                      const data = exportDatabase();
+                      const blob = new Blob([data], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `lkc-site-backup-${new Date().toISOString().slice(0, 10)}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase"
+                  >
+                    Download JSON Export
+                  </button>
+                </div>
+              </Card>
+            </div>
+          )}
+
           {tab === 'Gallery' && (
             <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1fr] gap-6">
               <div className="space-y-6">
@@ -1219,13 +1505,6 @@ const AdminDashboard: React.FC = () => {
                   ))}
                 </div>
               </Card>
-            </div>
-          )}
-
-          {!['Homepage', 'SEO', 'Nav', 'Blog', 'Gallery'].includes(tab) && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-              <h2 className="text-xl font-black uppercase tracking-tighter">{tab}</h2>
-              <p className="text-sm text-zinc-400 mt-3">Tab scaffold is ready in the new control-room layout. `SEO`, `Nav`, and `Blog` are now fully wired. Remaining tabs can be implemented next in the same non-breaking style.</p>
             </div>
           )}
         </main>
