@@ -1192,12 +1192,68 @@ const AdminDashboard: React.FC = () => {
                 <input value={heroData.headingText} onChange={(e) => updateHeroData(prev => ({ ...prev, headingText: e.target.value }))} placeholder="Hero headline" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
                 <textarea value={heroData.subText} onChange={(e) => updateHeroData(prev => ({ ...prev, subText: e.target.value }))} rows={3} placeholder="Subtext" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm md:col-span-2" />
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Desktop Slides (one URL per line)</label>
-                  <textarea value={(heroData.slides || []).join('\n')} onChange={(e) => updateHeroData(prev => ({ ...prev, slides: splitLines(e.target.value) }))} rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[10px] uppercase font-black text-zinc-500">Desktop Slides (video or photo)</label>
+                    <button
+                      onClick={() => updateHeroData(prev => ({ ...prev, slides: [...(prev.slides || []), ''] }))}
+                      className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase"
+                    >
+                      + Add Media
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {(heroData.slides || []).map((slide, idx) => (
+                      <div key={`desktop-slide-${idx}`} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-2">
+                        {renderMediaField(
+                          `Desktop Slide ${idx + 1}`,
+                          slide,
+                          (value) => updateHeroData(prev => ({ ...prev, slides: (prev.slides || []).map((s, i) => i === idx ? value : s) })),
+                          'Slide media URL'
+                        )}
+                        <button
+                          onClick={() => updateHeroData(prev => ({ ...prev, slides: (prev.slides || []).filter((_, i) => i !== idx) }))}
+                          className="mt-2 px-2 py-1 rounded bg-red-600/20 hover:bg-red-600/30 text-red-300 text-[10px] font-black uppercase"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {(heroData.slides || []).length === 0 && (
+                      <p className="text-xs text-zinc-500">No desktop slide media yet.</p>
+                    )}
+                  </div>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] uppercase font-black text-zinc-500 mb-2">Mobile Slides (one URL per line)</label>
-                  <textarea value={(heroData.mobileSlides || []).join('\n')} onChange={(e) => updateHeroData(prev => ({ ...prev, mobileSlides: splitLines(e.target.value) }))} rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[10px] uppercase font-black text-zinc-500">Mobile Slides (video or photo)</label>
+                    <button
+                      onClick={() => updateHeroData(prev => ({ ...prev, mobileSlides: [...(prev.mobileSlides || []), ''] }))}
+                      className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-black uppercase"
+                    >
+                      + Add Media
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {(heroData.mobileSlides || []).map((slide, idx) => (
+                      <div key={`mobile-slide-${idx}`} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-2">
+                        {renderMediaField(
+                          `Mobile Slide ${idx + 1}`,
+                          slide,
+                          (value) => updateHeroData(prev => ({ ...prev, mobileSlides: (prev.mobileSlides || []).map((s, i) => i === idx ? value : s) })),
+                          'Slide media URL'
+                        )}
+                        <button
+                          onClick={() => updateHeroData(prev => ({ ...prev, mobileSlides: (prev.mobileSlides || []).filter((_, i) => i !== idx) }))}
+                          className="mt-2 px-2 py-1 rounded bg-red-600/20 hover:bg-red-600/30 text-red-300 text-[10px] font-black uppercase"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {(heroData.mobileSlides || []).length === 0 && (
+                      <p className="text-xs text-zinc-500">No mobile slide media yet.</p>
+                    )}
+                  </div>
                 </div>
                 <label className="inline-flex items-center gap-2 text-xs uppercase text-zinc-300"><input type="checkbox" checked={heroData.showBadge !== false} onChange={(e) => updateHeroData(prev => ({ ...prev, showBadge: e.target.checked }))} /> Show Badge</label>
                 <label className="inline-flex items-center gap-2 text-xs uppercase text-zinc-300"><input type="checkbox" checked={heroData.showButtons !== false} onChange={(e) => updateHeroData(prev => ({ ...prev, showButtons: e.target.checked }))} /> Show Buttons</label>
