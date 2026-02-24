@@ -205,7 +205,7 @@ const INITIAL_FEATURES: FeaturesData = {
     occasions: { heading: "Parties & Occasions", text: "We specialize in unforgettable London events.", items: [{title: "Hen Parties", text: "Premium bubbles and your favorite anthems."}] },
     grid: { heading: "Venue Highlights", items: [{title: "Smart Lighting", description: "Immersive mood lighting.", image: ""}] }
 };
-const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nightlife", text: "Unmatched energy in London's most iconic district.", image1: "", image2: "", bigImage: "", bottomHeading: "Sing Until 3AM", bottomText: "The party never stops at LKC Soho." };
+const INITIAL_VIBE: VibeData = { enabled: true, label: "The Vibe", heading: "Soho Nightlife", text: "Unmatched energy in London's most iconic district.", image1: "", image2: "", bigImage: "", bottomHeading: "open till 3am", bottomText: "The party never stops at LKC Soho." };
 const INITIAL_STATS: BatteryData = { enabled: true, statPrefix: "Over", statNumber: "80,000", statSuffix: "Songs", subText: "Updated monthly with the latest hits." };
 const INITIAL_GALLERY: GalleryData = {
     heading: "Soho Karaoke Gallery",
@@ -402,6 +402,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setGalleryData(prev => {
             if (typeof prev.homeFeatureEnabled === 'boolean') return prev;
             return { ...prev, homeFeatureEnabled: Boolean(prev.showOnHome) };
+        });
+    }, []);
+
+    useEffect(() => {
+        setVibeData(prev => {
+            const heading = prev.bottomHeading || '';
+            const normalized = heading.toLowerCase();
+            if (
+                normalized.includes('till 3am') ||
+                normalized.includes('til 3am') ||
+                normalized.includes('until 3am') ||
+                normalized === 'sing until 3am'
+            ) {
+                return { ...prev, bottomHeading: 'open till 3am' };
+            }
+            return prev;
         });
     }, []);
 

@@ -16,13 +16,13 @@ const InfoSection: React.FC = () => {
         <div className="space-y-12 text-lg leading-relaxed">
           <div className="bg-zinc-800/40 p-8 rounded-3xl border border-zinc-700/50 backdrop-blur-sm">
               <p className="mb-6">
-                Welcome to <span className="text-white font-bold">London Karaoke Club</span>, Soho’s premier destination for private karaoke. <span className="text-yellow-400 font-bold">Open 2pm to 3am daily</span>. 
+                Welcome to <span className="text-white font-bold">London Karaoke Club</span>, Soho’s premier destination for private karaoke. <span className="text-yellow-400 font-bold">open till 3am</span>. 
                 Steps from Oxford Street, Bond Street, Tottenham Court Road, and minutes from London Bridge, Victoria, Marylebone, 
                 and the West End, we’re at the heart of London’s nightlife.
               </p>
               <p>
                 Say goodbye to chain karaoke’s claustrophobic, padded boxes. Our entire private spaces with dedicated <span className="text-pink-500 font-bold">private entrances</span> host groups of 10 to 50+ for hen dos, birthdays, weddings, or corporate events, delivering <span className="text-cyan-400 font-bold">60,000+ songs</span> through studio-quality sound equipment. Advance prebooking is essential—no walk-ins allowed. 
-                Prebook your private karaoke night in Soho’s open, electric spaces. <span className="text-yellow-400 font-bold">Open 2pm to 3am daily</span>!
+                Prebook your private karaoke night in Soho’s open, electric spaces. <span className="text-yellow-400 font-bold">open till 3am</span>!
               </p>
           </div>
 
@@ -64,7 +64,7 @@ const InfoSection: React.FC = () => {
             <p className="mb-6 relative z-10">
               Advance prebooking is required—<span className="text-red-500 font-bold">no walk-ins allowed</span>, ensuring your group of 10 to 50+ enjoys an exclusive, 
               open space with a private entrance Soho venues. Use our instant online booking or WhatsApp for tailored planning. 
-              Open 2pm to 3am daily, we deliver flawless execution. Missing a song? Contact us to add it!
+              open till 3am, we deliver flawless execution. Missing a song? Contact us to add it!
             </p>
             <p className="font-extrabold text-white text-xl tracking-wide relative z-10">
               Prebook Now | <span className="text-green-400">Plan via WhatsApp</span>. No chains, no boxes—just your private, spectacular night in Soho.
