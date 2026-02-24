@@ -40,8 +40,7 @@ const BlogPage: React.FC = () => {
                                 )}
                             </div>
                             <div className="p-8">
-                                <span className="text-xs font-bold text-pink-500 uppercase tracking-widest">{post.date}</span>
-                                <h3 className="text-2xl font-bold mt-2 mb-4 group-hover:text-yellow-400 transition-colors">{post.title}</h3>
+                                <h3 className="text-2xl font-bold mb-4 group-hover:text-yellow-400 transition-colors">{post.title}</h3>
                                 <p className="text-gray-400 line-clamp-3 leading-relaxed">{post.excerpt}</p>
                                 <div className="mt-6 flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest group-hover:gap-4 transition-all">
                                     Read Full Story <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
@@ -69,8 +68,7 @@ const BlogPage: React.FC = () => {
                   </div>
                 )}
                 
-                <span className="text-pink-500 font-black tracking-widest uppercase">{selectedPost.date}</span>
-                <h1 className="text-4xl md:text-6xl font-black mt-4 mb-8 leading-tight">{selectedPost.title}</h1>
+                <h1 className="text-4xl md:text-6xl font-black mb-8 leading-tight">{selectedPost.title}</h1>
                 
                 <div className="prose prose-invert prose-pink max-w-none text-gray-300 text-lg leading-relaxed whitespace-pre-line">
                     {selectedPost.content}
