@@ -60,6 +60,7 @@ const slugify = (value: string) =>
 const isVideoFile = (url: string) => /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url);
 const isImageFile = (url: string) => /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/i.test(url);
 const splitLines = (value: string) => value.split('\n').map(v => v.trim()).filter(Boolean);
+const normalizeMediaUrl = (url: string) => encodeURI((url || '').trim()).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/#/g, '%23');
 
 const Card: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
   <section className={`bg-zinc-900 border border-zinc-800 rounded-2xl p-5 ${className}`}>
@@ -82,6 +83,7 @@ const AdminDashboard: React.FC = () => {
   const [mediaTarget, setMediaTarget] = useState<{ kind: 'blog-image' | 'blog-og' | 'gallery-add' | 'generic'; postId?: string; collectionId?: string } | null>(null);
   const [storageFiles, setStorageFiles] = useState<{ name: string; url: string }[]>([]);
   const [selectedGalleryId, setSelectedGalleryId] = useState('');
+  const [brokenPreviewUrls, setBrokenPreviewUrls] = useState<Record<string, boolean>>({});
   const genericMediaSetterRef = useRef<((url: string) => void) | null>(null);
 
   const {
@@ -328,6 +330,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const files = await fetchServerFiles();
       setStorageFiles(files);
+      setBrokenPreviewUrls({});
       if (files.length === 0) {
         const probe = await fetch(`${syncUrl}?list=1`, {
           headers: { Authorization: `Bearer ${adminPassword}` }
@@ -545,37 +548,39 @@ const AdminDashboard: React.FC = () => {
               </label>
               <button onClick={refreshStorageFiles} className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Refresh</button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {storageFiles.map((file, i) => (
                 <button
                   key={`${file.url}-${i}`}
                   onClick={() => applyMediaSelection(file.url)}
                   className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden text-left hover:border-pink-500 transition-colors"
                 >
-                  <div className="h-36 w-full bg-black overflow-hidden border-b border-zinc-800">
-                    {isVideoFile(file.url) ? (
+                  <div className="aspect-square w-full bg-black overflow-hidden border-b border-zinc-800">
+                    {isVideoFile(file.url) && !brokenPreviewUrls[file.url] ? (
                       <video
-                        src={file.url}
+                        src={normalizeMediaUrl(file.url)}
                         muted
                         playsInline
                         preload="metadata"
                         className="block w-full h-full object-cover"
+                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.url]: true }))}
                       />
-                    ) : isImageFile(file.url) ? (
+                    ) : isImageFile(file.url) && !brokenPreviewUrls[file.url] ? (
                       <img
-                        src={file.url}
+                        src={normalizeMediaUrl(file.url)}
                         alt={file.name}
                         loading="lazy"
                         className="block w-full h-full object-cover"
+                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.url]: true }))}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest">
-                        Unsupported preview
+                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 text-center">
+                        No Preview
                       </div>
                     )}
                   </div>
                   <div className="p-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 truncate">{file.name}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 line-clamp-2 break-all">{file.name}</p>
                   </div>
                 </button>
               ))}
