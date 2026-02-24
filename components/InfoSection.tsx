@@ -16,13 +16,13 @@ const InfoSection: React.FC = () => {
         <div className="space-y-12 text-lg leading-relaxed">
           <div className="bg-zinc-800/40 p-8 rounded-3xl border border-zinc-700/50 backdrop-blur-sm">
               <p className="mb-6">
-                Welcome to <span className="text-white font-bold">London Karaoke Club</span>, Soho’s premier destination for private karaoke, open daily from <span className="text-yellow-400 font-bold">2pm to 3am</span>. 
+                Welcome to <span className="text-white font-bold">London Karaoke Club</span>, Soho’s premier destination for private karaoke. <span className="text-yellow-400 font-bold">Open 2pm to 3am daily</span>. 
                 Steps from Oxford Street, Bond Street, Tottenham Court Road, and minutes from London Bridge, Victoria, Marylebone, 
                 and the West End, we’re at the heart of London’s nightlife.
               </p>
               <p>
                 Say goodbye to chain karaoke’s claustrophobic, padded boxes. Our entire private spaces with dedicated <span className="text-pink-500 font-bold">private entrances</span> host groups of 10 to 50+ for hen dos, birthdays, weddings, or corporate events, delivering <span className="text-cyan-400 font-bold">60,000+ songs</span> through studio-quality sound equipment. Advance prebooking is essential—no walk-ins allowed. 
-                Prebook your private karaoke night and sing until <span className="text-yellow-400 font-bold">3am</span> in Soho’s open, electric spaces!
+                Prebook your private karaoke night in Soho’s open, electric spaces. <span className="text-yellow-400 font-bold">Open 2pm to 3am daily</span>!
               </p>
           </div>
 
@@ -53,7 +53,7 @@ const InfoSection: React.FC = () => {
             <p>
               Indulge in delicious sharing platters, gourmet snacks, and <span className="text-green-400 font-semibold">reasonably priced cocktails</span>, crafted for groups 
               of 10 to 50+ at hen parties, birthdays, or corporate events. Our menu, paired with studio-quality sound in 
-              open spaces, elevates your late-night karaoke until 3am. See our event packages to plan a prebooked night 
+              open spaces, elevates your late-night karaoke experience. See our event packages to plan a prebooked night 
               that surpasses Soho’s boxed venues.
             </p>
           </div>
