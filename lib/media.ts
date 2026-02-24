@@ -17,6 +17,13 @@ export interface MediaRecord {
   };
 }
 
+export interface ResolvedMedia {
+  type: MediaType;
+  resolvedUrl: string;
+  thumbUrl?: string;
+  status: MediaStatus;
+}
+
 const ABSOLUTE_URL = /^https?:\/\//i;
 const VIDEO_EXT = /\.(mp4|mov|m4v|webm|ogg)(\?|$)/i;
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/i;
@@ -62,4 +69,19 @@ export const normalizeMediaRecord = (input: any, index = 0): MediaRecord => {
     status: status === 'ok' || status === 'broken' || status === 'needs_fix' ? status : 'ok',
     meta: input?.meta || undefined
   };
+};
+
+export const resolveMedia = (record: Partial<MediaRecord>): ResolvedMedia => {
+  const resolvedUrl = resolveMediaUrl(record);
+  const type = inferMediaType({ ...record, url: resolvedUrl || record.url });
+  const thumbUrl = resolveMediaUrl({ url: record.thumbnailUrl || '' }) || undefined;
+  const filename = (record.filename || '').toLowerCase();
+  const rawUrl = (record.url || '').toLowerCase();
+  const explicitStatus = record.status;
+  const brokenByBlob = rawUrl.startsWith('blob:') || filename.includes('_blob');
+  const status: MediaStatus =
+    explicitStatus === 'ok' || explicitStatus === 'broken' || explicitStatus === 'needs_fix'
+      ? explicitStatus
+      : (brokenByBlob ? 'broken' : (resolvedUrl ? 'ok' : 'needs_fix'));
+  return { type, resolvedUrl, thumbUrl, status };
 };

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HomeSectionType, PageGalleryKey, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
-import { MediaRecord, resolveMediaUrl } from '../lib/media';
+import { MediaRecord, resolveMedia, resolveMediaUrl } from '../lib/media';
 
 const TABS = [
   'Dashboard',
@@ -337,7 +337,8 @@ const AdminDashboard: React.FC = () => {
       setBrokenPreviewUrls({});
       if (files.length === 0) {
         const probe = await fetch(`${syncUrl}?list=1`, {
-          headers: { Authorization: `Bearer ${adminPassword}` }
+          headers: { Authorization: `Bearer ${adminPassword}` },
+          credentials: 'include'
         });
         const probeData = await probe.json().catch(() => ({}));
         if (probe.status === 401 || String(probeData?.error || '').toLowerCase().includes('auth')) {
@@ -358,13 +359,14 @@ const AdminDashboard: React.FC = () => {
   const runRepairJob = async () => {
     setRepairRunning(true);
     setRepairSummary('');
-    const report = await repairMediaLibrary();
-    if (!report) {
+    const result = await repairMediaLibrary();
+    if (!result.ok || !result.report) {
       setSyncStatus('Error');
-      setSyncError('Media repair failed. Check server logs and auth.');
+      setSyncError(result.error || 'Media repair failed. Check server logs and auth.');
       setRepairRunning(false);
       return;
     }
+    const report = result.report;
     const summary = `Scanned ${report.totalScanned}, fixed URLs ${report.fixedUrls}, generated thumbs ${report.thumbnailsGenerated}, marked broken ${report.brokenMarked}, skipped ${report.skipped}`;
     setRepairSummary(summary);
     setSyncError('');
@@ -392,7 +394,8 @@ const AdminDashboard: React.FC = () => {
     setSyncError('');
     try {
       const response = await fetch(`${syncUrl}?list=1`, {
-        headers: { Authorization: `Bearer ${nextKey}` }
+        headers: { Authorization: `Bearer ${nextKey}` },
+        credentials: 'include'
       });
       const data = await response.json().catch(() => ({}));
       if (response.status === 401 || data?.success === false) {
@@ -582,44 +585,66 @@ const AdminDashboard: React.FC = () => {
                 <button
                   key={`${file.id}-${i}`}
                   onClick={() => {
-                    if (!file.url || file.status === 'broken') return;
-                    applyMediaSelection(file.url);
+                    const resolved = resolveMedia(file);
+                    if (!resolved.resolvedUrl || resolved.status === 'broken') return;
+                    applyMediaSelection(resolved.resolvedUrl);
                   }}
                   className={`rounded-xl border bg-zinc-950 overflow-hidden text-left transition-colors ${file.status === 'broken' ? 'border-red-700' : 'border-zinc-800 hover:border-pink-500'}`}
                 >
                   <div className="aspect-square w-full bg-black overflow-hidden border-b border-zinc-800">
-                    {((file.type === 'video') || isVideoFile(file.url)) && !brokenPreviewUrls[file.id] ? (
-                      <video
-                        src={normalizeMediaUrl(resolveMediaUrl(file))}
-                        poster={file.thumbnailUrl ? normalizeMediaUrl(resolveMediaUrl({ url: file.thumbnailUrl })) : undefined}
-                        muted
-                        playsInline
-                        preload="metadata"
-                        className="block w-full h-full object-cover"
-                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
-                      />
-                    ) : ((file.type === 'image') || isImageFile(file.url)) && !brokenPreviewUrls[file.id] ? (
-                      <img
-                        src={normalizeMediaUrl(resolveMediaUrl(file))}
-                        alt={file.filename}
-                        loading="lazy"
-                        className="block w-full h-full object-cover"
-                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 text-center gap-2">
-                        <span>{file.status === 'broken' ? 'Broken' : 'No Preview'}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: false }));
-                          }}
-                          className="px-2 py-1 rounded bg-zinc-800 text-[9px]"
-                        >
-                          Retry
-                        </button>
-                      </div>
-                    )}
+                    {(() => {
+                      const { type, resolvedUrl, thumbUrl, status } = resolveMedia(file);
+                      if ((type === 'video') && !brokenPreviewUrls[file.id] && status !== 'broken') {
+                        if (thumbUrl) {
+                          return (
+                            <img
+                              src={normalizeMediaUrl(thumbUrl)}
+                              alt={file.filename}
+                              loading="lazy"
+                              className="block w-full h-full object-cover"
+                              onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
+                            />
+                          );
+                        }
+                        return (
+                          <video
+                            src={normalizeMediaUrl(resolvedUrl)}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            className="block w-full h-full object-cover"
+                            onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
+                          />
+                        );
+                      }
+                      if ((type === 'image') && !brokenPreviewUrls[file.id] && status !== 'broken') {
+                        return (
+                          <img
+                            src={normalizeMediaUrl(resolvedUrl)}
+                            alt={file.filename}
+                            loading="lazy"
+                            className="block w-full h-full object-cover"
+                            onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
+                          />
+                        );
+                      }
+                      return (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 text-center gap-2">
+                          <span>{status === 'broken' ? 'Broken' : 'No Preview'}</span>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: false }));
+                              if (status === 'broken') await runRepairJob();
+                              else await refreshStorageFiles();
+                            }}
+                            className="px-2 py-1 rounded bg-zinc-800 text-[9px]"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="p-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 line-clamp-2 break-all">{file.filename}</p>

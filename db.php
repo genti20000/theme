@@ -203,7 +203,13 @@ $authKey = "Bearer " . (getenv("LKC_ADMIN_PASSWORD") ?: $config["admin_password"
 $headers = function_exists("getallheaders") ? getallheaders() : [];
 $incomingAuth = $headers["Authorization"] ?? $headers["authorization"] ?? "";
 if ($incomingAuth !== $authKey) {
-    json_response(["success" => false, "error" => "Auth Failed"], 401);
+    $isRepair = isset($_GET["repair"]);
+    json_response([
+        "success" => false,
+        "error" => $isRepair
+            ? "Unauthorized: missing/invalid admin auth for media repair endpoint. Send Authorization: Bearer <ADMIN_KEY>."
+            : "Auth Failed"
+    ], 401);
 }
 
 $dbHost = getenv("LKC_DB_HOST") ?: $config["db_host"];

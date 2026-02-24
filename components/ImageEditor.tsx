@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { useData } from '../context/DataContext';
-import { MediaRecord } from '../lib/media';
+import { MediaRecord, resolveMedia } from '../lib/media';
 
 const sampleImages = [
   // Intentionally empty: only admin/gallery images should be used.
@@ -783,10 +783,26 @@ const ImageEditor: React.FC = () => {
                             storageFiles.map((file, idx) => (
                                 <button 
                                     key={idx} 
-                                    onClick={() => handleSelectSample(file.url)}
+                                    onClick={() => {
+                                      const media = resolveMedia(file);
+                                      if (!media.resolvedUrl || media.status === 'broken') return;
+                                      handleSelectSample(media.resolvedUrl);
+                                    }}
                                     className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
                                 >
-                                    <img src={file.url} alt={file.filename} className="w-full h-full object-cover" />
+                                    {(() => {
+                                      const media = resolveMedia(file);
+                                      if (media.type === 'video' && media.thumbUrl) {
+                                        return <img src={media.thumbUrl} alt={file.filename} className="w-full h-full object-cover" />;
+                                      }
+                                      if (media.type === 'video') {
+                                        return <video src={media.resolvedUrl} muted playsInline preload="metadata" className="w-full h-full object-cover" />;
+                                      }
+                                      if (media.type === 'image') {
+                                        return <img src={media.resolvedUrl} alt={file.filename} className="w-full h-full object-cover" />;
+                                      }
+                                      return <div className="w-full h-full flex items-center justify-center text-gray-500 text-[10px] font-bold uppercase tracking-widest">No Preview</div>;
+                                    })()}
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
                                         <span className="text-white text-xs font-bold mb-1">Select</span>
                                         <span className="text-gray-300 text-[10px] truncate w-full text-center">{file.filename}</span>

@@ -134,6 +134,12 @@ export interface MediaRepairReport {
     brokenMarked: number;
     skipped: number;
 }
+export interface MediaRepairResult {
+    ok: boolean;
+    report?: MediaRepairReport;
+    error?: string;
+    statusCode?: number;
+}
 
 interface DataContextType {
     foodMenu: MenuCategory[];
@@ -193,7 +199,7 @@ interface DataContextType {
     loadFromFirebase: () => Promise<void>;
     uploadFile: (file: Blob | File) => Promise<string | null>;
     fetchServerFiles: () => Promise<MediaRecord[]>;
-    repairMediaLibrary: () => Promise<MediaRepairReport | null>;
+    repairMediaLibrary: () => Promise<MediaRepairResult>;
     isDataLoading: boolean;
 }
 
@@ -706,6 +712,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const response = await fetch(syncUrl, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${adminPassword}` },
+                credentials: 'include',
                 body: formData
             });
             const res = await response.json().catch(() => ({} as any));
@@ -732,6 +739,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const response = await fetch(`${syncUrl}?list=1`, {
                 headers: { 'Authorization': `Bearer ${adminPassword}` },
+                credentials: 'include',
                 cache: 'no-store'
             });
             const data = await response.json().catch(() => ({} as any));
@@ -758,19 +766,26 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } catch (e) { return []; }
     };
 
-    const repairMediaLibrary = async (): Promise<MediaRepairReport | null> => {
-        if (!syncUrl) return null;
+    const repairMediaLibrary = async (): Promise<MediaRepairResult> => {
+        if (!syncUrl) return { ok: false, error: 'Missing sync URL', statusCode: 0 };
         try {
             const response = await fetch(`${syncUrl}?repair=1`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${adminPassword}` },
+                credentials: 'include',
                 cache: 'no-store'
             });
             const data = await response.json().catch(() => null);
-            if (!response.ok || !data?.success) return null;
-            return data?.report || null;
+            if (!response.ok || !data?.success) {
+                return {
+                    ok: false,
+                    error: data?.error || `Repair failed (${response.status})`,
+                    statusCode: response.status
+                };
+            }
+            return { ok: true, report: data?.report, statusCode: response.status };
         } catch {
-            return null;
+            return { ok: false, error: 'Network error while running repair', statusCode: 0 };
         }
     };
 
