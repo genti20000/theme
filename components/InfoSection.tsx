@@ -42,7 +42,7 @@ const InfoSection: React.FC = () => {
             <h3 className="text-3xl font-bold text-purple-500 mb-4 drop-shadow-md">Soho’s Premier Locations</h3>
             <p>
               Our venues are <span className="text-white font-semibold">Soho’s pulse</span>, surrounded by Mayfair, Marylebone, and the West End. Hidden in plain sight, 
-              our spaces open into electric, open areas with private entrances, perfect for groups of 10 to 50+. Open <span className="text-yellow-400">2pm to 3am daily</span>, we outlast competitors, hosting late-night cast parties, tour wrap-ups, or work celebrations. 
+              our spaces open into electric, open areas with private entrances, perfect for groups of 10 to 50+. <span className="text-yellow-400">open till 3am</span>, we outlast competitors, hosting late-night cast parties, tour wrap-ups, or work celebrations. 
               Prebook in advance—no walk-ins ensures your exclusive space. Our <span className="text-green-400 font-semibold">5-star service</span> delivers better value than 
               pricy chains, and if you’re lost, we’ll guide you to your private entrance.
             </p>

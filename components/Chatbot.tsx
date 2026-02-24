@@ -41,7 +41,7 @@ const Chatbot: React.FC = () => {
                 
                 KEY INFO FOR CUSTOMERS:
                 - Location: Heart of Soho, London (near Oxford St, Bond St).
-                - Hours: 2pm to 3am daily.
+                - Hours: open till 3am.
                 - Experience: Private luxury booths (no "padded boxes"), 80,000+ songs, pro-audio.
                 - Booking: MUST pre-book via our booking site (https://bookings.londonkaraoke.club). No walk-ins allowed.
                 - Age: Strictly 18+. Valid photo ID required.
