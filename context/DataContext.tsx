@@ -343,8 +343,70 @@ const INITIAL_HOME_SECTIONS: HomeSectionItem[] = [
 ];
 
 const INITIAL_TERMS: TermItem[] = [
-    { title: "Age Policy", content: "– Our Soho venue is strictly for guests aged 18 and over." },
-    { title: "Booking Confirmation", content: "– All bookings are subject to our standard terms and conditions." }
+    {
+        title: "Terms and Conditions for Bookings (Westminster-Compliant)",
+        content: "By making a reservation, you agree to be bound by these Terms and Conditions. These terms support the licensing objectives under the Licensing Act 2003: prevention of crime and disorder, public safety, prevention of public nuisance, and protection of children from harm."
+    },
+    {
+        title: "1. Booking Times & Licensed Hours",
+        content: "All guests must vacate the premises by closing time in accordance with the premises licence. No extensions beyond licensed hours will be permitted."
+    },
+    {
+        title: "2. Booking Duration",
+        content: "Each standard booking slot is 1 hour and 55 minutes. Booking time includes arrival, room use, and exit. Failure to vacate on time may result in staff or security intervention."
+    },
+    {
+        title: "3. Reservations",
+        content: "Bookings must be made in advance through authorised channels. All reservations are subject to availability and confirmation. We reserve the right to refuse or cancel any booking where licensing compliance may be compromised."
+    },
+    {
+        title: "4. Cancellation & Amendments",
+        content: "All cancellations or amendments must be submitted in writing. Standard: minimum 21 working days’ notice. Peak period (September–December): minimum 28 working days’ notice. Late cancellations or no-shows may result in forfeiture of deposit or full booking fee."
+    },
+    {
+        title: "5. Late Arrivals",
+        content: "Guests are expected to arrive on time. Late arrival does not extend the booking duration. Significant delay or failure to attend may result in cancellation without refund."
+    },
+    {
+        title: "6. Conduct, Crime Prevention & Public Order",
+        content: "Guests must behave responsibly and in line with the operation of a licensed premises. Disorderly, aggressive, intoxicated, or anti-social behaviour will not be tolerated. We reserve the right to refuse entry or remove individuals or groups without refund where behaviour risks: crime or disorder, public safety, public nuisance, breach of licence conditions."
+    },
+    {
+        title: "7. Age Restriction — Strictly Over 18",
+        content: "The premises operates a strictly over-18s policy at all times. No persons under 18 are permitted on the premises, without exception. Valid photographic ID may be required on entry. Entry may be refused and guests removed without refund if age requirements are not met. This policy supports the protection of children from harm licensing objective."
+    },
+    {
+        title: "8. Identification Policy — Fake or Invalid ID (Zero Tolerance)",
+        content: "Fake, altered, borrowed, expired, or otherwise invalid identification will not be accepted. If any member of a booking group is found to be using or attempting to use fake or invalid ID: the entire group will be refused entry or removed from the premises, and no refund will be issued. ID checks form part of our Challenge 25 and crime-prevention measures. We reserve the right to retain suspected fake ID where permitted by law and to notify the relevant authorities if required."
+    },
+    {
+        title: "9. Alcohol & Intoxication Policy",
+        content: "Alcohol is supplied strictly in accordance with UK licensing law. Alcohol will only be served to guests aged 18 or over who are not intoxicated. Service may be refused and guests may be asked to leave where intoxication is observed."
+    },
+    {
+        title: "10. Damage, Loss & Liability",
+        content: "Guests are responsible for any damage caused to the premises, fixtures, fittings, or equipment. We reserve the right to recover repair or replacement costs, including via the payment method on file. We accept no liability for loss or damage to personal belongings."
+    },
+    {
+        title: "11. Safety, CCTV & Security",
+        content: "CCTV is in operation in accordance with licence conditions. Security and door supervision may be deployed where required. In an emergency or evacuation, staff and security instructions must be followed immediately."
+    },
+    {
+        title: "12. Noise Control & Neighbour Consideration",
+        content: "Guests must comply with all noise-management measures. Excessive noise or behaviour likely to disturb neighbours will not be tolerated. Bookings may be terminated to prevent public nuisance."
+    },
+    {
+        title: "13. Data Protection",
+        content: "Personal data is processed in accordance with UK GDPR and the Data Protection Act 2018. By booking, you consent to our data handling practices."
+    },
+    {
+        title: "14. Force Majeure & Operational Changes",
+        content: "We reserve the right to amend or cancel bookings due to unforeseen circumstances, including safety, licensing, or operational issues. Where possible, notice will be provided."
+    },
+    {
+        title: "15. Amendments to These Terms",
+        content: "These Terms and Conditions may be updated at any time. The version in force at the time of booking shall apply. By making a reservation, you confirm that you have read, understood, and agree to comply with these Terms and Conditions in full."
+    }
 ];
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -395,6 +457,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             if (missingPosts.length === 0) return prev;
             return { ...prev, posts: [...missingPosts, ...safePosts] };
+        });
+    }, []);
+
+    useEffect(() => {
+        setTermsData(prev => {
+            const safe = Array.isArray(prev) ? prev : [];
+            if (safe.length >= 10) return prev;
+            return INITIAL_TERMS;
         });
     }, []);
 
