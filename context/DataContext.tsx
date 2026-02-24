@@ -1,5 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { MediaRecord, normalizeMediaRecord } from '../lib/media';
 
 // --- Types ---
 export interface MenuItem { name: string; description: string; price: string; note?: string; }
@@ -126,6 +127,13 @@ export interface InstagramHighlightsData {
 export interface TermItem { title: string; content: string; }
 
 export interface FirebaseConfig { databaseURL: string; apiKey: string; }
+export interface MediaRepairReport {
+    totalScanned: number;
+    fixedUrls: number;
+    thumbnailsGenerated: number;
+    brokenMarked: number;
+    skipped: number;
+}
 
 interface DataContextType {
     foodMenu: MenuCategory[];
@@ -184,7 +192,8 @@ interface DataContextType {
     saveToFirebase: () => Promise<void>;
     loadFromFirebase: () => Promise<void>;
     uploadFile: (file: Blob | File) => Promise<string | null>;
-    fetchServerFiles: () => Promise<{name: string, url: string}[]>;
+    fetchServerFiles: () => Promise<MediaRecord[]>;
+    repairMediaLibrary: () => Promise<MediaRepairReport | null>;
     isDataLoading: boolean;
 }
 
@@ -718,16 +727,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } catch (e) { return null; } finally { setIsDataLoading(false); }
     };
 
-    const fetchServerFiles = async (): Promise<{name: string, url: string}[]> => {
+    const fetchServerFiles = async (): Promise<MediaRecord[]> => {
         if (!syncUrl) return [];
         try {
             const response = await fetch(`${syncUrl}?list=1`, {
-                headers: { 'Authorization': `Bearer ${adminPassword}` }
+                headers: { 'Authorization': `Bearer ${adminPassword}` },
+                cache: 'no-store'
             });
             const data = await response.json().catch(() => ({} as any));
             if (!response.ok) return [];
 
-            const rawFiles = Array.isArray(data?.files)
+            const rawFiles = Array.isArray(data?.media)
+                ? data.media
+                : Array.isArray(data?.files)
                 ? data.files
                 : Array.isArray(data?.data?.files)
                     ? data.data.files
@@ -738,15 +750,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return rawFiles
                 .map((item: any, idx: number) => {
                     if (typeof item === 'string') {
-                        const name = item.split('/').pop() || `file-${idx + 1}`;
-                        return { name, url: item };
+                        return normalizeMediaRecord({ url: item }, idx);
                     }
-                    const url = item?.url || item?.fileUrl || item?.file_url || item?.path || '';
-                    const name = item?.name || item?.filename || (typeof url === 'string' ? (url.split('/').pop() || `file-${idx + 1}`) : `file-${idx + 1}`);
-                    return url ? { name, url } : null;
+                    return normalizeMediaRecord(item, idx);
                 })
-                .filter(Boolean) as { name: string; url: string }[];
+                .filter(Boolean) as MediaRecord[];
         } catch (e) { return []; }
+    };
+
+    const repairMediaLibrary = async (): Promise<MediaRepairReport | null> => {
+        if (!syncUrl) return null;
+        try {
+            const response = await fetch(`${syncUrl}?repair=1`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${adminPassword}` },
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => null);
+            if (!response.ok || !data?.success) return null;
+            return data?.report || null;
+        } catch {
+            return null;
+        }
     };
 
     useEffect(() => {
@@ -769,9 +794,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             termsData, updateTermsData: setTermsData, songs, updateSongs: setSongs,
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             firebaseConfig, updateFirebaseConfig: setFirebaseConfig, isDataLoading,
-            purgeCache: () => { localStorage.clear(); window.location.reload(); },
+            purgeCache: () => {
+                Object.keys(localStorage).forEach((key) => {
+                    if (key.startsWith('lkc_')) localStorage.removeItem(key);
+                });
+                localStorage.removeItem('lkc_media_list_cache');
+                window.location.reload();
+            },
             importDatabase, exportDatabase, saveToHostinger, loadFromHostinger, saveToFirebase, loadFromFirebase, uploadFile,
-            fetchServerFiles
+            fetchServerFiles, repairMediaLibrary
         }}>
             {children}
         </DataContext.Provider>

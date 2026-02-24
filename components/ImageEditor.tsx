@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { useData } from '../context/DataContext';
+import { MediaRecord } from '../lib/media';
 
 const sampleImages = [
   // Intentionally empty: only admin/gallery images should be used.
@@ -43,7 +44,7 @@ const ImageEditor: React.FC = () => {
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [galleryTab, setGalleryTab] = useState<'site' | 'storage'>('site');
-  const [storageFiles, setStorageFiles] = useState<{name: string, url: string}[]>([]);
+  const [storageFiles, setStorageFiles] = useState<MediaRecord[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const siteCollections = (galleryData.collections && galleryData.collections.length > 0)
     ? galleryData.collections
@@ -785,10 +786,10 @@ const ImageEditor: React.FC = () => {
                                     onClick={() => handleSelectSample(file.url)}
                                     className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
                                 >
-                                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                    <img src={file.url} alt={file.filename} className="w-full h-full object-cover" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
                                         <span className="text-white text-xs font-bold mb-1">Select</span>
-                                        <span className="text-gray-300 text-[10px] truncate w-full text-center">{file.name}</span>
+                                        <span className="text-gray-300 text-[10px] truncate w-full text-center">{file.filename}</span>
                                     </div>
                                 </button>
                             ))

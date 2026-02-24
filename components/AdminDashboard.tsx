@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HomeSectionType, PageGalleryKey, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
+import { MediaRecord, resolveMediaUrl } from '../lib/media';
 
 const TABS = [
   'Dashboard',
@@ -81,9 +82,11 @@ const AdminDashboard: React.FC = () => {
   const [addNavKey, setAddNavKey] = useState('');
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<{ kind: 'blog-image' | 'blog-og' | 'gallery-add' | 'generic'; postId?: string; collectionId?: string } | null>(null);
-  const [storageFiles, setStorageFiles] = useState<{ name: string; url: string }[]>([]);
+  const [storageFiles, setStorageFiles] = useState<MediaRecord[]>([]);
   const [selectedGalleryId, setSelectedGalleryId] = useState('');
   const [brokenPreviewUrls, setBrokenPreviewUrls] = useState<Record<string, boolean>>({});
+  const [repairRunning, setRepairRunning] = useState(false);
+  const [repairSummary, setRepairSummary] = useState<string>('');
   const genericMediaSetterRef = useRef<((url: string) => void) | null>(null);
 
   const {
@@ -132,7 +135,8 @@ const AdminDashboard: React.FC = () => {
     pageGallerySettings,
     updatePageGallerySettings,
     uploadFile,
-    fetchServerFiles
+    fetchServerFiles,
+    repairMediaLibrary
   } = useData();
 
   const selectedSection = useMemo(() => {
@@ -351,6 +355,23 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const runRepairJob = async () => {
+    setRepairRunning(true);
+    setRepairSummary('');
+    const report = await repairMediaLibrary();
+    if (!report) {
+      setSyncStatus('Error');
+      setSyncError('Media repair failed. Check server logs and auth.');
+      setRepairRunning(false);
+      return;
+    }
+    const summary = `Scanned ${report.totalScanned}, fixed URLs ${report.fixedUrls}, generated thumbs ${report.thumbnailsGenerated}, marked broken ${report.brokenMarked}, skipped ${report.skipped}`;
+    setRepairSummary(summary);
+    setSyncError('');
+    await refreshStorageFiles();
+    setRepairRunning(false);
+  };
+
   const openMediaModal = async (
     target: { kind: 'blog-image' | 'blog-og' | 'gallery-add' | 'generic'; postId?: string; collectionId?: string },
     genericSetter?: (url: string) => void
@@ -547,40 +568,64 @@ const AdminDashboard: React.FC = () => {
                 />
               </label>
               <button onClick={refreshStorageFiles} className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Refresh</button>
+              <button
+                onClick={runRepairJob}
+                disabled={repairRunning}
+                className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-xs font-black uppercase"
+              >
+                {repairRunning ? 'Repairing...' : 'Rebuild Thumbnails / Repair Media'}
+              </button>
+              {repairSummary && <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{repairSummary}</p>}
             </div>
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {storageFiles.map((file, i) => (
                 <button
-                  key={`${file.url}-${i}`}
-                  onClick={() => applyMediaSelection(file.url)}
-                  className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden text-left hover:border-pink-500 transition-colors"
+                  key={`${file.id}-${i}`}
+                  onClick={() => {
+                    if (!file.url || file.status === 'broken') return;
+                    applyMediaSelection(file.url);
+                  }}
+                  className={`rounded-xl border bg-zinc-950 overflow-hidden text-left transition-colors ${file.status === 'broken' ? 'border-red-700' : 'border-zinc-800 hover:border-pink-500'}`}
                 >
                   <div className="aspect-square w-full bg-black overflow-hidden border-b border-zinc-800">
-                    {isVideoFile(file.url) && !brokenPreviewUrls[file.url] ? (
+                    {((file.type === 'video') || isVideoFile(file.url)) && !brokenPreviewUrls[file.id] ? (
                       <video
-                        src={normalizeMediaUrl(file.url)}
+                        src={normalizeMediaUrl(resolveMediaUrl(file))}
+                        poster={file.thumbnailUrl ? normalizeMediaUrl(resolveMediaUrl({ url: file.thumbnailUrl })) : undefined}
                         muted
                         playsInline
                         preload="metadata"
                         className="block w-full h-full object-cover"
-                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.url]: true }))}
+                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
                       />
-                    ) : isImageFile(file.url) && !brokenPreviewUrls[file.url] ? (
+                    ) : ((file.type === 'image') || isImageFile(file.url)) && !brokenPreviewUrls[file.id] ? (
                       <img
-                        src={normalizeMediaUrl(file.url)}
-                        alt={file.name}
+                        src={normalizeMediaUrl(resolveMediaUrl(file))}
+                        alt={file.filename}
                         loading="lazy"
                         className="block w-full h-full object-cover"
-                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.url]: true }))}
+                        onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 text-center">
-                        No Preview
+                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 text-center gap-2">
+                        <span>{file.status === 'broken' ? 'Broken' : 'No Preview'}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: false }));
+                          }}
+                          className="px-2 py-1 rounded bg-zinc-800 text-[9px]"
+                        >
+                          Retry
+                        </button>
                       </div>
                     )}
                   </div>
                   <div className="p-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 line-clamp-2 break-all">{file.name}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 line-clamp-2 break-all">{file.filename}</p>
+                    <p className={`mt-1 text-[9px] uppercase tracking-widest ${file.status === 'broken' ? 'text-red-400' : file.status === 'needs_fix' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      {file.status}
+                    </p>
                   </div>
                 </button>
               ))}
