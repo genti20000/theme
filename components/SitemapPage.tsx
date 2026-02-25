@@ -16,6 +16,7 @@ const SitemapPage: React.FC = () => {
         { label: "Gallery", to: ROUTES.gallery },
         { label: "Song Library", to: ROUTES.songs },
         { label: "Events & Occasions", to: ROUTES.events },
+        { label: "Birthday Karaoke Soho", to: ROUTES["birthday-karaoke-soho"] },
         { label: "Hen Do Karaoke Soho", to: ROUTES["hen-do-karaoke-soho"] },
         { label: "Nightlife Blog", to: ROUTES.blog },
         { label: "Social Hub", to: ROUTES.instagram },

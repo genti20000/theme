@@ -8,7 +8,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerData } = useData();
 
-  const navLinks = (headerData.navOrder || ['menu', 'gallery', 'blog', 'drinks', 'events', 'songs']).filter(
+  const navLinks = (headerData.navOrder || ['menu', 'gallery', 'birthday-karaoke-soho', 'hen-do-karaoke-soho', 'blog', 'drinks', 'songs']).filter(
     (link) => link in ROUTES
   );
 
@@ -23,7 +23,7 @@ const Header: React.FC = () => {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md">
       <div className="mx-auto grid h-16 w-full max-w-[1200px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 md:h-[72px] md:px-8">
         <div className="hidden md:flex items-center gap-5">
-          {navLinks.slice(0, 3).map((link) => (
+          {navLinks.slice(0, 5).map((link) => (
             <Link key={link} to={getHref(link)} className="inline-flex h-10 items-center text-xs font-bold uppercase tracking-[0.08em] text-zinc-300 hover:text-white">
               {getLabel(link)}
             </Link>

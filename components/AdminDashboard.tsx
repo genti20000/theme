@@ -154,7 +154,7 @@ const AdminDashboard: React.FC = () => {
     return counts;
   }, [homeSections]);
 
-  const navOrder = headerData.navOrder || ['menu', 'gallery', 'blog', 'drinks', 'events', 'songs'];
+  const navOrder = headerData.navOrder || ['menu', 'gallery', 'birthday-karaoke-soho', 'hen-do-karaoke-soho', 'blog', 'drinks', 'songs'];
   const navCandidates = Object.keys(ROUTES).filter(k => k !== 'home');
 
   const selectedBlog = useMemo(() => {

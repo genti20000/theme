@@ -268,7 +268,7 @@ const INITIAL_SEO: HeaderData = {
     siteTitle: "London Karaoke Club | Private Karaoke Bar & Cocktails in Soho",
     siteDescription: "Luxury private karaoke suites in Soho, London. Over 80,000 songs, signature cocktails, and premium service. Perfect for hen parties and birthdays. Book online.",
     faviconUrl: "/favicon.svg",
-    navOrder: ["menu", "gallery", "blog", "drinks", "events", "songs"],
+    navOrder: ["menu", "gallery", "birthday-karaoke-soho", "hen-do-karaoke-soho", "blog", "drinks", "songs"],
     customScripts: { header: "", footer: "" }
 };
 
