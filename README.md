@@ -22,10 +22,12 @@ View your app in AI Studio: https://ai.studio/apps/drive/1jWfVzsD1j70JUOolhkhxzR
 ## Media Library env vars
 
 Frontend:
-- `VITE_FILES_BASE_URL=https://files.londonkaraoke.club/uploads/`
+- `VITE_MEDIA_BASE_PATH=/uploads`
+- Optional: `VITE_MEDIA_BASE_URL=https://files.londonkaraoke.club`
 
 Server (`db.php`):
-- `LKC_FILES_BASE_URL=https://files.londonkaraoke.club/uploads/`
+- `LKC_MEDIA_BASE_PATH=uploads` (folder under `public_html`, default is `public_html/uploads`)
+- Optional: `LKC_MEDIA_BASE_URL=https://files.londonkaraoke.club`
 - `LKC_ADMIN_PASSWORD=<admin key>`
 - `LKC_DB_HOST=<mysql host>`
 - `LKC_DB_NAME=<mysql db>`
@@ -44,3 +46,13 @@ CLI (server-safe, idempotent):
 Notes:
 - Repair scans uploaded files, normalizes URLs, generates missing video thumbnails with `ffmpeg` (if available), and marks blob/invalid records as `broken`.
 - The job is idempotent and can be rerun safely.
+
+## Hostinger media setup
+
+1. Upload endpoint writes files to `public_html/uploads` by default (`db.php` + `LKC_MEDIA_BASE_PATH=uploads`).
+2. Media URLs are resolved as root-absolute paths such as `/uploads/1771478148_file.png` so they work from `/admin` and public routes.
+3. Verify files exist in Hostinger hPanel:
+   - `public_html/uploads/`
+   - `public_html/uploads/thumbs/` (video thumbnails)
+4. Run one-time cleanup to remove blob/broken placeholders:
+   - `LKC_SYNC_URL=\"https://files.londonkaraoke.club/db.php\" LKC_ADMIN_PASSWORD=\"<admin key>\" php scripts/cleanup_media.php`

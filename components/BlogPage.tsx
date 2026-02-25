@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useData, BlogPost } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
+import { getMediaUrl } from '../lib/media';
 
 const BlogPage: React.FC = () => {
   const { blogData } = useData();
@@ -30,7 +31,7 @@ const BlogPage: React.FC = () => {
                             <div className="aspect-video relative overflow-hidden">
                                 {post.imageUrl ? (
                                   <>
-                                    <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    <img src={getMediaUrl(post.imageUrl)} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent"></div>
                                   </>
                                 ) : (
@@ -61,7 +62,7 @@ const BlogPage: React.FC = () => {
                 </button>
                 
                 {selectedPost.imageUrl ? (
-                  <img src={selectedPost.imageUrl} className="w-full h-[50vh] object-cover rounded-[3rem] mb-12 shadow-2xl border border-zinc-800" alt="" />
+                  <img src={getMediaUrl(selectedPost.imageUrl)} className="w-full h-[50vh] object-cover rounded-[3rem] mb-12 shadow-2xl border border-zinc-800" alt="" />
                 ) : (
                   <div className="w-full h-[50vh] rounded-[3rem] mb-12 shadow-2xl border border-zinc-800 bg-zinc-950 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase tracking-widest">
                     No Image

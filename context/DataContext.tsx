@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { MediaRecord, normalizeMediaRecord } from '../lib/media';
+import { MediaRecord, getMediaUrl, isInvalidMediaRef, normalizeMediaRecord } from '../lib/media';
 
 // --- Types ---
 export interface MenuItem { name: string; description: string; price: string; note?: string; }
@@ -141,6 +141,65 @@ export interface MediaRepairResult {
     statusCode?: number;
 }
 
+const MEDIA_KEY_EXACT = new Set([
+    'backgroundImageUrl', 'mainImageUrl', 'mobileMainImageUrl', 'sideImageUrl', 'headerImageUrl',
+    'videoUrl', 'mobileVideoUrl', 'bigImage', 'mobileBigImage', 'image1', 'image2',
+    'logoUrl', 'faviconUrl', 'avatar', 'ogImage', 'thumbnail', 'thumbnailUrl', 'fileUrl'
+]);
+
+const isMediaFieldKey = (key: string): boolean => {
+    if (MEDIA_KEY_EXACT.has(key)) return true;
+    return /(image|video|logo|favicon|avatar|thumbnail|slide)s?(url)?$/i.test(key);
+};
+
+const sanitizeMediaString = (value: string): string => {
+    const raw = (value || '').trim();
+    if (!raw || isInvalidMediaRef(raw)) return '';
+    return getMediaUrl(raw);
+};
+
+const sanitizeMediaPayload = (input: any, parentKey = ''): any => {
+    if (Array.isArray(input)) {
+        const next = input
+            .map((item) => sanitizeMediaPayload(item, parentKey))
+            .filter((item) => {
+                if (item == null) return false;
+                if (typeof item === 'string') return item.trim().length > 0;
+                if (parentKey === 'images' && typeof item === 'object') {
+                    const url = (item as any).url || '';
+                    return typeof url === 'string' && url.trim().length > 0;
+                }
+                return true;
+            });
+        return next;
+    }
+    if (typeof input === 'string') return input;
+    if (!input || typeof input !== 'object') return input;
+
+    const output: Record<string, any> = {};
+    Object.entries(input).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+            const isMediaUrlInImageArray = key === 'url' && (parentKey === 'images' || parentKey === 'videos' || parentKey === 'media');
+            if (isMediaFieldKey(key) || isMediaUrlInImageArray) {
+                output[key] = sanitizeMediaString(value);
+                return;
+            }
+            output[key] = value;
+            return;
+        }
+        if (Array.isArray(value)) {
+            if (isMediaFieldKey(key) && value.every((v) => typeof v === 'string')) {
+                output[key] = value.map((v) => sanitizeMediaString(v)).filter(Boolean);
+                return;
+            }
+            output[key] = sanitizeMediaPayload(value, key);
+            return;
+        }
+        output[key] = sanitizeMediaPayload(value, key);
+    });
+    return output;
+};
+
 interface DataContextType {
     foodMenu: MenuCategory[];
     updateFoodMenu: React.Dispatch<React.SetStateAction<MenuCategory[]>>;
@@ -200,6 +259,7 @@ interface DataContextType {
     uploadFile: (file: Blob | File) => Promise<string | null>;
     fetchServerFiles: () => Promise<MediaRecord[]>;
     repairMediaLibrary: () => Promise<MediaRepairResult>;
+    cleanupMediaLibrary: () => Promise<MediaRepairResult>;
     isDataLoading: boolean;
 }
 
@@ -625,35 +685,38 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
     useEffect(() => { persist('firebaseConfig', firebaseConfig); }, [firebaseConfig]);
 
-    const exportDatabase = () => JSON.stringify({ 
-        headerData, heroData, highlightsData, featuresData, vibeData, batteryData, 
-        galleryData, pageGallerySettings, homeSections, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData, 
-        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.3" 
-    }, null, 2);
+    const exportPayloadObject = () => sanitizeMediaPayload({
+        headerData, heroData, highlightsData, featuresData, vibeData, batteryData,
+        galleryData, pageGallerySettings, homeSections, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData,
+        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.4"
+    });
+
+    const exportDatabase = () => JSON.stringify(exportPayloadObject(), null, 2);
 
     const importDatabase = (json: any) => {
         try {
             const c = typeof json === 'string' ? JSON.parse(json) : json;
-            if (c.headerData) setHeaderData(c.headerData);
-            if (c.heroData) setHeroData(c.heroData);
-            if (c.highlightsData) setHighlightsData(c.highlightsData);
-            if (c.featuresData) setFeaturesData(c.featuresData);
-            if (c.vibeData) setVibeData(c.vibeData);
-            if (c.batteryData) setBatteryData(c.batteryData);
-            if (c.galleryData) setGalleryData(c.galleryData);
+            const next = sanitizeMediaPayload(c);
+            if (next.headerData) setHeaderData(next.headerData);
+            if (next.heroData) setHeroData(next.heroData);
+            if (next.highlightsData) setHighlightsData(next.highlightsData);
+            if (next.featuresData) setFeaturesData(next.featuresData);
+            if (next.vibeData) setVibeData(next.vibeData);
+            if (next.batteryData) setBatteryData(next.batteryData);
+            if (next.galleryData) setGalleryData(next.galleryData);
             if (c.pageGallerySettings) setPageGallerySettings(c.pageGallerySettings);
             if (c.homeSections) setHomeSections(c.homeSections);
             if (c.homeSectionRepeats) setHomeSectionRepeats(c.homeSectionRepeats);
-            if (c.blogData) setBlogData(c.blogData);
-            if (c.faqData) setFaqData(c.faqData);
-            if (c.drinksData) setDrinksData(c.drinksData);
-            if (c.foodMenu) setFoodMenu(c.foodMenu);
-            if (c.testimonialsData) setTestimonialsData(c.testimonialsData);
-            if (c.infoSectionData) setInfoSectionData(c.infoSectionData);
-            if (c.eventsData) setEventsData(c.eventsData);
-            if (c.instagramHighlightsData) setInstagramHighlightsData(c.instagramHighlightsData);
-            if (c.termsData) setTermsData(c.termsData);
-            if (c.songs) setSongs(c.songs);
+            if (next.blogData) setBlogData(next.blogData);
+            if (next.faqData) setFaqData(next.faqData);
+            if (next.drinksData) setDrinksData(next.drinksData);
+            if (next.foodMenu) setFoodMenu(next.foodMenu);
+            if (next.testimonialsData) setTestimonialsData(next.testimonialsData);
+            if (next.infoSectionData) setInfoSectionData(next.infoSectionData);
+            if (next.eventsData) setEventsData(next.eventsData);
+            if (next.instagramHighlightsData) setInstagramHighlightsData(next.instagramHighlightsData);
+            if (next.termsData) setTermsData(next.termsData);
+            if (next.songs) setSongs(next.songs);
             return true;
         } catch (e) { return false; }
     };
@@ -718,6 +781,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (!response.ok) return null;
 
             // Support multiple response formats from custom PHP handlers.
+            const key =
+                res?.key ||
+                res?.media?.key ||
+                res?.media?.filename ||
+                res?.filename ||
+                null;
             const url =
                 res?.url ||
                 res?.fileUrl ||
@@ -727,7 +796,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 res?.path ||
                 null;
 
-            if (typeof url === 'string' && url.length > 0) return url;
+            if (typeof key === 'string' && key.length > 0) return getMediaUrl(key);
+            if (typeof url === 'string' && url.length > 0) return getMediaUrl(url);
             if (res?.success && typeof res?.url === 'string') return res.url;
             return null;
         } catch (e) { return null; } finally { setIsDataLoading(false); }
@@ -786,6 +856,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const cleanupMediaLibrary = async (): Promise<MediaRepairResult> => {
+        if (!syncUrl) return { ok: false, error: 'Missing sync URL', statusCode: 0 };
+        try {
+            const response = await fetch(`${syncUrl}?cleanup=1`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${adminPassword}` },
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => null);
+            if (!response.ok || !data?.success) {
+                return {
+                    ok: false,
+                    error: data?.error || `Cleanup failed (${response.status})`,
+                    statusCode: response.status
+                };
+            }
+            return { ok: true, report: data?.report, statusCode: response.status };
+        } catch {
+            return { ok: false, error: 'Network error while running cleanup', statusCode: 0 };
+        }
+    };
+
     useEffect(() => {
         loadFromHostinger();
     }, []);
@@ -814,7 +906,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 window.location.reload();
             },
             importDatabase, exportDatabase, saveToHostinger, loadFromHostinger, saveToFirebase, loadFromFirebase, uploadFile,
-            fetchServerFiles, repairMediaLibrary
+            fetchServerFiles, repairMediaLibrary, cleanupMediaLibrary
         }}>
             {children}
         </DataContext.Provider>

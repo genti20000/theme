@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HomeSectionType, PageGalleryKey, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
-import { MediaRecord, resolveMedia, resolveMediaUrl } from '../lib/media';
+import { MediaRecord, getMediaKey, getMediaUrl, resolveMedia } from '../lib/media';
 
 const TABS = [
   'Dashboard',
@@ -59,7 +59,6 @@ const slugify = (value: string) =>
     .replace(/-+/g, '-');
 
 const isVideoFile = (url: string) => /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url);
-const isImageFile = (url: string) => /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/i.test(url);
 const splitLines = (value: string) => value.split('\n').map(v => v.trim()).filter(Boolean);
 const normalizeMediaUrl = (url: string) => encodeURI((url || '').trim()).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/#/g, '%23');
 
@@ -87,6 +86,9 @@ const AdminDashboard: React.FC = () => {
   const [brokenPreviewUrls, setBrokenPreviewUrls] = useState<Record<string, boolean>>({});
   const [repairRunning, setRepairRunning] = useState(false);
   const [repairSummary, setRepairSummary] = useState<string>('');
+  const [lastSyncedPayload, setLastSyncedPayload] = useState<string>(() => localStorage.getItem('lkc_last_synced_payload') || '');
+  const [mediaTestKey, setMediaTestKey] = useState('');
+  const [mediaTestResult, setMediaTestResult] = useState('');
   const genericMediaSetterRef = useRef<((url: string) => void) | null>(null);
 
   const {
@@ -136,7 +138,8 @@ const AdminDashboard: React.FC = () => {
     updatePageGallerySettings,
     uploadFile,
     fetchServerFiles,
-    repairMediaLibrary
+    repairMediaLibrary,
+    cleanupMediaLibrary
   } = useData();
 
   const selectedSection = useMemo(() => {
@@ -169,7 +172,7 @@ const AdminDashboard: React.FC = () => {
     || galleryCollections.find(g => g.id === galleryData.activeCollectionId)
     || galleryCollections[0];
   const tabMediaUrls = useMemo(() => {
-    const clean = (values: Array<string | undefined>) => Array.from(new Set(values.filter(Boolean) as string[]));
+    const clean = (values: Array<string | undefined>) => Array.from(new Set((values || []).map(v => getMediaUrl(v || '')).filter(Boolean)));
     switch (tab) {
       case 'SEO':
         return clean([headerData.logoUrl, headerData.faviconUrl]);
@@ -257,6 +260,22 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSync = async (mode: 'save' | 'publish') => {
+    if (!syncUrl || !adminPassword) {
+      setSyncStatus('Error');
+      setSyncError('Set sync URL and admin key first.');
+      return;
+    }
+    const payload = exportDatabase();
+    if (!payload || payload.trim().length < 3) {
+      setSyncStatus('Error');
+      setSyncError('Cannot save empty payload.');
+      return;
+    }
+    if (payload === lastSyncedPayload) {
+      setSyncStatus('Idle');
+      setSyncError('No changes to save.');
+      return;
+    }
     setSyncStatus('Saving');
     setSyncError('');
     try {
@@ -266,7 +285,7 @@ const AdminDashboard: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminPassword}`
         },
-        body: exportDatabase()
+        body: payload
       });
 
       if (response.status === 401) {
@@ -289,6 +308,8 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
+      setLastSyncedPayload(payload);
+      localStorage.setItem('lkc_last_synced_payload', payload);
       setSyncStatus('Idle');
       if (mode === 'publish') {
         window.open('/', '_blank', 'noopener,noreferrer');
@@ -368,6 +389,22 @@ const AdminDashboard: React.FC = () => {
     const report = result.report;
     const summary = `Scanned ${report.totalScanned}, fixed URLs ${report.fixedUrls}, generated thumbs ${report.thumbnailsGenerated}, marked broken ${report.brokenMarked}, skipped ${report.skipped}`;
     setRepairSummary(summary);
+    setSyncError('');
+    await refreshStorageFiles();
+    setRepairRunning(false);
+  };
+
+  const runCleanupJob = async () => {
+    setRepairRunning(true);
+    setRepairSummary('');
+    const result = await cleanupMediaLibrary();
+    if (!result.ok) {
+      setSyncStatus('Error');
+      setSyncError(result.error || 'Media cleanup failed.');
+      setRepairRunning(false);
+      return;
+    }
+    setRepairSummary('Cleanup completed. Invalid blob/broken records removed.');
     setSyncError('');
     await refreshStorageFiles();
     setRepairRunning(false);
@@ -459,6 +496,20 @@ const AdminDashboard: React.FC = () => {
     setSyncError(errorMessage);
   };
 
+  const testMediaUrl = async () => {
+    const resolved = getMediaUrl(mediaTestKey);
+    if (!resolved) {
+      setMediaTestResult('Invalid media key/path (blob or empty).');
+      return;
+    }
+    try {
+      const response = await fetch(resolved, { method: 'GET', cache: 'no-store' });
+      setMediaTestResult(`Resolved: ${resolved} · HTTP ${response.status}`);
+    } catch {
+      setMediaTestResult(`Resolved: ${resolved} · fetch failed`);
+    }
+  };
+
   const renderMediaField = (
     label: string,
     value: string,
@@ -496,9 +547,9 @@ const AdminDashboard: React.FC = () => {
       {value && (
         <div className="rounded-xl overflow-hidden border border-zinc-800 bg-black h-32">
           {isVideoFile(value) ? (
-            <video src={value} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+            <video src={getMediaUrl(value)} muted playsInline preload="metadata" className="w-full h-full object-cover" />
           ) : (
-            <img src={value} alt={label} className="w-full h-full object-cover" />
+            <img src={getMediaUrl(value)} alt={label} className="w-full h-full object-cover" />
           )}
         </div>
       )}
@@ -576,6 +627,13 @@ const AdminDashboard: React.FC = () => {
               >
                 {repairRunning ? 'Repairing...' : 'Rebuild Thumbnails / Repair Media'}
               </button>
+              <button
+                onClick={runCleanupJob}
+                disabled={repairRunning}
+                className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-xs font-black uppercase"
+              >
+                Cleanup Broken Records
+              </button>
               {repairSummary && <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{repairSummary}</p>}
             </div>
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
@@ -633,8 +691,12 @@ const AdminDashboard: React.FC = () => {
                             onClick={async (e) => {
                               e.stopPropagation();
                               setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: false }));
-                              if (status === 'broken') await runRepairJob();
-                              else await refreshStorageFiles();
+                              if (status === 'broken') {
+                                setSyncError('Invalid media record (blob/missing key). Reupload this item.');
+                                await runRepairJob();
+                              } else {
+                                await refreshStorageFiles();
+                              }
                             }}
                             className="px-2 py-1 rounded bg-zinc-800 text-[9px]"
                           >
@@ -698,9 +760,9 @@ const AdminDashboard: React.FC = () => {
                 {tabMediaUrls.slice(0, 32).map((url, idx) => (
                   <div key={`${url}-${idx}`} className="rounded-lg overflow-hidden border border-zinc-800 bg-black h-20">
                     {isVideoFile(url) ? (
-                      <video src={url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                      <video src={getMediaUrl(url)} muted playsInline preload="metadata" className="w-full h-full object-cover" />
                     ) : (
-                      <img src={url} alt={`media-${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={getMediaUrl(url)} alt={`media-${idx + 1}`} className="w-full h-full object-cover" />
                     )}
                   </div>
                 ))}
@@ -1215,7 +1277,7 @@ const AdminDashboard: React.FC = () => {
                     <p className="text-[10px] uppercase tracking-widest text-zinc-500">/{selectedBlog.slug || slugify(selectedBlog.title)}</p>
                     <h4 className="text-2xl font-black leading-tight">{selectedBlog.title || 'Untitled Post'}</h4>
                     <p className="text-xs uppercase tracking-widest text-zinc-500">{selectedBlog.status || 'draft'} {selectedBlog.publishAt ? `· ${selectedBlog.publishAt}` : ''}</p>
-                    {selectedBlog.imageUrl && <img src={selectedBlog.imageUrl} alt={selectedBlog.title} className="w-full h-48 object-cover rounded-xl border border-zinc-800" />}
+                    {selectedBlog.imageUrl && <img src={getMediaUrl(selectedBlog.imageUrl)} alt={selectedBlog.title} className="w-full h-48 object-cover rounded-xl border border-zinc-800" />}
                     <p className="text-sm text-zinc-300">{selectedBlog.excerpt}</p>
                     <div className="text-sm text-zinc-400 whitespace-pre-line leading-relaxed">{selectedBlog.content}</div>
                   </article>
@@ -1590,6 +1652,30 @@ const AdminDashboard: React.FC = () => {
                   </button>
                 </div>
               </Card>
+              <Card title="Test Media URL">
+                <div className="space-y-3">
+                  <input
+                    value={mediaTestKey}
+                    onChange={(e) => setMediaTestKey(e.target.value)}
+                    placeholder="Enter media key/path, e.g. 1771478148_file.png"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={testMediaUrl}
+                      className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase"
+                    >
+                      Resolve & Test
+                    </button>
+                    {mediaTestKey && (
+                      <span className="text-xs text-zinc-400 self-center">
+                        Key: {getMediaKey(mediaTestKey)}
+                      </span>
+                    )}
+                  </div>
+                  {mediaTestResult && <p className="text-xs text-zinc-300">{mediaTestResult}</p>}
+                </div>
+              </Card>
             </div>
           )}
 
@@ -1753,7 +1839,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {(activeGallery?.images || []).map((image, idx) => (
                       <div key={image.id} className="rounded-xl border border-zinc-800 bg-zinc-800/30 overflow-hidden">
-                        <img src={image.url} alt={image.caption} className="w-full aspect-square object-cover" />
+                        <img src={getMediaUrl(image.url)} alt={image.caption} className="w-full aspect-square object-cover" />
                         <div className="p-2">
                           <input
                             value={image.caption || ''}
@@ -1795,7 +1881,7 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-xs uppercase tracking-widest text-zinc-500 mb-3">{activeGallery?.name || 'Gallery'}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {(activeGallery?.images || []).slice(0, 8).map(image => (
-                    <img key={image.id} src={image.url} alt={image.caption} className="w-full aspect-square object-cover rounded-lg border border-zinc-800" />
+                    <img key={image.id} src={getMediaUrl(image.url)} alt={image.caption} className="w-full aspect-square object-cover rounded-lg border border-zinc-800" />
                   ))}
                 </div>
               </Card>

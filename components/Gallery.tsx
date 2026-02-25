@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GalleryViewMode, useData } from '../context/DataContext';
+import { getMediaUrl } from '../lib/media';
 
 interface GalleryProps {
   embedded?: boolean;
@@ -23,7 +24,9 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
     || collections.find(c => c.id === activeCollectionId)
     || collections.find(c => c.id === galleryData.activeCollectionId)
     || collections[0];
-  const images = activeCollection?.images || [];
+  const images = (activeCollection?.images || [])
+    .map((img) => ({ ...img, url: getMediaUrl(img.url || '') }))
+    .filter((img) => !!img.url);
 
   useEffect(() => {
     if (forcedCollectionId) return;
@@ -132,7 +135,7 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
 
           <div className="relative max-w-5xl w-full max-h-[85vh] flex flex-col items-center">
             <img 
-              src={images[lightboxIndex].url} 
+              src={getMediaUrl(images[lightboxIndex].url)} 
               alt="" 
               className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(236,72,153,0.3)]"
               onClick={(e) => e.stopPropagation()}
@@ -195,7 +198,7 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
                     >
                         {!loadedImages[img.id] && <div className="absolute inset-0 shimmer-placeholder"></div>}
                         <img 
-                            src={img.url} 
+                            src={getMediaUrl(img.url)} 
                             alt={img.caption} 
                             loading="lazy"
                             onLoad={() => handleImageLoad(img.id)}
@@ -216,7 +219,7 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
                          {images.map((img, i) => (
                              <img 
                                 key={i} 
-                                src={img.url} 
+                                src={getMediaUrl(img.url)} 
                                 loading={i === currentIndex ? 'eager' : 'lazy'}
                                 className="w-full h-full object-cover flex-shrink-0" 
                                 alt=""

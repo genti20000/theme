@@ -28,10 +28,57 @@ const ABSOLUTE_URL = /^https?:\/\//i;
 const VIDEO_EXT = /\.(mp4|mov|m4v|webm|ogg)(\?|$)/i;
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/i;
 
-export const FILES_BASE_URL = (
+export const MEDIA_BASE_PATH = (
+  (import.meta.env.VITE_MEDIA_BASE_PATH as string | undefined) ||
+  '/uploads'
+).replace(/\/+$/, '');
+
+export const MEDIA_BASE_URL = (
+  (import.meta.env.VITE_MEDIA_BASE_URL as string | undefined) ||
   (import.meta.env.VITE_FILES_BASE_URL as string | undefined) ||
-  'https://files.londonkaraoke.club/uploads/'
-).replace(/\/+$/, '/') ;
+  ''
+).replace(/\/+$/, '');
+
+const isBlobMedia = (value: string) => value.startsWith('blob:') || value.toLowerCase().includes('_blob');
+
+export const isInvalidMediaRef = (value: string): boolean => {
+  const raw = (value || '').trim();
+  if (!raw) return true;
+  return isBlobMedia(raw);
+};
+
+export const getMediaUrl = (keyOrPath: string): string => {
+  const raw = (keyOrPath || '').trim();
+  if (!raw || isBlobMedia(raw)) return '';
+  if (ABSOLUTE_URL.test(raw)) return raw;
+  let normalized = raw.startsWith('/') ? raw : `/${raw.replace(/^\/+/, '')}`;
+  if (!normalized.startsWith(`${MEDIA_BASE_PATH}/`)) {
+    normalized = `${MEDIA_BASE_PATH}/${normalized.replace(/^\/+/, '').replace(/^uploads\//, '')}`;
+  }
+  if (MEDIA_BASE_URL) {
+    // Optional absolute media host override for split-domain deployments.
+    return `${MEDIA_BASE_URL}${normalized}`;
+  }
+  return normalized;
+};
+
+export const getMediaKey = (keyOrPath: string): string => {
+  const raw = (keyOrPath || '').trim();
+  if (!raw || isBlobMedia(raw)) return '';
+  if (ABSOLUTE_URL.test(raw)) {
+    try {
+      const parsed = new URL(raw);
+      const pathname = parsed.pathname.replace(/^\/+/, '');
+      const base = MEDIA_BASE_PATH.replace(/^\/+/, '');
+      return pathname.replace(new RegExp(`^${base}/`), '').replace(/^uploads\//, '');
+    } catch {
+      return raw.split('/').pop() || '';
+    }
+  }
+  const withoutLeading = raw.replace(/^\/+/, '');
+  const base = MEDIA_BASE_PATH.replace(/^\/+/, '');
+  return withoutLeading.replace(new RegExp(`^${base}/`), '').replace(/^uploads\//, '');
+};
 
 export const inferMediaType = (input: Partial<MediaRecord>): MediaType => {
   const mime = (input.mimeType || '').toLowerCase();
@@ -42,21 +89,16 @@ export const inferMediaType = (input: Partial<MediaRecord>): MediaType => {
 };
 
 export const resolveMediaUrl = (record: Partial<MediaRecord>): string => {
-  const raw = (record.url || '').trim();
-  if (!raw) return '';
-  if (raw.startsWith('blob:')) return '';
-  if (ABSOLUTE_URL.test(raw)) return raw;
-  if (raw.startsWith('/uploads/')) return `${FILES_BASE_URL}${raw.replace(/^\/uploads\//, '')}`;
-  if (raw.startsWith('uploads/')) return `${FILES_BASE_URL}${raw.replace(/^uploads\//, '')}`;
-  return `${FILES_BASE_URL}${raw.replace(/^\/+/, '')}`;
+  const raw = (record.url || record.filename || '').trim();
+  return getMediaUrl(raw);
 };
 
 export const normalizeMediaRecord = (input: any, index = 0): MediaRecord => {
   const urlCandidate = input?.url || input?.fileUrl || input?.file_url || input?.path || input?.filename || input?.name || '';
-  const filename = (input?.filename || input?.name || (typeof urlCandidate === 'string' ? urlCandidate.split('/').pop() : '') || `media-${index + 1}`).toString();
+  const filename = (input?.filename || input?.name || getMediaKey(String(urlCandidate)) || `media-${index + 1}`).toString();
   const resolved = resolveMediaUrl({ url: urlCandidate, filename });
   const type = inferMediaType({ url: resolved || urlCandidate, filename, mimeType: input?.mimeType || input?.mime });
-  const looksBlob = String(urlCandidate).startsWith('blob:') || filename.toLowerCase().includes('_blob');
+  const looksBlob = isBlobMedia(String(urlCandidate)) || filename.toLowerCase().includes('_blob');
   const status: MediaStatus = looksBlob ? 'broken' : (input?.status || (resolved ? 'ok' : 'needs_fix'));
   return {
     id: String(input?.id || `${filename}-${index}`),

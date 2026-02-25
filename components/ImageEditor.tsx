@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { useData } from '../context/DataContext';
-import { MediaRecord, resolveMedia } from '../lib/media';
+import { MediaRecord, getMediaUrl, resolveMedia } from '../lib/media';
 
 const sampleImages = [
   // Intentionally empty: only admin/gallery images should be used.
@@ -458,8 +458,8 @@ const ImageEditor: React.FC = () => {
                     {sampleImages.length > 0 && (
                       <div className="grid grid-cols-3 gap-4 mb-4">
                           {sampleImages.map((img) => (
-                          <button key={img.url} onClick={() => handleSelectSample(img.url)} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedSample === img.url ? 'border-pink-500 scale-105' : 'border-zinc-700 hover:border-pink-400'}`}>
-                              <img src={img.url} alt={img.name} className="aspect-square object-cover" />
+                          <button key={img.url} onClick={() => handleSelectSample(getMediaUrl(img.url))} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedSample === img.url ? 'border-pink-500 scale-105' : 'border-zinc-700 hover:border-pink-400'}`}>
+                              <img src={getMediaUrl(img.url)} alt={img.name} className="aspect-square object-cover" />
                               <div className="absolute inset-0 bg-black/40"></div>
                               <span className="absolute bottom-2 left-2 text-white text-xs font-bold">{img.name}</span>
                           </button>
@@ -770,10 +770,10 @@ const ImageEditor: React.FC = () => {
                             siteGalleryImages.map((img) => (
                                 <button 
                                     key={img.id} 
-                                    onClick={() => handleSelectSample(img.url)}
+                                    onClick={() => handleSelectSample(getMediaUrl(img.url))}
                                     className="aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-yellow-400 transition-colors relative group"
                                 >
-                                    <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+                                    <img src={getMediaUrl(img.url)} alt={img.caption} className="w-full h-full object-cover" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <span className="text-white text-xs font-bold">Select</span>
                                     </div>
