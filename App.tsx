@@ -18,6 +18,7 @@ import HashScroll from './components/HashScroll';
 import { DataProvider } from './context/DataContext';
 import DrinksPage from './pages/DrinksPage';
 import HomePage from './pages/HomePage';
+import HenDoKaraokeSohoPage from './pages/HenDoKaraokeSohoPage';
 import StubPage from './pages/StubPage';
 
 const AppShell: React.FC = () => {
@@ -57,6 +58,7 @@ const App: React.FC = () => {
             <Route path="terms" element={<Terms />} />
             <Route path="sitemap" element={<SitemapPage />} />
             <Route path="instagram" element={<InstagramPage />} />
+            <Route path="hen-do-karaoke-soho" element={<HenDoKaraokeSohoPage />} />
             <Route path="*" element={<StubPage title="Page Not Found" />} />
           </Route>
           <Route path="admin" element={<AdminDashboard />} />

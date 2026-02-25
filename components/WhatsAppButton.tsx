@@ -10,8 +10,8 @@ const WhatsAppButton: React.FC = () => {
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed right-4 md:right-6 z-50 bg-[#25D366] hover:bg-[#1ebf5a] text-white min-h-11 min-w-11 p-3 md:p-3.5 rounded-full shadow-[0_10px_30px_rgba(37,211,102,0.35)] transition-all duration-200 hover:scale-105 flex items-center justify-center"
-      style={{ bottom: 'max(12px, env(safe-area-inset-bottom))' }}
+      className="fixed right-5 z-50 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-[#25D366] p-3 text-white shadow-[0_10px_30px_rgba(37,211,102,0.35)] transition-all duration-200 hover:scale-105 hover:bg-[#1ebf5a]"
+      style={{ bottom: 'max(1.25rem, calc(env(safe-area-inset-bottom) + 1rem))' }}
       aria-label="Contact us on WhatsApp"
     >
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6">

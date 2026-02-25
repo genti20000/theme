@@ -20,23 +20,22 @@ const Header: React.FC = () => {
   const getHref = (key: string) => ROUTES[key as keyof typeof ROUTES] ?? '/';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/75 backdrop-blur-xl">
-      <div className="container mx-auto px-4 h-16 md:h-[68px] grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md">
+      <div className="mx-auto grid h-16 w-full max-w-[1200px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 md:h-[72px] md:px-8">
         <div className="hidden md:flex items-center gap-5">
           {navLinks.slice(0, 3).map((link) => (
-            <Link key={link} to={getHref(link)} className="min-h-11 inline-flex items-center text-xs font-bold uppercase tracking-[0.08em] text-zinc-300 hover:text-white">
+            <Link key={link} to={getHref(link)} className="inline-flex h-10 items-center text-xs font-bold uppercase tracking-[0.08em] text-zinc-300 hover:text-white">
               {getLabel(link)}
             </Link>
           ))}
         </div>
 
-        <Link to="/" className="justify-self-center inline-flex items-center gap-2">
+        <Link to="/" className="justify-self-center inline-flex items-center">
           {headerData.logoUrl ? (
-            <img src={headerData.logoUrl} alt="London Karaoke Club" width={52} height={52} className="h-11 w-11 md:h-12 md:w-12 object-contain" loading="eager" />
+            <img src={headerData.logoUrl} alt="London Karaoke Club" width={48} height={48} className="h-10 w-auto max-h-12 md:h-12 object-contain" loading="eager" />
           ) : (
-            <div className="h-11 w-11 md:h-12 md:w-12 rounded-full border border-zinc-700 bg-zinc-900" />
+            <div className="h-10 w-10 rounded-full border border-zinc-700 bg-zinc-900 md:h-12 md:w-12" />
           )}
-          <span className="hidden sm:block text-[11px] font-black uppercase tracking-[0.14em] text-zinc-200">London Karaoke Club</span>
         </Link>
 
         <div className="justify-self-end flex items-center gap-2 md:gap-3">
@@ -45,7 +44,7 @@ const Header: React.FC = () => {
           </div>
           <button
             onClick={() => setIsMenuOpen((v) => !v)}
-            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-200 hover:text-white"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-zinc-200 hover:text-white"
             aria-label="Toggle menu"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,15 +55,15 @@ const Header: React.FC = () => {
       </div>
 
       {isMenuOpen && (
-        <div className="border-t border-zinc-800 bg-zinc-950/98 backdrop-blur-xl">
-          <div className="container mx-auto px-4 py-4 grid gap-2">
+        <div className="border-t border-zinc-800 bg-zinc-950/98 backdrop-blur-md">
+          <div className="mx-auto grid w-full max-w-[1200px] gap-2 px-5 py-4 md:px-8">
             <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full">Book Now</Button>
             {navLinks.map((link) => (
               <Link
                 key={link}
                 to={getHref(link)}
                 onClick={() => setIsMenuOpen(false)}
-                className="min-h-11 px-3 rounded-xl border border-zinc-800 bg-zinc-900 text-sm font-bold uppercase tracking-[0.08em] text-zinc-200 hover:text-white inline-flex items-center"
+                className="inline-flex min-h-11 items-center rounded-xl border border-white/10 bg-white/[0.03] px-3 text-sm font-bold uppercase tracking-[0.08em] text-zinc-200 hover:text-white"
               >
                 {getLabel(link)}
               </Link>

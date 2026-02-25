@@ -3,31 +3,36 @@ import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { NAV, SUMUP_BOOKING_URL, WHATSAPP_URL } from '../lib/nav';
 import Button from './ui/Button';
+import Card from './ui/Card';
 
 const Footer: React.FC = () => {
   const { footerData } = useData();
 
-  const sections = ['Explore', 'Book', 'Events', 'LKC', 'Connect'] as const;
+  const groups = [
+    { title: 'Explore', items: NAV.filter((n) => n.section === 'Explore') },
+    { title: 'Events', items: NAV.filter((n) => n.section === 'Events') },
+    { title: 'LKC', items: NAV.filter((n) => n.section === 'LKC') },
+  ];
 
   return (
-    <footer className="bg-zinc-950 border-t border-zinc-900 text-zinc-400">
-      <div className="container mx-auto px-6 py-14">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 md:p-8 text-center mb-12">
-          <h4 className="text-2xl md:text-4xl font-black text-white mb-3">{footerData.ctaHeading}</h4>
-          <p className="text-zinc-300 mb-6 max-w-2xl mx-auto">{footerData.ctaText}</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+    <footer className="border-t border-white/10 bg-[#0A0A0A] text-zinc-400">
+      <div className="mx-auto w-full max-w-[1200px] px-5 py-16 md:px-8 md:py-20 lg:py-24">
+        <Card className="mb-12 p-6 text-center md:p-8">
+          <h4 className="mb-3 text-2xl font-black text-white md:text-3xl">{footerData.ctaHeading}</h4>
+          <p className="mx-auto mb-6 max-w-2xl text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{footerData.ctaText}</p>
+          <div className="flex flex-col justify-center gap-3 sm:flex-row">
             <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">{footerData.ctaButtonText}</Button>
             <Button href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" variant="secondary">Plan via WhatsApp</Button>
           </div>
-        </div>
+        </Card>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10">
-          {sections.map((section) => (
-            <div key={section}>
-              <h5 className="font-black text-white text-xs uppercase tracking-[0.1em] mb-4">{section}</h5>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-10">
+          {groups.map((group) => (
+            <div key={group.title}>
+              <h5 className="mb-4 text-xs font-black uppercase tracking-[0.1em] text-white">{group.title}</h5>
               <ul className="space-y-2">
-                {NAV.filter((n) => n.section === section).map((item, idx) => (
-                  <li key={`${section}-${idx}`}>
+                {group.items.map((item, idx) => (
+                  <li key={`${group.title}-${idx}`}>
                     {item.external ? (
                       <a href={item.href} className="text-sm hover:text-white" target="_blank" rel="noopener noreferrer">{item.label}</a>
                     ) : (
@@ -38,13 +43,22 @@ const Footer: React.FC = () => {
               </ul>
             </div>
           ))}
+
+          <Card className="p-5">
+            <h5 className="mb-4 text-xs font-black uppercase tracking-[0.1em] text-white">Contact</h5>
+            <div className="space-y-3 text-sm">
+              <p>Soho, London</p>
+              <p>
+                <a href="tel:+447761383514" className="hover:text-white">+44 7761 383514</a>
+              </p>
+              <p>Open until 3am</p>
+              <Button href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" variant="secondary" className="w-full">WhatsApp</Button>
+            </div>
+          </Card>
         </div>
 
-        <div className="pt-6 border-t border-zinc-800 text-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-1">
-            <p>Copyright © {new Date().getFullYear()} London Karaoke Club. All rights reserved.</p>
-            <p>Soho, London · +44 7761 383514 · Open until 3am</p>
-          </div>
+        <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs md:flex-row md:items-center md:justify-between">
+          <p>Copyright © {new Date().getFullYear()} London Karaoke Club. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white">Terms of Use</Link>

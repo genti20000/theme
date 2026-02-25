@@ -5,7 +5,7 @@ import FAQAccordion, { FAQAccordionItem } from './ui/FAQAccordion';
 const faqData: FAQAccordionItem[] = [
   {
     question: 'What are the opening hours?',
-    answer: 'We are open daily from 2pm until 3am. Perfect for afternoon warm-ups or late-night encores.'
+    answer: 'We are open until 3am, ideal for late-night celebrations and private karaoke events in Soho.'
   },
   {
     question: 'Do I need to book in advance?',
@@ -47,10 +47,10 @@ const faqData: FAQAccordionItem[] = [
 
 const FAQ: React.FC = () => {
   return (
-    <Section id="faq" className="bg-zinc-950 border-t border-zinc-900" containerClassName="max-w-4xl">
+    <Section id="faq" className="bg-zinc-950 border-t border-white/10" containerClassName="max-w-4xl">
       <div className="text-center mb-10">
-        <h2 className="text-3xl md:text-5xl font-black text-white mb-3">Frequently Asked Questions</h2>
-        <p className="text-zinc-400">Everything you need before you sing.</p>
+        <h2 className="mb-3 text-2xl font-black leading-tight text-white md:text-3xl">Frequently Asked Questions</h2>
+        <p className="text-base leading-6 text-zinc-400 md:text-lg md:leading-7">Everything you need before you sing.</p>
       </div>
       <FAQAccordion items={faqData} />
     </Section>

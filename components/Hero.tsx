@@ -21,7 +21,7 @@ const Hero: React.FC = () => {
   const isVideo = (url: string) => /\.(mp4|webm|mov)(\?|$)/i.test(url || '');
 
   return (
-    <section className="relative isolate min-h-[88svh] md:min-h-screen flex items-end pb-16 md:pb-20 overflow-hidden bg-black">
+    <section className="relative isolate flex min-h-[72vh] items-end overflow-hidden bg-black pb-16 md:min-h-[78vh] md:pb-20">
       <div className="absolute inset-0 z-0">
         {slides.length > 0 ? slides.map((slide, index) => {
           const active = index === currentSlide;
@@ -47,24 +47,25 @@ const Hero: React.FC = () => {
         }) : <div className="absolute inset-0 bg-zinc-950" />}
       </div>
 
-      <div className="absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(10,10,10,0.35)_0%,rgba(10,10,10,0.75)_52%,rgba(10,10,10,0.95)_100%)]" />
+      <div className="absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.75)_100%)]" />
 
-      <div className="relative z-20 container mx-auto px-6">
-        <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-[0.94] tracking-tight text-white">
+      <div className="relative z-20 mx-auto w-full max-w-[1200px] px-5 md:px-8">
+        <div className="mx-auto max-w-[720px] text-center">
+          <h1 className="mb-4 text-4xl font-black leading-[1.1] tracking-[-0.02em] text-white md:text-5xl md:leading-[1.05]">
             Private Karaoke in Soho
             <span className="block text-yellow-300">Open Until 3am</span>
           </h1>
 
-          <p className="mt-5 max-w-2xl text-sm md:text-lg leading-relaxed text-zinc-200">
+          <p className="mb-5 text-base leading-6 text-zinc-200 md:text-lg md:leading-7">
             80,000+ songs, updated monthly. Private spaces for 10–50+ guests.
             No chains. No boxes. Just your own club.
           </p>
 
-          <div className="mt-7 flex flex-col sm:flex-row gap-3 sm:items-center">
+          <Badge className="mb-3">★★★★★ 4.9 (128 Google Reviews)</Badge>
+
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Your Private Room</Button>
             <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" variant="secondary">Check Availability</Button>
-            <Badge className="sm:ml-2">★★★★★ 4.9 (128 Google Reviews)</Badge>
           </div>
 
           <p className="mt-4 text-xs md:text-sm font-semibold text-yellow-200/90 tracking-[0.03em]">

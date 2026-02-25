@@ -8,6 +8,7 @@ export type NavKey =
   | 'events'
   | 'songs'
   | 'instagram'
+  | 'hen-do-karaoke-soho'
   | 'sitemap'
   | 'faqs'
   | 'about'
@@ -37,6 +38,7 @@ export const ROUTES: Record<NavKey, string> = {
   events: "/events",
   songs: "/songs",
   instagram: "/instagram",
+  "hen-do-karaoke-soho": "/hen-do-karaoke-soho",
   sitemap: "/sitemap",
   faqs: "/faqs",
   about: "/about",
@@ -57,6 +59,7 @@ export const NAV_LABELS: Record<NavKey, string> = {
   events: "Events",
   songs: "Songs",
   instagram: "Instagram",
+  "hen-do-karaoke-soho": "Hen Do Karaoke Soho",
   sitemap: "Sitemap",
   faqs: "FAQs",
   about: "About Us",
@@ -84,7 +87,7 @@ export const NAV: NavItem[] = [
 
   // Events
   { label: "Birthday Parties", href: ROUTES.events, section: "Events" },
-  { label: "Hen & Stag Dos", href: ROUTES.events, section: "Events" },
+  { label: "Hen & Stag Dos", href: ROUTES["hen-do-karaoke-soho"], section: "Events" },
   { label: "Corporate Events", href: ROUTES.events, section: "Events" },
 
   // LKC

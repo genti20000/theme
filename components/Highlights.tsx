@@ -1,77 +1,60 @@
-
 import React from 'react';
 import { useData } from '../context/DataContext';
+import Section from './ui/Section';
 
 const Highlights: React.FC = () => {
   const { highlightsData } = useData();
 
   return (
-    <section className="bg-zinc-900 py-16 md:py-24">
-      <div className="container mx-auto px-6 mb-16">
-        <div className="text-center max-w-3xl mx-auto">
-          <h3 className="text-4xl md:text-5xl font-bold mb-6">{highlightsData.heading}</h3>
-          <p className="text-xl text-gray-300">
-            {highlightsData.subtext}
-          </p>
+    <Section className="border-t border-white/10 bg-[#0A0A0A]" containerClassName="space-y-12 md:space-y-16">
+      <div className="mx-auto max-w-[720px] text-center">
+        <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">{highlightsData.heading}</h2>
+        <p className="mt-4 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{highlightsData.subtext}</p>
+      </div>
+
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-950">
+        {highlightsData.mainImageUrl ? (
+          <>
+            <img src={highlightsData.mainImageUrl} alt="Friends singing karaoke" className="hidden h-[60vh] w-full object-cover md:block" />
+            <img src={highlightsData.mobileMainImageUrl || highlightsData.mainImageUrl} alt="Friends singing karaoke" className="block h-[52vh] w-full object-cover md:hidden" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10" />
+          </>
+        ) : (
+          <div className="flex h-[52vh] items-center justify-center text-sm font-bold uppercase tracking-widest text-zinc-500 md:h-[60vh]">Add Main Image In Admin</div>
+        )}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-12 lg:gap-10">
+        <div className="md:col-span-3 lg:col-span-6">
+          <h3 className="mb-6 text-2xl font-black text-white md:text-3xl">{highlightsData.featureListTitle}</h3>
+          <ul className="space-y-4 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
+            {highlightsData.featureList.map((feature, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <CheckIcon />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
 
-      {/* Full Width Image */}
-      <div className="w-full h-[60vh] md:h-[80vh] mb-16 relative bg-zinc-950">
-          {highlightsData.mainImageUrl ? (
-            <>
-              <img 
-                src={highlightsData.mainImageUrl} 
-                alt="Friends singing karaoke" 
-                className="hidden md:block w-full h-full object-cover"
-              />
-              <img 
-                src={highlightsData.mobileMainImageUrl || highlightsData.mainImageUrl} 
-                alt="Friends singing karaoke" 
-                className="md:hidden block w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/10"></div>
-            </>
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-zinc-500 text-sm font-bold uppercase tracking-widest">
-              Add Main Image In Admin
-            </div>
-          )}
-      </div>
-
-      <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="pl-0 md:pl-10">
-            <h4 className="text-3xl font-bold mb-8">{highlightsData.featureListTitle}</h4>
-            <ul className="space-y-4 text-lg text-gray-300">
-              {highlightsData.featureList.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <CheckIcon />
-                    {feature}
-                  </li>
-              ))}
-            </ul>
-          </div>
-          <div className="flex justify-center">
+        <div className="md:col-span-3 lg:col-span-6">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950">
             {highlightsData.sideImageUrl ? (
-              <img src={highlightsData.sideImageUrl} alt="Karaoke Detail" className="rounded-full w-[300px] h-[300px] md:w-[500px] md:h-[500px] object-cover border-8 border-zinc-800 shadow-2xl" />
+              <img src={highlightsData.sideImageUrl} alt="Karaoke detail" className="h-[340px] w-full object-cover md:h-[420px]" loading="lazy" />
             ) : (
-              <div className="rounded-full w-[300px] h-[300px] md:w-[500px] md:h-[500px] border-8 border-zinc-800 shadow-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 text-xs font-bold uppercase tracking-widest text-center px-6">
-                Add Side Image In Admin
-              </div>
+              <div className="flex h-[340px] items-center justify-center px-6 text-center text-xs font-bold uppercase tracking-widest text-zinc-500 md:h-[420px]">Add Side Image In Admin</div>
             )}
           </div>
         </div>
       </div>
-    </section>
+    </Section>
   );
 };
 
 const CheckIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-4 text-pink-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+  <svg xmlns="http://www.w3.org/2000/svg" className="mt-1 h-4 w-4 flex-shrink-0 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
   </svg>
 );
-
 
 export default Highlights;

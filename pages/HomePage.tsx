@@ -70,7 +70,7 @@ const HomePage: React.FC = () => {
             </section>
           );
         }
-        if (section.type === 'gallery') return <PageGallerySection pageKey="home" className="mt-20" key={section.id} />;
+        if (section.type === 'gallery') return <PageGallerySection pageKey="home" key={section.id} />;
         return null;
       })}
     </>

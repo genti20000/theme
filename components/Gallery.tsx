@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GalleryViewMode, useData } from '../context/DataContext';
 import { getMediaUrl } from '../lib/media';
@@ -13,7 +12,6 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
   const { galleryData, isDataLoading } = useData();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('carousel');
-  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeCollectionId, setActiveCollectionId] = useState<string>('');
 
@@ -24,6 +22,7 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
     || collections.find(c => c.id === activeCollectionId)
     || collections.find(c => c.id === galleryData.activeCollectionId)
     || collections[0];
+
   const images = (activeCollection?.images || [])
     .map((img) => ({ ...img, url: getMediaUrl(img.url || '') }))
     .filter((img) => !!img.url);
@@ -42,26 +41,19 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
     setViewMode(nextMode);
   }, [activeCollection?.id, activeCollection?.defaultViewMode, forcedViewMode]);
 
-  const handleImageLoad = (id: string) => {
-      setLoadedImages(prev => ({ ...prev, [id]: true }));
-  };
+  useEffect(() => {
+    if (embedded || viewMode !== 'carousel' || images.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [embedded, viewMode, images.length]);
 
   useEffect(() => {
-    if (viewMode === 'carousel' && images.length > 0) {
-        const timer = setInterval(() => {
-            setCurrentIndex(prev => (prev + 1) % images.length);
-        }, 5000);
-        return () => clearInterval(timer);
-    }
-  }, [viewMode, images.length]);
-
-  // Lock scroll when lightbox is open
-  useEffect(() => {
-    if (lightboxIndex !== null) {
-      document.body.style.overflow = 'hidden';
-    } else {
+    document.body.style.overflow = lightboxIndex !== null ? 'hidden' : '';
+    return () => {
       document.body.style.overflow = '';
-    }
+    };
   }, [lightboxIndex]);
 
   useEffect(() => {
@@ -70,98 +62,44 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
   }, [activeCollection?.id]);
 
   if (isDataLoading && images.length === 0) {
-      return (
-        <div className={`${embedded ? 'py-12' : 'min-h-screen'} bg-black flex flex-col items-center justify-center text-white`}>
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mb-4"></div>
-            <p className="text-gray-400 font-bold tracking-widest uppercase text-xs">Loading Gallery...</p>
-        </div>
-      );
+    return (
+      <div className={`${embedded ? 'py-12' : 'min-h-screen'} flex flex-col items-center justify-center bg-black text-white`}>
+        <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-yellow-400" />
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Loading Gallery...</p>
+      </div>
+    );
   }
 
-  const closeLightbox = () => setLightboxIndex(null);
-  const nextLightbox = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLightboxIndex(prev => (prev !== null ? (prev + 1) % images.length : null));
-  };
-  const prevLightbox = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLightboxIndex(prev => (prev !== null ? (prev - 1 + images.length) % images.length : null));
-  };
+  const featuredImage = images[0];
+  const secondaryImages = images.slice(1, 5);
 
   return (
-    <div className={`bg-black text-white relative select-none ${embedded ? 'py-16' : 'min-h-screen pt-24 pb-24'}`}>
-      <style>{`
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .animate-gallery-item { animation: fadeInScale 0.6s ease-out forwards; }
-        .shimmer-placeholder {
-          background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-        }
-      `}</style>
-
-      {/* Lightbox Modal */}
+    <div className={`relative select-none bg-black text-white ${embedded ? 'py-16 md:py-20 lg:py-28' : 'min-h-screen pb-24 pt-24'}`}>
       {lightboxIndex !== null && (
-        <div 
-          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-12 animate-fade-in"
-          onClick={closeLightbox}
-        >
-          <button 
-            className="absolute top-6 right-6 text-white bg-zinc-800/50 p-3 rounded-full hover:bg-zinc-700 transition-colors z-[110]"
-            onClick={closeLightbox}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 md:p-12 backdrop-blur-xl" onClick={() => setLightboxIndex(null)}>
+          <button className="absolute right-6 top-6 rounded-full bg-zinc-800/50 p-3 text-white transition-colors hover:bg-zinc-700" onClick={() => setLightboxIndex(null)}>
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
-          
-          <button 
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-zinc-800/30 p-4 rounded-full hover:bg-pink-600 transition-all hidden md:block"
-            onClick={prevLightbox}
-          >
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
-          </button>
-          <button 
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-zinc-800/30 p-4 rounded-full hover:bg-pink-600 transition-all hidden md:block"
-            onClick={nextLightbox}
-          >
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-          </button>
-
-          <div className="relative max-w-5xl w-full max-h-[85vh] flex flex-col items-center">
-            <img 
-              src={getMediaUrl(images[lightboxIndex].url)} 
-              alt="" 
-              className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(236,72,153,0.3)]"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <div className="mt-6 text-center">
-              <p className="text-white font-black uppercase tracking-widest text-sm mb-1">{images[lightboxIndex].caption || 'LKC Soho'}</p>
-              <p className="text-zinc-500 text-xs font-bold">{lightboxIndex + 1} / {images.length}</p>
-            </div>
+          <div className="relative max-h-[85vh] w-full max-w-5xl">
+            <img src={getMediaUrl(images[lightboxIndex].url)} alt="" className="h-full w-full object-contain" onClick={(e) => e.stopPropagation()} />
           </div>
         </div>
       )}
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tighter uppercase italic">{galleryData.heading}</h2>
-          <p className="text-gray-400 text-lg mb-8">{activeCollection?.subtext || galleryData.subtext}</p>
+      <div className="mx-auto w-full max-w-[1200px] px-5 md:px-8">
+        <div className="mx-auto mb-12 max-w-[720px] text-center">
+          <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">{galleryData.heading}</h2>
+          <p className="mt-3 text-base leading-6 text-gray-400 md:text-lg md:leading-7">{activeCollection?.subtext || galleryData.subtext}</p>
           {!forcedCollectionId && collections.length > 1 && (
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
               {collections.map((collection) => (
                 <button
                   key={collection.id}
                   onClick={() => setActiveCollectionId(collection.id)}
-                  className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase transition-all border ${
+                  className={`rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
                     activeCollection?.id === collection.id
-                      ? 'bg-pink-500 text-white border-pink-400'
-                      : 'bg-zinc-900/60 text-zinc-400 border-zinc-700 hover:text-white hover:border-zinc-500'
+                      ? 'border-yellow-300/40 bg-yellow-400/15 text-yellow-200'
+                      : 'border-white/15 bg-white/[0.03] text-zinc-400 hover:border-white/25 hover:text-white'
                   }`}
                 >
                   {collection.name}
@@ -169,94 +107,85 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
               ))}
             </div>
           )}
+
           {!embedded && (
-          <div className="flex justify-center gap-4 bg-zinc-900/50 p-1 rounded-full w-max mx-auto border border-zinc-800">
-              <button 
-                onClick={() => setViewMode('carousel')} 
-                className={`px-8 py-2 rounded-full text-xs font-black tracking-widest uppercase transition-all ${viewMode === 'carousel' ? 'bg-yellow-400 text-black shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+            <div className="mx-auto mt-6 flex w-max gap-2 rounded-full border border-white/10 bg-white/[0.03] p-1">
+              <button
+                onClick={() => setViewMode('carousel')}
+                className={`rounded-full px-6 py-2 text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'carousel' ? 'bg-yellow-400 text-black' : 'text-zinc-400 hover:text-zinc-200'}`}
               >
                 Carousel
               </button>
-              <button 
-                onClick={() => setViewMode('grid')} 
-                className={`px-8 py-2 rounded-full text-xs font-black tracking-widest uppercase transition-all ${viewMode === 'grid' ? 'bg-yellow-400 text-black shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`rounded-full px-6 py-2 text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-yellow-400 text-black' : 'text-zinc-400 hover:text-zinc-200'}`}
               >
                 Grid
               </button>
-          </div>
+            </div>
           )}
         </div>
 
-        {viewMode === 'grid' && (
-            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 [column-fill:_balance] space-y-3">
-                {images.map((img, idx) => (
-                    <div 
-                        key={img.id} 
-                        onClick={() => setLightboxIndex(idx)}
-                        className="relative mb-3 break-inside-avoid rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 animate-gallery-item group shadow-2xl cursor-pointer"
-                        style={{ animationDelay: `${idx * 0.05}s` }}
-                    >
-                        {!loadedImages[img.id] && <div className="absolute inset-0 shimmer-placeholder"></div>}
-                        <img 
-                            src={getMediaUrl(img.url)} 
-                            alt={img.caption} 
-                            loading="lazy"
-                            onLoad={() => handleImageLoad(img.id)}
-                            className={`w-full object-cover transition-all duration-700 group-hover:scale-[1.03] ${loadedImages[img.id] ? 'opacity-100' : 'opacity-0'}`} 
-                        />
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-3 pointer-events-none">
-                            <p className="text-white font-semibold text-[10px] md:text-xs tracking-wide uppercase truncate">{img.caption || "London Karaoke Club"}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-        
-        {viewMode === 'carousel' && images.length > 0 && (
-             <div className="max-w-5xl mx-auto group animate-gallery-item">
-                 <div className="relative aspect-video md:aspect-[21/9] bg-zinc-900 rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(250,204,21,0.1)] border border-zinc-800">
-                     <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
-                         {images.map((img, i) => (
-                             <img 
-                                key={i} 
-                                src={getMediaUrl(img.url)} 
-                                loading={i === currentIndex ? 'eager' : 'lazy'}
-                                className="w-full h-full object-cover flex-shrink-0" 
-                                alt=""
-                             />
-                         ))}
-                     </div>
-                     
-                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
-                     
-                     <button 
-                        onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)} 
-                        className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/40 backdrop-blur-md text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-yellow-400 hover:text-black border border-white/10 z-10"
-                     >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
-                     </button>
-                     <button 
-                        onClick={() => setCurrentIndex((currentIndex + 1) % images.length)} 
-                        className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/40 backdrop-blur-md text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-yellow-400 hover:text-black border border-white/10 z-10"
-                     >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                     </button>
+        {embedded ? (
+          <div className="space-y-4">
+            {featuredImage && (
+              <button
+                type="button"
+                onClick={() => setLightboxIndex(0)}
+                className="group relative block overflow-hidden rounded-2xl border border-white/10"
+              >
+                <img src={getMediaUrl(featuredImage.url)} alt={featuredImage.caption || 'London Karaoke Club'} className="h-[340px] w-full object-cover md:h-[520px]" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent opacity-80 transition-opacity duration-200 group-hover:opacity-100" />
+                <p className="absolute bottom-4 left-4 text-sm font-bold text-white">{featuredImage.caption || 'London Karaoke Club'}</p>
+              </button>
+            )}
 
-                     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                        {images.map((_, i) => (
-                            <button 
-                                key={i} 
-                                onClick={() => setCurrentIndex(i)}
-                                className={`h-1.5 rounded-full transition-all ${currentIndex === i ? 'w-8 bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'w-2 bg-white/30 hover:bg-white/50'}`} 
-                            />
-                        ))}
-                     </div>
-                 </div>
-                 <div className="mt-8 text-center">
-                    <p className="text-yellow-400 font-black tracking-widest uppercase text-[10px] mb-2">Atmosphere Preview</p>
-                    <h4 className="text-2xl font-bold italic uppercase tracking-tighter">{images[currentIndex]?.caption || "Vibrant Soho Nights"}</h4>
-                 </div>
-             </div>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {secondaryImages.map((img, idx) => (
+                <button
+                  type="button"
+                  key={img.id}
+                  onClick={() => setLightboxIndex(idx + 1)}
+                  className="group relative overflow-hidden rounded-2xl border border-white/10"
+                >
+                  <img src={getMediaUrl(img.url)} alt={img.caption || 'London Karaoke Club'} className="h-40 w-full object-cover md:h-48" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                  <p className="absolute bottom-3 left-3 text-xs font-semibold text-white">{img.caption || 'LKC Soho'}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {images.map((img, idx) => (
+              <button
+                type="button"
+                key={img.id}
+                onClick={() => setLightboxIndex(idx)}
+                className="group relative overflow-hidden rounded-2xl border border-white/10"
+              >
+                <img src={getMediaUrl(img.url)} alt={img.caption || 'London Karaoke Club'} loading="lazy" className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-60 transition-opacity duration-200 group-hover:opacity-100" />
+                <p className="absolute bottom-3 left-3 truncate text-xs font-semibold text-white">{img.caption || 'London Karaoke Club'}</p>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="mx-auto max-w-5xl">
+            <div className="relative aspect-video overflow-hidden rounded-[2rem] border border-white/10">
+              <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+                {images.map((img, i) => (
+                  <img key={i} src={getMediaUrl(img.url)} loading={i === currentIndex ? 'eager' : 'lazy'} className="h-full w-full flex-shrink-0 object-cover" alt="" />
+                ))}
+              </div>
+              <button onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/40 p-3 text-white">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button onClick={() => setCurrentIndex((currentIndex + 1) % images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/40 p-3 text-white">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
