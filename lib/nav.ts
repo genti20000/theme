@@ -26,7 +26,7 @@ export type NavItem = {
 };
 
 export const SUMUP_BOOKING_URL = "https://bookings.londonkaraoke.club";
-export const WHATSAPP_URL = "https://wa.me/447761383514?text=Hi!%20I'd%20like%20to%20make%20a%20booking%20🎤";
+export const WHATSAPP_URL = "https://wa.me/447761383514?text=Hi%20London%20Karaoke%20Club%2C%20I%27d%20like%20to%20book%20a%20private%20karaoke%20room%20for%20my%20group.%20Please%20share%20availability%20and%20pricing.";
 
 export const ROUTES: Record<NavKey, string> = {
   home: "/",

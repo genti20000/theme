@@ -10,6 +10,7 @@ import FAQ from '../components/FAQ';
 import InstagramHighlights from '../components/InstagramHighlights';
 import DrinksMenu from '../components/DrinksMenu';
 import PageGallerySection from '../components/PageGallerySection';
+import HomeConversionBlocks from '../components/HomeConversionBlocks';
 import { useData } from '../context/DataContext';
 
 const HomePage: React.FC = () => {
@@ -53,7 +54,15 @@ const HomePage: React.FC = () => {
         if (section.type === 'battery') return batteryData.enabled !== false ? <Battery key={section.id} /> : null;
         if (section.type === 'testimonials') return testimonialsData.enabled !== false ? <Testimonials key={section.id} /> : null;
         if (section.type === 'info') return infoSectionData.enabled !== false ? <InfoSection key={section.id} /> : null;
-        if (section.type === 'faq') return faqData.enabled !== false ? <FAQ key={section.id} /> : null;
+        if (section.type === 'faq') {
+          if (faqData.enabled === false) return null;
+          return (
+            <React.Fragment key={section.id}>
+              <HomeConversionBlocks />
+              <FAQ />
+            </React.Fragment>
+          );
+        }
         if (section.type === 'drinks') {
           return (
             <section id={index === 0 ? "drinks" : undefined} key={section.id}>

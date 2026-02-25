@@ -29,6 +29,8 @@ const Hero: React.FC = () => {
   // Defaults for visibility if not set
   const showBadge = heroData.showBadge !== false;
   const showButtons = heroData.showButtons !== false;
+  const heroHeading = 'Private Karaoke in Soho — Open Until 3am';
+  const heroSubheading = '80,000+ songs, updated monthly. Private spaces for 10–50+ guests. No chains. No boxes. Just your own club.';
 
   return (
     <section className="relative w-full h-[90vh] md:h-screen flex flex-col items-center justify-end pb-12 md:pb-24 text-center text-white overflow-hidden bg-black" aria-label="Welcome to London Karaoke Club">
@@ -106,27 +108,30 @@ const Hero: React.FC = () => {
         {showBadge && heroData.badgeText && (
           <div className="mb-4 inline-block">
             <span className="py-1 px-4 rounded-full bg-red-600/80 backdrop-blur-sm border border-red-400 text-white text-xs md:text-sm font-bold tracking-wider uppercase animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)]">
-              {heroData.badgeText}
+              Fridays & Saturdays sell out 1–2 weeks in advance.
             </span>
           </div>
         )}
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-white via-red-200 to-green-100 drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
-          {heroData.headingText}
+          {heroHeading}
         </h1>
         <p className="mt-6 text-base md:text-xl max-w-2xl mx-auto text-gray-200 font-medium drop-shadow-md">
-          {heroData.subText}
+          {heroSubheading}
         </p>
         
         {showButtons && (
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <a href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" title="Book your Soho Karaoke Room" className="bg-red-600 hover:bg-red-700 text-white text-lg font-bold py-3 px-10 rounded-full border-2 border-white transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.6)]">
-              {heroData.buttonText}
+              Book Your Private Room
               </a>
-              <button onClick={() => window.scrollTo({top: window.innerHeight, behavior: 'smooth'})} className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-bold py-3 px-10 rounded-full border border-white/20 transition-all">
-                  Explore LKC Soho
-              </button>
+              <a href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-bold py-3 px-10 rounded-full border border-white/20 transition-all">
+                  Check Availability
+              </a>
           </div>
         )}
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-zinc-900/70 px-4 py-2">
+          <span className="text-yellow-300 text-sm font-black tracking-wide">★★★★★ 4.9 (128 Google Reviews)</span>
+        </div>
       </div>
     </section>
   );

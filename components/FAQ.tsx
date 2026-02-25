@@ -7,7 +7,7 @@ const FAQ: React.FC = () => {
     const faqData = [
         {
             question: "What are the opening hours?",
-            answer: "We are open daily from 2pm to 3am. Perfect for afternoon warm-ups or late-night encores."
+            answer: "We are open daily from 2pm until 3am. Perfect for afternoon warm-ups or late-night encores."
         },
         {
             question: "Do I need to book in advance?",

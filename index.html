@@ -22,38 +22,82 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "EntertainmentBusiness",
-      "name": "London Karaoke Club",
-      "@id": "https://londonkaraoke.club",
-      "url": "https://londonkaraoke.club",
-      "telephone": "+447761383514",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Soho",
-        "addressLocality": "London",
-        "postalCode": "W1",
-        "addressCountry": "GB"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 51.5136,
-        "longitude": -0.1365
-      },
-      "openingHoursSpecification": {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday"
-        ],
-        "opens": "14:00",
-        "closes": "03:00"
-      },
-      "priceRange": "££"
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.londonkaraoke.club/#organization",
+          "name": "London Karaoke Club",
+          "url": "https://www.londonkaraoke.club/",
+          "telephone": "+44 7761 383514"
+        },
+        {
+          "@type": "LocalBusiness",
+          "@id": "https://www.londonkaraoke.club/#localbusiness",
+          "name": "London Karaoke Club",
+          "url": "https://www.londonkaraoke.club/",
+          "telephone": "+44 7761 383514",
+          "priceRange": "££",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Soho, London",
+            "addressCountry": "GB"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+              ],
+              "opens": "14:00",
+              "closes": "03:00"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://www.londonkaraoke.club/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How many songs do you have?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "London Karaoke Club offers 80,000+ songs, updated monthly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What are your opening hours?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "We are open daily from 14:00 to 03:00."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do you allow walk-ins?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. Advance prebooking is required."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the minimum booking duration?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Minimum booking duration is 2 hours."
+              }
+            }
+          ]
+        }
+      ]
     }
     </script>
 
