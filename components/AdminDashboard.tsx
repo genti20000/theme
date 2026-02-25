@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HomeSectionType, PageGalleryKey, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
-import { MediaRecord, getMediaKey, getMediaUrl, resolveMedia } from '../lib/media';
+import { MediaRecord, getMediaKey, getMediaUrl } from '../lib/media';
+import MediaLibraryModal from './MediaLibraryModal';
 
 const TABS = [
   'Dashboard',
@@ -60,7 +61,6 @@ const slugify = (value: string) =>
 
 const isVideoFile = (url: string) => /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url);
 const splitLines = (value: string) => value.split('\n').map(v => v.trim()).filter(Boolean);
-const normalizeMediaUrl = (url: string) => encodeURI((url || '').trim()).replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/#/g, '%23');
 
 const Card: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
   <section className={`bg-zinc-900 border border-zinc-800 rounded-2xl p-5 ${className}`}>
@@ -83,7 +83,6 @@ const AdminDashboard: React.FC = () => {
   const [mediaTarget, setMediaTarget] = useState<{ kind: 'blog-image' | 'blog-og' | 'gallery-add' | 'generic'; postId?: string; collectionId?: string } | null>(null);
   const [storageFiles, setStorageFiles] = useState<MediaRecord[]>([]);
   const [selectedGalleryId, setSelectedGalleryId] = useState('');
-  const [brokenPreviewUrls, setBrokenPreviewUrls] = useState<Record<string, boolean>>({});
   const [repairRunning, setRepairRunning] = useState(false);
   const [repairSummary, setRepairSummary] = useState<string>('');
   const [lastSyncedPayload, setLastSyncedPayload] = useState<string>(() => localStorage.getItem('lkc_last_synced_payload') || '');
@@ -355,7 +354,6 @@ const AdminDashboard: React.FC = () => {
     try {
       const files = await fetchServerFiles();
       setStorageFiles(files);
-      setBrokenPreviewUrls({});
       if (files.length === 0) {
         const probe = await fetch(`${syncUrl}?list=1`, {
           headers: { Authorization: `Bearer ${adminPassword}` }
@@ -496,6 +494,26 @@ const AdminDashboard: React.FC = () => {
     setSyncError(errorMessage);
   };
 
+  const uploadFromMediaModal = async (file: File): Promise<string | null> => {
+    const url = await uploadFile(file);
+    if (!url) {
+      setSyncStatus('Error');
+      setSyncError('Upload failed. Check admin key and db.php upload response.');
+      return null;
+    }
+    await refreshStorageFiles();
+    return url;
+  };
+
+  const retryBrokenItem = async (file: MediaRecord): Promise<void> => {
+    if (!file.filename || file.filename.toLowerCase().includes('_blob')) {
+      setSyncError('Invalid media record (blob/missing key). Reupload this item.');
+      await runCleanupJob();
+      return;
+    }
+    await runRepairJob();
+  };
+
   const testMediaUrl = async () => {
     const resolved = getMediaUrl(mediaTestKey);
     if (!resolved) {
@@ -583,144 +601,23 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      {isMediaModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm p-4 flex items-center justify-center">
-          <div className="w-full max-w-5xl h-[80vh] bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
-              <h3 className="text-sm font-black uppercase tracking-widest">Media Library</h3>
-              <button
-                onClick={() => {
-                  setIsMediaModalOpen(false);
-                  setMediaTarget(null);
-                  genericMediaSetterRef.current = null;
-                }}
-                className="px-3 py-1 rounded-lg bg-zinc-800 text-xs uppercase font-black"
-              >
-                Close
-              </button>
-            </div>
-            <div className="p-4 border-b border-zinc-800 flex items-center gap-2">
-              <label className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase cursor-pointer">
-                Upload Media
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const url = await uploadFile(file);
-                    if (url) {
-                      await refreshStorageFiles();
-                      applyMediaSelection(url);
-                    } else {
-                      setSyncStatus('Error');
-                      setSyncError('Upload failed. Check admin key and db.php upload response.');
-                    }
-                  }}
-                />
-              </label>
-              <button onClick={refreshStorageFiles} className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">Refresh</button>
-              <button
-                onClick={runRepairJob}
-                disabled={repairRunning}
-                className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-xs font-black uppercase"
-              >
-                {repairRunning ? 'Repairing...' : 'Rebuild Thumbnails / Repair Media'}
-              </button>
-              <button
-                onClick={runCleanupJob}
-                disabled={repairRunning}
-                className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-xs font-black uppercase"
-              >
-                Cleanup Broken Records
-              </button>
-              {repairSummary && <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{repairSummary}</p>}
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {storageFiles.map((file, i) => (
-                <button
-                  key={`${file.id}-${i}`}
-                  onClick={() => {
-                    const resolved = resolveMedia(file);
-                    if (!resolved.resolvedUrl || resolved.status === 'broken') return;
-                    applyMediaSelection(resolved.resolvedUrl);
-                  }}
-                  className={`rounded-xl border bg-zinc-950 overflow-hidden text-left transition-colors ${file.status === 'broken' ? 'border-red-700' : 'border-zinc-800 hover:border-pink-500'}`}
-                >
-                  <div className="aspect-square w-full bg-black overflow-hidden border-b border-zinc-800">
-                    {(() => {
-                      const { type, resolvedUrl, thumbUrl, status } = resolveMedia(file);
-                      if ((type === 'video') && !brokenPreviewUrls[file.id] && status !== 'broken') {
-                        if (thumbUrl) {
-                          return (
-                            <img
-                              src={normalizeMediaUrl(thumbUrl)}
-                              alt={file.filename}
-                              loading="lazy"
-                              className="block w-full h-full object-cover"
-                              onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
-                            />
-                          );
-                        }
-                        return (
-                          <video
-                            src={normalizeMediaUrl(resolvedUrl)}
-                            muted
-                            playsInline
-                            preload="metadata"
-                            className="block w-full h-full object-cover"
-                            onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
-                          />
-                        );
-                      }
-                      if ((type === 'image') && !brokenPreviewUrls[file.id] && status !== 'broken') {
-                        return (
-                          <img
-                            src={normalizeMediaUrl(resolvedUrl)}
-                            alt={file.filename}
-                            loading="lazy"
-                            className="block w-full h-full object-cover"
-                            onError={() => setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: true }))}
-                          />
-                        );
-                      }
-                      return (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 text-center gap-2">
-                          <span>{status === 'broken' ? 'Broken' : 'No Preview'}</span>
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setBrokenPreviewUrls(prev => ({ ...prev, [file.id]: false }));
-                              if (status === 'broken') {
-                                setSyncError('Invalid media record (blob/missing key). Reupload this item.');
-                                await runRepairJob();
-                              } else {
-                                await refreshStorageFiles();
-                              }
-                            }}
-                            className="px-2 py-1 rounded bg-zinc-800 text-[9px]"
-                          >
-                            Retry
-                          </button>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <div className="p-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 line-clamp-2 break-all">{file.filename}</p>
-                    <p className={`mt-1 text-[9px] uppercase tracking-widest ${file.status === 'broken' ? 'text-red-400' : file.status === 'needs_fix' ? 'text-amber-400' : 'text-emerald-400'}`}>
-                      {file.status}
-                    </p>
-                  </div>
-                </button>
-              ))}
-              {storageFiles.length === 0 && (
-                <div className="col-span-full text-center py-16 text-zinc-500 text-sm">No files on server yet.</div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <MediaLibraryModal
+        isOpen={isMediaModalOpen}
+        files={storageFiles}
+        repairRunning={repairRunning}
+        repairSummary={repairSummary}
+        onClose={() => {
+          setIsMediaModalOpen(false);
+          setMediaTarget(null);
+          genericMediaSetterRef.current = null;
+        }}
+        onUpload={uploadFromMediaModal}
+        onRefresh={refreshStorageFiles}
+        onRepair={runRepairJob}
+        onCleanup={runCleanupJob}
+        onRetryBroken={retryBrokenItem}
+        onInsertSelected={applyMediaSelection}
+      />
 
       <header className="sticky top-0 z-50 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 px-6 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
