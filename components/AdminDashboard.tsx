@@ -337,8 +337,7 @@ const AdminDashboard: React.FC = () => {
       setBrokenPreviewUrls({});
       if (files.length === 0) {
         const probe = await fetch(`${syncUrl}?list=1`, {
-          headers: { Authorization: `Bearer ${adminPassword}` },
-          credentials: 'include'
+          headers: { Authorization: `Bearer ${adminPassword}` }
         });
         const probeData = await probe.json().catch(() => ({}));
         if (probe.status === 401 || String(probeData?.error || '').toLowerCase().includes('auth')) {
@@ -394,8 +393,7 @@ const AdminDashboard: React.FC = () => {
     setSyncError('');
     try {
       const response = await fetch(`${syncUrl}?list=1`, {
-        headers: { Authorization: `Bearer ${nextKey}` },
-        credentials: 'include'
+        headers: { Authorization: `Bearer ${nextKey}` }
       });
       const data = await response.json().catch(() => ({}));
       if (response.status === 401 || data?.success === false) {
@@ -415,7 +413,7 @@ const AdminDashboard: React.FC = () => {
       setSyncError('');
     } catch (error) {
       setSyncStatus('Error');
-      setSyncError(`Auth check failed: ${String(error)}`);
+      setSyncError(`Auth check failed: network/CORS error contacting sync URL (${syncUrl}).`);
     }
   };
 

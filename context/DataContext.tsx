@@ -712,7 +712,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const response = await fetch(syncUrl, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${adminPassword}` },
-                credentials: 'include',
                 body: formData
             });
             const res = await response.json().catch(() => ({} as any));
@@ -739,7 +738,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const response = await fetch(`${syncUrl}?list=1`, {
                 headers: { 'Authorization': `Bearer ${adminPassword}` },
-                credentials: 'include',
                 cache: 'no-store'
             });
             const data = await response.json().catch(() => ({} as any));
@@ -772,7 +770,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const response = await fetch(`${syncUrl}?repair=1`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${adminPassword}` },
-                credentials: 'include',
                 cache: 'no-store'
             });
             const data = await response.json().catch(() => null);
