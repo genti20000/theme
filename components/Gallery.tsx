@@ -188,12 +188,12 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
         </div>
 
         {viewMode === 'grid' && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-6">
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 [column-fill:_balance] space-y-3">
                 {images.map((img, idx) => (
                     <div 
                         key={img.id} 
                         onClick={() => setLightboxIndex(idx)}
-                        className="relative aspect-square rounded-xl md:rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 animate-gallery-item group shadow-2xl cursor-pointer"
+                        className="relative mb-3 break-inside-avoid rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 animate-gallery-item group shadow-2xl cursor-pointer"
                         style={{ animationDelay: `${idx * 0.05}s` }}
                     >
                         {!loadedImages[img.id] && <div className="absolute inset-0 shimmer-placeholder"></div>}
@@ -202,10 +202,10 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
                             alt={img.caption} 
                             loading="lazy"
                             onLoad={() => handleImageLoad(img.id)}
-                            className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${loadedImages[img.id] ? 'opacity-100' : 'opacity-0'}`} 
+                            className={`w-full object-cover transition-all duration-700 group-hover:scale-[1.03] ${loadedImages[img.id] ? 'opacity-100' : 'opacity-0'}`} 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2 md:p-6 flex items-end pointer-events-none">
-                            <p className="text-white font-bold text-[8px] md:text-sm tracking-wide uppercase truncate">{img.caption || "London Karaoke Club"}</p>
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-3 pointer-events-none">
+                            <p className="text-white font-semibold text-[10px] md:text-xs tracking-wide uppercase truncate">{img.caption || "London Karaoke Club"}</p>
                         </div>
                     </div>
                 ))}
