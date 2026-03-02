@@ -4,54 +4,9 @@ import Button from './ui/Button';
 import Card from './ui/Card';
 import Section from './ui/Section';
 
-const RoomIcon = () => (
-  <svg className="h-4 w-4 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 10h18M5 10V6a2 2 0 012-2h10a2 2 0 012 2v4M4 10v8m16-8v8M8 18h8" />
-  </svg>
-);
-
-const spaces = [
-  { name: 'Private Room A', capacity: '20–40 guests' },
-  { name: 'Private Room B', capacity: '10–20 guests' },
-  { name: 'Private Room C', capacity: '30–50+ guests' }
-];
-
 const HomeConversionBlocks: React.FC = () => {
   return (
     <Section className="border-t border-white/10 bg-[#0A0A0A]" containerClassName="space-y-16 md:space-y-20 lg:space-y-28">
-      <section id="spaces" className="space-y-6">
-        <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">Our Private Karaoke Spaces</h2>
-        <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-12 lg:gap-10">
-          {spaces.map((space) => (
-            <Card key={space.name} className="group p-6 transition-all duration-200 hover:-translate-y-1 hover:border-yellow-300/40 md:col-span-3 lg:col-span-4">
-              <div className="mb-3 flex items-center gap-2">
-                <RoomIcon />
-                <h3 className="text-xl font-bold text-white">{space.name}</h3>
-              </div>
-              <ul className="mb-5 space-y-2 text-sm text-zinc-300">
-                <li>Capacity: {space.capacity}</li>
-                <li>Open until 3am</li>
-                <li>Minimum 2 hour booking</li>
-              </ul>
-              <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full">Book Private Room</Button>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section id="pricing">
-        <Card className="p-6 md:p-8">
-          <h2 className="mb-3 text-2xl font-black leading-tight text-white md:text-3xl">Simple Pricing</h2>
-          <p className="mb-5 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">Prices vary by group size and day.</p>
-          <ul className="mb-6 space-y-2 text-sm text-zinc-200">
-            <li>Weekdays from £X/hr</li>
-            <li>Fridays & Saturdays from £X/hr</li>
-            <li>Min 2 hours</li>
-          </ul>
-          <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Check Availability</Button>
-        </Card>
-      </section>
-
       <section className="rounded-2xl border border-yellow-300/30 bg-white/[0.03] p-6 text-center md:p-8">
         <h3 className="mb-3 text-2xl font-black text-white">Ready to lock in your date?</h3>
         <p className="mb-5 text-zinc-300">Fridays & Saturdays sell out 1–2 weeks in advance.</p>

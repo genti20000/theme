@@ -8,21 +8,6 @@ import { SUMUP_BOOKING_URL } from '../lib/nav';
 const birthdayWhatsAppUrl =
   'https://wa.me/447761383514?text=Hi%20London%20Karaoke%20Club%2C%20I%27m%20planning%20a%20birthday%20karaoke%20party%20in%20Soho.%20Please%20share%20availability%2C%20room%20options%2C%20and%20pricing.';
 
-const rooms = [
-  {
-    name: 'Private Room A',
-    details: '10–20 guests · Intimate birthday nights',
-  },
-  {
-    name: 'Private Room B',
-    details: '20–40 guests · Big birthday energy',
-  },
-  {
-    name: 'Private Room C',
-    details: '30–50+ guests · Milestone takeovers',
-  },
-];
-
 const faqs = [
   {
     question: 'Can I bring a birthday cake?',
@@ -108,20 +93,6 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
         <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">Your group gets full control of the room and playlist.</p>
         <p className="mt-4 text-base leading-6 text-zinc-200 md:text-lg md:leading-7">No waiting your turn. No strangers watching. No awkward public mics.</p>
         <p className="mt-2 text-base leading-6 text-zinc-200 md:text-lg md:leading-7">Just your people.</p>
-      </Section>
-
-      <Section>
-        <h2 className="mb-6 text-2xl font-black leading-tight md:text-3xl">Choose Your Birthday Space</h2>
-        <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-12 lg:gap-10">
-          {rooms.map((room) => (
-            <Card key={room.name} className="p-6 md:col-span-3 lg:col-span-4">
-              <h3 className="mb-3 text-xl font-bold text-white">{room.name}</h3>
-              <p className="mb-4 text-base leading-6 text-zinc-300">{room.details}</p>
-              <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full">Check Live Availability</Button>
-            </Card>
-          ))}
-        </div>
-        <p className="mt-4 text-sm text-zinc-400">Minimum 2 hours · Open until 3am</p>
       </Section>
 
       <Section className="border-t border-white/10">
