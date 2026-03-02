@@ -10,15 +10,15 @@ const birthdayWhatsAppUrl =
 
 const rooms = [
   {
-    name: 'Vox Room',
+    name: 'Private Room A',
     details: '10–20 guests · Intimate birthday nights',
   },
   {
-    name: 'Terrace Bar',
+    name: 'Private Room B',
     details: '20–40 guests · Big birthday energy',
   },
   {
-    name: 'Attic',
+    name: 'Private Room C',
     details: '30–50+ guests · Milestone takeovers',
   },
 ];
@@ -111,7 +111,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section>
-        <h2 className="mb-6 text-2xl font-black leading-tight md:text-3xl">Choose Your Birthday Room</h2>
+        <h2 className="mb-6 text-2xl font-black leading-tight md:text-3xl">Choose Your Birthday Space</h2>
         <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-12 lg:gap-10">
           {rooms.map((room) => (
             <Card key={room.name} className="p-6 md:col-span-3 lg:col-span-4">

@@ -10,17 +10,17 @@ const henWhatsAppUrl =
 
 const roomOptions = [
   {
-    name: 'Terrace Bar',
+    name: 'Private Room A',
     details: '20–40 guests · Ideal for larger hen groups',
     meta: 'Open until 3am · Minimum 2 hours',
   },
   {
-    name: 'Vox Room',
+    name: 'Private Room B',
     details: '10–20 guests · Intimate hen celebrations',
     meta: 'Open until 3am · Minimum 2 hours',
   },
   {
-    name: 'Attic',
+    name: 'Private Room C',
     details: '30–50+ guests · Big energy hen nights',
     meta: 'Open until 3am · Minimum 2 hours',
   },
@@ -104,7 +104,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
               <h3 className="mb-3 text-xl font-bold text-white">{room.name}</h3>
               <p className="mb-2 text-base leading-6 text-zinc-300">{room.details}</p>
               <p className="mb-4 text-sm text-zinc-400">{room.meta}</p>
-              <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full">See Live Availability</Button>
+              <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full">Check Live Availability</Button>
             </Card>
           ))}
         </div>

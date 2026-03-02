@@ -11,9 +11,9 @@ const RoomIcon = () => (
 );
 
 const spaces = [
-  { name: 'Terrace Bar', capacity: '20–40 guests' },
-  { name: 'Vox Room', capacity: '10–20 guests' },
-  { name: 'Attic', capacity: '30–50+ guests' }
+  { name: 'Private Room A', capacity: '20–40 guests' },
+  { name: 'Private Room B', capacity: '10–20 guests' },
+  { name: 'Private Room C', capacity: '30–50+ guests' }
 ];
 
 const HomeConversionBlocks: React.FC = () => {
@@ -33,7 +33,7 @@ const HomeConversionBlocks: React.FC = () => {
                 <li>Open until 3am</li>
                 <li>Minimum 2 hour booking</li>
               </ul>
-              <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full">Book {space.name}</Button>
+              <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="w-full">Book Private Room</Button>
             </Card>
           ))}
         </div>
