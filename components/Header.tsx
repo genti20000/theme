@@ -32,9 +32,9 @@ const Header: React.FC = () => {
 
         <Link to="/" className="justify-self-center inline-flex items-center">
           {headerData.logoUrl ? (
-            <img src={headerData.logoUrl} alt="London Karaoke Club" width={48} height={48} className="h-10 w-auto max-h-12 md:h-12 object-contain" loading="eager" />
+            <img src={headerData.logoUrl} alt="London Karaoke Club" width={56} height={56} className="h-[46px] w-auto max-h-[56px] md:h-12 object-contain" loading="eager" />
           ) : (
-            <div className="h-10 w-10 rounded-full border border-zinc-700 bg-zinc-900 md:h-12 md:w-12" />
+            <div className="h-[46px] w-[46px] rounded-full border border-zinc-700 bg-zinc-900 md:h-12 md:w-12" />
           )}
         </Link>
 
