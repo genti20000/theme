@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useData } from '../context/DataContext';
+import { getMediaUrl } from '../lib/media';
 
 const InstagramHighlights: React.FC = () => {
   const { instagramHighlightsData } = useData();
@@ -44,7 +45,7 @@ const InstagramHighlights: React.FC = () => {
                 <div className="w-20 h-20 md:w-28 md:h-28 rounded-full border-4 border-black overflow-hidden bg-zinc-900">
                   {h.imageUrl ? (
                     <img 
-                      src={h.imageUrl}
+                      src={getMediaUrl(h.imageUrl)}
                       alt={h.title} 
                       className="w-full h-full object-cover"
                     />

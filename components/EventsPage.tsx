@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useData } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
+import { getMediaUrl } from '../lib/media';
 
 const FadeInScrollSection: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -50,7 +51,7 @@ const EventsPage: React.FC = () => {
         <div className="absolute inset-0 z-0">
             {eventsData.hero.image ? (
               <>
-                <img src={eventsData.hero.image} alt="Events Hero" className="w-full h-full object-cover opacity-60" />
+                <img src={getMediaUrl(eventsData.hero.image)} alt="Events Hero" className="w-full h-full object-cover opacity-60" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black"></div>
               </>
             ) : (
@@ -77,7 +78,7 @@ const EventsPage: React.FC = () => {
                         {section.imageUrl ? (
                           <>
                             <img 
-                                src={section.imageUrl} 
+                                src={getMediaUrl(section.imageUrl)} 
                                 alt={section.title} 
                                 className="w-full h-[350px] md:h-[500px] object-cover transition-transform duration-1000 group-hover:scale-110" 
                             />

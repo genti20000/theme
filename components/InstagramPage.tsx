@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
+import { getMediaUrl } from '../lib/media';
 
 interface StoryViewerProps {
   highlight: { title: string; imageUrl: string; link: string };
@@ -45,7 +46,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ highlight, onClose }) => {
             <div className="w-10 h-10 rounded-full border-2 border-pink-500 overflow-hidden bg-zinc-900">
               {highlight.imageUrl ? (
                 <img 
-                  src={highlight.imageUrl}
+                  src={getMediaUrl(highlight.imageUrl)}
                   alt={highlight.title} 
                   className="w-full h-full object-cover"
                 />
@@ -66,7 +67,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ highlight, onClose }) => {
         {/* Story Content */}
         {highlight.imageUrl ? (
           <img 
-            src={highlight.imageUrl}
+            src={getMediaUrl(highlight.imageUrl)}
             alt={highlight.title} 
             className="w-full h-full object-cover"
           />
@@ -111,7 +112,7 @@ const InstagramPage: React.FC = () => {
                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-black overflow-hidden bg-zinc-900">
                         {headerData.logoUrl ? (
                             <img 
-                                src={headerData.logoUrl}
+                                src={getMediaUrl(headerData.logoUrl)}
                                 alt="Profile" 
                                 className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
                             />
@@ -178,7 +179,7 @@ const InstagramPage: React.FC = () => {
                                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-black overflow-hidden bg-zinc-900 ring-2 ring-zinc-800 ring-offset-2 ring-offset-black group-hover:ring-pink-500">
                                     {h.imageUrl ? (
                                       <img 
-                                          src={h.imageUrl}
+                                          src={getMediaUrl(h.imageUrl)}
                                           alt={h.title} 
                                           className="w-full h-full object-cover"
                                       />
@@ -226,7 +227,7 @@ const InstagramPage: React.FC = () => {
                     posts.map((post) => (
                         <div key={post.id} className="aspect-square relative group cursor-pointer overflow-hidden bg-zinc-900 border border-zinc-800/30">
                             {post.imageUrl ? (
-                              <img src={post.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                              <img src={getMediaUrl(post.imageUrl)} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
                                 No Image

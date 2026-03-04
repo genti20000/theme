@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useData } from '../context/DataContext';
+import { getMediaUrl } from '../lib/media';
 
 const Fitness: React.FC = () => {
   const { vibeData } = useData();
@@ -21,12 +22,12 @@ const Fitness: React.FC = () => {
             {vibeData.videoUrl ? (
                 <>
                     <video 
-                        src={vibeData.videoUrl} 
+                        src={getMediaUrl(vibeData.videoUrl)} 
                         autoPlay muted loop playsInline 
                         className="hidden md:block w-full h-full object-cover rounded-3xl border-[4px] border-zinc-800 shadow-2xl"
                     />
                     <video 
-                        src={vibeData.mobileVideoUrl || vibeData.videoUrl} 
+                        src={getMediaUrl(vibeData.mobileVideoUrl || vibeData.videoUrl)} 
                         autoPlay muted loop playsInline 
                         className="md:hidden block w-full h-full object-cover rounded-3xl border-[4px] border-zinc-800 shadow-2xl"
                     />
@@ -34,14 +35,14 @@ const Fitness: React.FC = () => {
             ) : (
                 <>
                     {vibeData.image1 ? (
-                      <img src={vibeData.image1} alt="Vibe Image 1" className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full object-cover rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl"/>
+                      <img src={getMediaUrl(vibeData.image1)} alt="Vibe Image 1" className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full object-cover rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl"/>
                     ) : (
                       <div className="absolute top-0 right-1/2 translate-x-[20%] w-[45%] h-full rounded-full z-10 border-[10px] border-zinc-900 shadow-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest text-center px-4">
                         Add Image 1 In Admin
                       </div>
                     )}
                     {vibeData.image2 ? (
-                      <img src={vibeData.image2} alt="Vibe Image 2" className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full object-cover rounded-full border-[10px] border-zinc-900 shadow-2xl"/>
+                      <img src={getMediaUrl(vibeData.image2)} alt="Vibe Image 2" className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full object-cover rounded-full border-[10px] border-zinc-900 shadow-2xl"/>
                     ) : (
                       <div className="absolute bottom-0 left-1/2 -translate-x-[20%] w-[45%] h-full rounded-full border-[10px] border-zinc-900 shadow-2xl bg-zinc-950 flex items-center justify-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest text-center px-4">
                         Add Image 2 In Admin
@@ -60,12 +61,12 @@ const Fitness: React.FC = () => {
                 {vibeData.bigImage ? (
                   <>
                     <img 
-                        src={vibeData.bigImage} 
+                        src={getMediaUrl(vibeData.bigImage)} 
                         alt="Party Atmosphere" 
                         className="hidden md:block w-full h-full object-cover md:opacity-60"
                     />
                     <img 
-                        src={vibeData.mobileBigImage || vibeData.bigImage} 
+                        src={getMediaUrl(vibeData.mobileBigImage || vibeData.bigImage)} 
                         alt="Party Atmosphere" 
                         className="md:hidden block w-full h-full object-cover md:opacity-60"
                     />

@@ -2,6 +2,7 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
 import { SUMUP_BOOKING_URL } from '../lib/nav';
+import { getMediaUrl } from '../lib/media';
 
 interface DrinksMenuProps {
   showReadyToBookCta?: boolean;
@@ -17,7 +18,7 @@ const DrinksMenu: React.FC<DrinksMenuProps> = ({ showReadyToBookCta = false }) =
         <div className="absolute inset-0 z-0">
           {headerImageUrl ? (
             <img
-              src={headerImageUrl}
+              src={getMediaUrl(headerImageUrl)}
               alt="Vibrant cocktail bar atmosphere"
               className="w-full h-full object-cover opacity-20"
             />

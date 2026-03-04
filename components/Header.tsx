@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES, SUMUP_BOOKING_URL } from '../lib/nav';
 import Button from './ui/Button';
+import { getMediaUrl } from '../lib/media';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,7 +33,7 @@ const Header: React.FC = () => {
 
         <Link to="/" className="justify-self-center inline-flex items-center">
           {headerData.logoUrl ? (
-            <img src={headerData.logoUrl} alt="London Karaoke Club" width={56} height={56} className="h-[46px] w-auto max-h-[56px] md:h-14 md:max-h-[64px] object-contain" loading="eager" />
+            <img src={getMediaUrl(headerData.logoUrl)} alt="London Karaoke Club" width={56} height={56} className="h-[46px] w-auto max-h-[56px] md:h-14 md:max-h-[64px] object-contain" loading="eager" />
           ) : (
             <div className="h-[46px] w-[46px] rounded-full border border-zinc-700 bg-zinc-900 md:h-14 md:w-14" />
           )}

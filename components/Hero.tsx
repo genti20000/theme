@@ -20,7 +20,7 @@ const Hero: React.FC = () => {
   const isVideo = (url: string) => /\.(mp4|webm|mov)(\?|$)/i.test(url || '');
 
   return (
-    <section className="relative isolate flex min-h-[72vh] items-end overflow-hidden bg-black pb-16 md:min-h-[78vh] md:pb-20">
+    <section className="relative isolate flex min-h-[calc(100svh-64px)] items-end overflow-hidden bg-black pb-16 md:min-h-[calc(100svh-84px)] md:pb-20">
       <div className="absolute inset-0 z-0">
         {slides.length > 0 ? slides.map((slide, index) => {
           const active = index === currentSlide;
@@ -36,9 +36,9 @@ const Hero: React.FC = () => {
               </div>
               <div className="md:hidden block h-full w-full bg-black">
                 {isVideo(mobileSlide) ? (
-                  <video src={mobileSlide} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                  <video src={mobileSlide} autoPlay muted loop playsInline className="h-full w-full object-contain object-center bg-black" />
                 ) : (
-                  <img src={mobileSlide} alt="London Karaoke Club Soho" width={1080} height={1920} className="h-full w-full object-cover" loading={index === 0 ? 'eager' : 'lazy'} />
+                  <img src={mobileSlide} alt="London Karaoke Club Soho" width={1080} height={1920} className="h-full w-full object-contain object-center bg-black" loading={index === 0 ? 'eager' : 'lazy'} />
                 )}
               </div>
             </div>
