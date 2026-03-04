@@ -132,6 +132,7 @@ export interface HenDoPageData {
     heroSubtitle: string;
     heroDescription: string;
     heroImageUrl?: string;
+    extraImages?: string[];
     urgencyText: string;
     whyTitle: string;
     whyIntro: string;
@@ -156,6 +157,7 @@ export interface BirthdayPageData {
     heroDescription: string;
     heroHighlights: string;
     heroImageUrl?: string;
+    extraImages?: string[];
     urgencyText: string;
     whyTitle: string;
     whyIntroA: string;
@@ -456,6 +458,7 @@ const INITIAL_HEN_DO_PAGE: HenDoPageData = {
     heroSubtitle: 'Private Rooms · 80,000+ Songs · Open Until 3am',
     heroDescription: 'Planning the bride’s last big night? London Karaoke Club gives your group a fully private party space in the heart of Soho.',
     heroImageUrl: '',
+    extraImages: [],
     urgencyText: 'Fridays & Saturdays sell out early.',
     whyTitle: 'Built for Big Hen Nights',
     whyIntro: 'Forget awkward shared bars or tiny padded boxes.',
@@ -500,6 +503,7 @@ const INITIAL_BIRTHDAY_PAGE: BirthdayPageData = {
     heroDescription: 'Celebrate properly — in your own private karaoke space in the heart of Soho.',
     heroHighlights: '80,000+ songs · Studio-quality sound · 10–50+ guests',
     heroImageUrl: '',
+    extraImages: [],
     urgencyText: 'Weekend dates sell out fast.',
     whyTitle: 'Built for Big Birthday Energy',
     whyIntroA: 'This isn’t a shared bar corner.',

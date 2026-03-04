@@ -17,7 +17,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       <Section className="border-b border-white/10" containerClassName="text-center">
         {birthdayPageData.heroImageUrl && (
           <div className="mb-6 overflow-hidden rounded-2xl border border-white/10">
-            <img src={getMediaUrl(birthdayPageData.heroImageUrl)} alt="Birthday karaoke in Soho" className="h-[260px] w-full object-cover md:h-[360px]" />
+            <img src={getMediaUrl(birthdayPageData.heroImageUrl)} alt="Birthday karaoke in Soho" className="max-h-[70vh] w-full object-contain bg-black" />
           </div>
         )}
         <h1 className="mx-auto mb-4 max-w-[720px] text-4xl font-black leading-[1.1] tracking-[-0.02em] md:text-5xl md:leading-[1.05]">{birthdayPageData.heroTitle}</h1>
@@ -32,6 +32,18 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
 
         <p className="text-sm font-semibold text-yellow-200">{birthdayPageData.urgencyText}</p>
       </Section>
+
+      {(birthdayPageData.extraImages || []).length > 0 && (
+        <Section>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {(birthdayPageData.extraImages || []).map((url, idx) => (
+              <div key={`${url}-${idx}`} className="overflow-hidden rounded-xl border border-white/10 bg-black">
+                <img src={getMediaUrl(url)} alt={`Birthday gallery ${idx + 1}`} className="h-56 w-full object-contain bg-black" />
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section>
         <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.whyTitle}</h2>

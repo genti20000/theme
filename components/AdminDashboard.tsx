@@ -196,9 +196,9 @@ const AdminDashboard: React.FC = () => {
       case 'Events':
         return clean([eventsData.hero?.image, ...(eventsData.sections || []).map(s => s.imageUrl)]);
       case 'Birthday':
-        return clean([birthdayPageData.heroImageUrl]);
+        return clean([birthdayPageData.heroImageUrl, ...(birthdayPageData.extraImages || [])]);
       case 'Hen Do':
-        return clean([henDoPageData.heroImageUrl]);
+        return clean([henDoPageData.heroImageUrl, ...(henDoPageData.extraImages || [])]);
       case 'Blog':
         return clean((blogData.posts || []).flatMap(p => [p.imageUrl, p.ogImage]));
       case 'Instagram':
@@ -1450,6 +1450,23 @@ const AdminDashboard: React.FC = () => {
                   <input value={birthdayPageData.heroSubtitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, heroSubtitle: e.target.value }))} placeholder="Hero subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 </div>
                 {renderMediaField('Hero image URL', birthdayPageData.heroImageUrl || '', (value) => updateBirthdayPageData(prev => ({ ...prev, heroImageUrl: value })), 'Hero image URL')}
+                <div className="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-2">
+                  <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Extra Images</p>
+                  {(birthdayPageData.extraImages || []).map((img, idx) => (
+                    <div key={`birthday-extra-${idx}`} className="flex gap-2">
+                      <div className="flex-1">
+                        {renderMediaField(
+                          `Extra image ${idx + 1}`,
+                          img,
+                          (value) => updateBirthdayPageData(prev => ({ ...prev, extraImages: (prev.extraImages || []).map((s, i) => i === idx ? value : s) })),
+                          'Image URL'
+                        )}
+                      </div>
+                      <button onClick={() => updateBirthdayPageData(prev => ({ ...prev, extraImages: (prev.extraImages || []).filter((_, i) => i !== idx) }))} className="h-8 px-2 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black mt-6">Remove</button>
+                    </div>
+                  ))}
+                  <button onClick={() => updateBirthdayPageData(prev => ({ ...prev, extraImages: [...(prev.extraImages || []), ''] }))} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">+ Add Image</button>
+                </div>
                 <textarea value={birthdayPageData.heroDescription} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, heroDescription: e.target.value }))} rows={2} placeholder="Hero description" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <input value={birthdayPageData.heroHighlights} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, heroHighlights: e.target.value }))} placeholder="Hero highlights line" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <input value={birthdayPageData.urgencyText} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, urgencyText: e.target.value }))} placeholder="Urgency line" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
@@ -1500,6 +1517,23 @@ const AdminDashboard: React.FC = () => {
                   <input value={henDoPageData.heroSubtitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, heroSubtitle: e.target.value }))} placeholder="Hero subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 </div>
                 {renderMediaField('Hero image URL', henDoPageData.heroImageUrl || '', (value) => updateHenDoPageData(prev => ({ ...prev, heroImageUrl: value })), 'Hero image URL')}
+                <div className="rounded-xl border border-zinc-800 bg-zinc-800/30 p-3 space-y-2">
+                  <p className="text-[10px] uppercase font-black tracking-widest text-zinc-500">Extra Images</p>
+                  {(henDoPageData.extraImages || []).map((img, idx) => (
+                    <div key={`hen-extra-${idx}`} className="flex gap-2">
+                      <div className="flex-1">
+                        {renderMediaField(
+                          `Extra image ${idx + 1}`,
+                          img,
+                          (value) => updateHenDoPageData(prev => ({ ...prev, extraImages: (prev.extraImages || []).map((s, i) => i === idx ? value : s) })),
+                          'Image URL'
+                        )}
+                      </div>
+                      <button onClick={() => updateHenDoPageData(prev => ({ ...prev, extraImages: (prev.extraImages || []).filter((_, i) => i !== idx) }))} className="h-8 px-2 rounded bg-red-600/20 text-red-300 text-xs uppercase font-black mt-6">Remove</button>
+                    </div>
+                  ))}
+                  <button onClick={() => updateHenDoPageData(prev => ({ ...prev, extraImages: [...(prev.extraImages || []), ''] }))} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">+ Add Image</button>
+                </div>
                 <textarea value={henDoPageData.heroDescription} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, heroDescription: e.target.value }))} rows={2} placeholder="Hero description" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                 <input value={henDoPageData.urgencyText} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, urgencyText: e.target.value }))} placeholder="Urgency line" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
 
