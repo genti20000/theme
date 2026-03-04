@@ -29,9 +29,9 @@ const Hero: React.FC = () => {
             <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ${active ? 'opacity-100' : 'opacity-0'}`}>
               <div className="hidden md:block h-full w-full">
                 {isVideo(slide) ? (
-                  <video src={slide} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                  <video src={slide} autoPlay muted loop playsInline className="h-full w-full object-contain bg-black" />
                 ) : (
-                  <img src={slide} alt="London Karaoke Club Soho" width={1920} height={1080} className="h-full w-full object-cover" loading={index === 0 ? 'eager' : 'lazy'} />
+                  <img src={slide} alt="London Karaoke Club Soho" width={1920} height={1080} className="h-full w-full object-contain bg-black" loading={index === 0 ? 'eager' : 'lazy'} />
                 )}
               </div>
               <div className="md:hidden block h-full w-full bg-black">

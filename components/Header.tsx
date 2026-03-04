@@ -21,7 +21,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md">
-      <div className="mx-auto grid h-16 w-full max-w-[1200px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 md:h-[72px] md:px-8">
+      <div className="mx-auto grid h-16 w-full max-w-[1200px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 md:h-[84px] md:px-8">
         <div className="hidden md:flex items-center gap-5">
           {navLinks.slice(0, 5).map((link) => (
             <Link key={link} to={getHref(link)} className="inline-flex h-10 items-center text-xs font-bold uppercase tracking-[0.08em] text-zinc-300 hover:text-white">
@@ -32,9 +32,9 @@ const Header: React.FC = () => {
 
         <Link to="/" className="justify-self-center inline-flex items-center">
           {headerData.logoUrl ? (
-            <img src={headerData.logoUrl} alt="London Karaoke Club" width={56} height={56} className="h-[46px] w-auto max-h-[56px] md:h-12 object-contain" loading="eager" />
+            <img src={headerData.logoUrl} alt="London Karaoke Club" width={56} height={56} className="h-[46px] w-auto max-h-[56px] md:h-14 md:max-h-[64px] object-contain" loading="eager" />
           ) : (
-            <div className="h-[46px] w-[46px] rounded-full border border-zinc-700 bg-zinc-900 md:h-12 md:w-12" />
+            <div className="h-[46px] w-[46px] rounded-full border border-zinc-700 bg-zinc-900 md:h-14 md:w-14" />
           )}
         </Link>
 
