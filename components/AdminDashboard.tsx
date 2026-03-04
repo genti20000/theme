@@ -17,6 +17,8 @@ const TABS = [
   'Food',
   'Drinks',
   'Events',
+  'Birthday',
+  'Hen Do',
   'Blog',
   'Instagram',
   'FAQ',
@@ -101,6 +103,10 @@ const AdminDashboard: React.FC = () => {
     updateEventsData,
     termsData,
     updateTermsData,
+    henDoPageData,
+    updateHenDoPageData,
+    birthdayPageData,
+    updateBirthdayPageData,
     homeSections,
     updateHomeSections,
     homeSectionRepeats,
@@ -189,6 +195,10 @@ const AdminDashboard: React.FC = () => {
         return clean([drinksData.headerImageUrl]);
       case 'Events':
         return clean([eventsData.hero?.image, ...(eventsData.sections || []).map(s => s.imageUrl)]);
+      case 'Birthday':
+        return clean([birthdayPageData.heroImageUrl]);
+      case 'Hen Do':
+        return clean([henDoPageData.heroImageUrl]);
       case 'Blog':
         return clean((blogData.posts || []).flatMap(p => [p.imageUrl, p.ogImage]));
       case 'Instagram':
@@ -1203,7 +1213,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <Card title="Quick Jump">
                 <div className="flex flex-wrap gap-2">
-                  {['Homepage', 'SEO', 'Nav', 'Hero', 'Blog', 'Gallery', 'Config'].map((target) => (
+                  {['Homepage', 'SEO', 'Nav', 'Hero', 'Birthday', 'Hen Do', 'Blog', 'Gallery', 'Config'].map((target) => (
                     <button key={target} onClick={() => setTab(target)} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-black uppercase">
                       {target}
                     </button>
@@ -1428,6 +1438,92 @@ const AdminDashboard: React.FC = () => {
                     + Add Event Section
                   </button>
                 </div>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Birthday' && (
+            <Card title="Birthday Landing Page Editor">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={birthdayPageData.heroTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, heroTitle: e.target.value }))} placeholder="Hero title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={birthdayPageData.heroSubtitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, heroSubtitle: e.target.value }))} placeholder="Hero subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                {renderMediaField('Hero image URL', birthdayPageData.heroImageUrl || '', (value) => updateBirthdayPageData(prev => ({ ...prev, heroImageUrl: value })), 'Hero image URL')}
+                <textarea value={birthdayPageData.heroDescription} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, heroDescription: e.target.value }))} rows={2} placeholder="Hero description" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.heroHighlights} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, heroHighlights: e.target.value }))} placeholder="Hero highlights line" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.urgencyText} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, urgencyText: e.target.value }))} placeholder="Urgency line" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={birthdayPageData.whyTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, whyTitle: e.target.value }))} placeholder="Why title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={birthdayPageData.whyIntroA} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, whyIntroA: e.target.value }))} placeholder="Why intro line 1" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={birthdayPageData.whyIntroB} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, whyIntroB: e.target.value }))} placeholder="Why intro line 2" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                <textarea value={(birthdayPageData.whyBullets || []).join('\n')} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, whyBullets: splitLines(e.target.value) }))} rows={5} placeholder="Why bullets (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={birthdayPageData.whyOutroA} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, whyOutroA: e.target.value }))} placeholder="Why outro line 1" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={birthdayPageData.whyOutroB} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, whyOutroB: e.target.value }))} placeholder="Why outro line 2" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+
+                <input value={birthdayPageData.milestonesTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, milestonesTitle: e.target.value }))} placeholder="Milestones title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.milestonesIntro} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, milestonesIntro: e.target.value }))} placeholder="Milestones intro" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(birthdayPageData.milestonesBullets || []).join('\n')} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, milestonesBullets: splitLines(e.target.value) }))} rows={5} placeholder="Milestones bullets (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.milestonesOutroA} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, milestonesOutroA: e.target.value }))} placeholder="Milestones outro line 1" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.milestonesOutroB} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, milestonesOutroB: e.target.value }))} placeholder="Milestones outro line 2" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.milestonesOutroC} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, milestonesOutroC: e.target.value }))} placeholder="Milestones outro line 3" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={birthdayPageData.drinksTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, drinksTitle: e.target.value }))} placeholder="Drinks title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.drinksIntro} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, drinksIntro: e.target.value }))} placeholder="Drinks intro" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(birthdayPageData.drinksBullets || []).join('\n')} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, drinksBullets: splitLines(e.target.value) }))} rows={4} placeholder="Drinks bullets (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={birthdayPageData.drinksNote} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, drinksNote: e.target.value }))} rows={2} placeholder="Drinks note" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={birthdayPageData.socialTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, socialTitle: e.target.value }))} placeholder="Social proof title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(birthdayPageData.testimonials || []).map(i => `${i.quote}||${i.name}`).join('\n')} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, testimonials: splitLines(e.target.value).map((line) => { const [quote = '', name = ''] = line.split('||'); return { quote, name }; }) }))} rows={4} placeholder="Testimonials: quote||name" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={birthdayPageData.seoTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, seoTitle: e.target.value }))} placeholder="SEO block title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(birthdayPageData.seoParagraphs || []).join('\n\n')} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, seoParagraphs: e.target.value.split('\n\n').map(v => v.trim()).filter(Boolean) }))} rows={8} placeholder="SEO paragraphs (separate by blank line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={birthdayPageData.faqTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, faqTitle: e.target.value }))} placeholder="FAQ title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(birthdayPageData.faqs || []).map(i => `${i.question}||${i.answer}`).join('\n')} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, faqs: splitLines(e.target.value).map((line) => { const [question = '', answer = ''] = line.split('||'); return { question, answer }; }) }))} rows={6} placeholder="FAQs: question||answer" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={birthdayPageData.finalTitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, finalTitle: e.target.value }))} placeholder="Final CTA title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={birthdayPageData.finalSubtitle} onChange={(e) => updateBirthdayPageData(prev => ({ ...prev, finalSubtitle: e.target.value }))} placeholder="Final CTA subtitle" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+              </div>
+            </Card>
+          )}
+
+          {tab === 'Hen Do' && (
+            <Card title="Hen Do Landing Page Editor">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input value={henDoPageData.heroTitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, heroTitle: e.target.value }))} placeholder="Hero title" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <input value={henDoPageData.heroSubtitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, heroSubtitle: e.target.value }))} placeholder="Hero subtitle" className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                </div>
+                {renderMediaField('Hero image URL', henDoPageData.heroImageUrl || '', (value) => updateHenDoPageData(prev => ({ ...prev, heroImageUrl: value })), 'Hero image URL')}
+                <textarea value={henDoPageData.heroDescription} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, heroDescription: e.target.value }))} rows={2} placeholder="Hero description" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={henDoPageData.urgencyText} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, urgencyText: e.target.value }))} placeholder="Urgency line" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={henDoPageData.whyTitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, whyTitle: e.target.value }))} placeholder="Why title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={henDoPageData.whyIntro} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, whyIntro: e.target.value }))} rows={2} placeholder="Why intro" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(henDoPageData.whyBullets || []).join('\n')} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, whyBullets: splitLines(e.target.value) }))} rows={5} placeholder="Why bullets (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={henDoPageData.whyOutro} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, whyOutro: e.target.value }))} placeholder="Why outro" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={henDoPageData.drinksTitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, drinksTitle: e.target.value }))} placeholder="Drinks title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={henDoPageData.drinksIntro} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, drinksIntro: e.target.value }))} placeholder="Drinks intro" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(henDoPageData.drinksBullets || []).join('\n')} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, drinksBullets: splitLines(e.target.value) }))} rows={4} placeholder="Drinks bullets (one per line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={henDoPageData.drinksNote} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, drinksNote: e.target.value }))} rows={2} placeholder="Drinks note" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={henDoPageData.socialTitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, socialTitle: e.target.value }))} placeholder="Social proof title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(henDoPageData.testimonials || []).map(i => `${i.quote}||${i.name}`).join('\n')} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, testimonials: splitLines(e.target.value).map((line) => { const [quote = '', name = ''] = line.split('||'); return { quote, name }; }) }))} rows={4} placeholder="Testimonials: quote||name" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={henDoPageData.seoTitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, seoTitle: e.target.value }))} placeholder="SEO block title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(henDoPageData.seoParagraphs || []).join('\n\n')} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, seoParagraphs: e.target.value.split('\n\n').map(v => v.trim()).filter(Boolean) }))} rows={8} placeholder="SEO paragraphs (separate by blank line)" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={henDoPageData.faqTitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, faqTitle: e.target.value }))} placeholder="FAQ title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <textarea value={(henDoPageData.faqs || []).map(i => `${i.question}||${i.answer}`).join('\n')} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, faqs: splitLines(e.target.value).map((line) => { const [question = '', answer = ''] = line.split('||'); return { question, answer }; }) }))} rows={6} placeholder="FAQs: question||answer" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+
+                <input value={henDoPageData.finalTitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, finalTitle: e.target.value }))} placeholder="Final CTA title" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                <input value={henDoPageData.finalSubtitle} onChange={(e) => updateHenDoPageData(prev => ({ ...prev, finalSubtitle: e.target.value }))} placeholder="Final CTA subtitle" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
               </div>
             </Card>
           )}

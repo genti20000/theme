@@ -125,6 +125,63 @@ export interface InstagramHighlightsData {
 }
 
 export interface TermItem { title: string; content: string; }
+export interface LandingTestimonial { quote: string; name: string; }
+export interface LandingFaq { question: string; answer: string; }
+export interface HenDoPageData {
+    heroTitle: string;
+    heroSubtitle: string;
+    heroDescription: string;
+    heroImageUrl?: string;
+    urgencyText: string;
+    whyTitle: string;
+    whyIntro: string;
+    whyBullets: string[];
+    whyOutro: string;
+    drinksTitle: string;
+    drinksIntro: string;
+    drinksBullets: string[];
+    drinksNote: string;
+    socialTitle: string;
+    testimonials: LandingTestimonial[];
+    seoTitle: string;
+    seoParagraphs: string[];
+    faqTitle: string;
+    faqs: LandingFaq[];
+    finalTitle: string;
+    finalSubtitle: string;
+}
+export interface BirthdayPageData {
+    heroTitle: string;
+    heroSubtitle: string;
+    heroDescription: string;
+    heroHighlights: string;
+    heroImageUrl?: string;
+    urgencyText: string;
+    whyTitle: string;
+    whyIntroA: string;
+    whyIntroB: string;
+    whyBullets: string[];
+    whyOutroA: string;
+    whyOutroB: string;
+    milestonesTitle: string;
+    milestonesIntro: string;
+    milestonesBullets: string[];
+    milestonesOutroA: string;
+    milestonesOutroB: string;
+    milestonesOutroC: string;
+    drinksTitle: string;
+    drinksIntro: string;
+    drinksBullets: string[];
+    drinksNote: string;
+    socialTitle: string;
+    testimonials: LandingTestimonial[];
+    seoTitle: string;
+    seoParagraphs: string[];
+    faqTitle: string;
+    faqs: LandingFaq[];
+    finalTitle: string;
+    finalSubtitle: string;
+}
 
 export interface FirebaseConfig { databaseURL: string; apiKey: string; }
 export interface MediaRepairReport {
@@ -241,6 +298,10 @@ interface DataContextType {
     updateInstagramHighlightsData: React.Dispatch<React.SetStateAction<InstagramHighlightsData>>;
     termsData: TermItem[];
     updateTermsData: React.Dispatch<React.SetStateAction<TermItem[]>>;
+    henDoPageData: HenDoPageData;
+    updateHenDoPageData: React.Dispatch<React.SetStateAction<HenDoPageData>>;
+    birthdayPageData: BirthdayPageData;
+    updateBirthdayPageData: React.Dispatch<React.SetStateAction<BirthdayPageData>>;
     songs: Song[];
     updateSongs: React.Dispatch<React.SetStateAction<Song[]>>;
     adminPassword: string;
@@ -390,6 +451,107 @@ const INITIAL_INSTAGRAM: InstagramHighlightsData = {
     highlights: [],
     posts: []
 };
+const INITIAL_HEN_DO_PAGE: HenDoPageData = {
+    heroTitle: 'Hen Do Karaoke in Soho',
+    heroSubtitle: 'Private Rooms · 80,000+ Songs · Open Until 3am',
+    heroDescription: 'Planning the bride’s last big night? London Karaoke Club gives your group a fully private party space in the heart of Soho.',
+    heroImageUrl: '',
+    urgencyText: 'Fridays & Saturdays sell out early.',
+    whyTitle: 'Built for Big Hen Nights',
+    whyIntro: 'Forget awkward shared bars or tiny padded boxes.',
+    whyBullets: [
+        'A fully private karaoke room',
+        'Space for 10–50+ guests',
+        'Studio-quality sound',
+        '80,000+ songs (updated monthly)',
+        'Custom key & tempo control',
+        'Open until 3am',
+        'Central Soho location'
+    ],
+    whyOutro: 'Matching outfits? Champagne entrances? Bride spotlight moment? All welcome.',
+    drinksTitle: 'Cocktails & Sharing Platters',
+    drinksIntro: 'Keep the energy high with:',
+    drinksBullets: ['Signature cocktails', 'Prosecco & champagne', 'Sharing platters', 'Pre-booked drinks packages'],
+    drinksNote: 'No outside drinks permitted — but everything you need is on site.',
+    socialTitle: 'What Other Hen Groups Say',
+    testimonials: [
+        { quote: 'The perfect hen night. Private, loud, and so much fun.', name: 'Sophie M.' },
+        { quote: 'Bride had the best night ever. Staff were amazing.', name: 'Hannah L.' }
+    ],
+    seoTitle: 'Hen Do Karaoke Soho – The Private Party Option',
+    seoParagraphs: [
+        'If you’re searching for a hen do karaoke Soho venue that feels exclusive, London Karaoke Club offers private room hire designed specifically for hen parties. Unlike public karaoke bars, your group has full control of the space, music, and atmosphere.',
+        'For groups comparing private karaoke hen party London venues, we combine central Soho access, flexible room sizes for 10–50+ guests, and a song library of 80,000+ tracks updated monthly.',
+        'Prebooking is essential — weekend hen nights fill quickly.'
+    ],
+    faqTitle: 'Hen Party FAQs',
+    faqs: [
+        { question: 'How many people can attend a hen party?', answer: 'Rooms accommodate 10–50+ guests.' },
+        { question: 'Do you offer hen packages?', answer: 'Drinks packages can be pre-arranged. Message us for details.' },
+        { question: 'Is fancy dress allowed?', answer: 'Yes — themed outfits welcome.' },
+        { question: 'Do we need to book in advance?', answer: 'Yes. We do not accept walk-ins.' }
+    ],
+    finalTitle: 'Ready to Plan the Bride’s Night?',
+    finalSubtitle: 'Secure your private hen karaoke room in Soho now.'
+};
+const INITIAL_BIRTHDAY_PAGE: BirthdayPageData = {
+    heroTitle: 'Private Karaoke Birthday Parties in Soho',
+    heroSubtitle: 'Your Room. Your Playlist. Your Night. Open Until 3am.',
+    heroDescription: 'Celebrate properly — in your own private karaoke space in the heart of Soho.',
+    heroHighlights: '80,000+ songs · Studio-quality sound · 10–50+ guests',
+    heroImageUrl: '',
+    urgencyText: 'Weekend dates sell out fast.',
+    whyTitle: 'Built for Big Birthday Energy',
+    whyIntroA: 'This isn’t a shared bar corner.',
+    whyIntroB: 'This isn’t a tiny padded box.',
+    whyBullets: [
+        'A fully private karaoke room',
+        'Space for 10–50+ guests',
+        '80,000+ songs (updated monthly)',
+        'Custom key & tempo control',
+        'Cocktails & sharing platters',
+        'Open until 3am',
+        'Central Soho location'
+    ],
+    whyOutroA: 'Bring the cake. Bring the outfits. Bring the chaos.',
+    whyOutroB: 'We’ll handle the sound.',
+    milestonesTitle: 'From 18ths to 40ths and Beyond',
+    milestonesIntro: 'Whether it’s:',
+    milestonesBullets: [
+        '18th birthday karaoke Soho',
+        '21st birthday party London',
+        '30th birthday venue Soho',
+        '40th birthday celebration London'
+    ],
+    milestonesOutroA: 'Your group gets full control of the room and playlist.',
+    milestonesOutroB: 'No waiting your turn. No strangers watching. No awkward public mics.',
+    milestonesOutroC: 'Just your people.',
+    drinksTitle: 'Cocktails That Match the Occasion',
+    drinksIntro: 'Pre-arrange:',
+    drinksBullets: ['Prosecco & champagne', 'Birthday drinks packages', 'Sharing platters', 'Signature cocktails'],
+    drinksNote: 'Our team can help you shape the vibe — low-key drinks or full-blown party.',
+    socialTitle: 'What Birthday Groups Say',
+    testimonials: [
+        { quote: 'Booked for my 30th and it was unreal.', name: 'James T.' },
+        { quote: 'Best birthday I’ve had in years.', name: 'Laura P.' }
+    ],
+    seoTitle: 'Birthday Karaoke Soho – Private Room Hire',
+    seoParagraphs: [
+        'If you’re searching for birthday karaoke Soho venues, London Karaoke Club offers fully private karaoke room hire designed for group celebrations.',
+        'Unlike public karaoke bars, your birthday party has exclusive use of the room, access to 80,000+ songs updated monthly, and late finishes until 3am.',
+        'For planners comparing private karaoke birthday London venues, we combine central location, flexible room sizes for 10–50+ guests, and a booking system that shows real-time availability.',
+        'Advance booking is essential for weekend dates.'
+    ],
+    faqTitle: 'Birthday Party FAQs',
+    faqs: [
+        { question: 'Can I bring a birthday cake?', answer: 'Yes — speak to us in advance.' },
+        { question: 'Is decoration allowed?', answer: 'Yes, within reason. Message us for details.' },
+        { question: 'Is there a minimum spend?', answer: 'Prices vary by day and group size. Minimum booking is 2 hours.' },
+        { question: 'Do you allow outside drinks?', answer: 'No outside food or drink permitted.' }
+    ],
+    finalTitle: 'Lock In Your Birthday Date',
+    finalSubtitle: 'Fridays & Saturdays sell out quickly.'
+};
 const INITIAL_HOME_SECTION_REPEATS: HomeSectionRepeats = {
     hero: 1,
     instagramHighlights: 1,
@@ -512,6 +674,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Corporate & Private Events", subtitle: "The ultimate venue for London group bookings.", image: "" }, sections: [] }));
     const [instagramHighlightsData, setInstagramHighlightsData] = useState<InstagramHighlightsData>(() => init('instagramHighlightsData', INITIAL_INSTAGRAM));
     const [termsData, setTermsData] = useState<TermItem[]>(() => init('termsData', INITIAL_TERMS));
+    const [henDoPageData, setHenDoPageData] = useState<HenDoPageData>(() => init('henDoPageData', INITIAL_HEN_DO_PAGE));
+    const [birthdayPageData, setBirthdayPageData] = useState<BirthdayPageData>(() => init('birthdayPageData', INITIAL_BIRTHDAY_PAGE));
     const [songs, setSongs] = useState<Song[]>(() => init('songs', []));
     const [adminPassword, setAdminPassword] = useState<string>(() => init('adminPassword', 'admin123'));
     const [syncUrl, setSyncUrl] = useState<string>(() => init('syncUrl', 'https://files.londonkaraoke.club/db.php'));
@@ -680,6 +844,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => { persist('eventsData', eventsData); }, [eventsData]);
     useEffect(() => { persist('instagramHighlightsData', instagramHighlightsData); }, [instagramHighlightsData]);
     useEffect(() => { persist('termsData', termsData); }, [termsData]);
+    useEffect(() => { persist('henDoPageData', henDoPageData); }, [henDoPageData]);
+    useEffect(() => { persist('birthdayPageData', birthdayPageData); }, [birthdayPageData]);
     useEffect(() => { persist('songs', songs); }, [songs]);
     useEffect(() => { persist('adminPassword', adminPassword); }, [adminPassword]);
     useEffect(() => { persist('syncUrl', syncUrl); }, [syncUrl]);
@@ -688,7 +854,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const exportPayloadObject = () => sanitizeMediaPayload({
         headerData, heroData, highlightsData, featuresData, vibeData, batteryData,
         galleryData, pageGallerySettings, homeSections, homeSectionRepeats, blogData, faqData, drinksData, foodMenu, testimonialsData,
-        infoSectionData, eventsData, instagramHighlightsData, termsData, songs, adminPassword, version: "6.4"
+        infoSectionData, eventsData, instagramHighlightsData, termsData, henDoPageData, birthdayPageData, songs, adminPassword, version: "6.4"
     });
 
     const exportDatabase = () => JSON.stringify(exportPayloadObject(), null, 2);
@@ -716,6 +882,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (next.eventsData) setEventsData(next.eventsData);
             if (next.instagramHighlightsData) setInstagramHighlightsData(next.instagramHighlightsData);
             if (next.termsData) setTermsData(next.termsData);
+            if (next.henDoPageData) setHenDoPageData(next.henDoPageData);
+            if (next.birthdayPageData) setBirthdayPageData(next.birthdayPageData);
             if (next.songs) setSongs(next.songs);
             return true;
         } catch (e) { return false; }
@@ -895,7 +1063,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             blogData, updateBlogData: setBlogData, testimonialsData, updateTestimonialsData: setTestimonialsData,
             infoSectionData, updateInfoSectionData: setInfoSectionData, faqData, updateFaqData: setFaqData,
             eventsData, updateEventsData: setEventsData, instagramHighlightsData, updateInstagramHighlightsData: setInstagramHighlightsData,
-            termsData, updateTermsData: setTermsData, songs, updateSongs: setSongs,
+            termsData, updateTermsData: setTermsData,
+            henDoPageData, updateHenDoPageData: setHenDoPageData,
+            birthdayPageData, updateBirthdayPageData: setBirthdayPageData,
+            songs, updateSongs: setSongs,
             adminPassword, updateAdminPassword: setAdminPassword, syncUrl, updateSyncUrl: setSyncUrl,
             firebaseConfig, updateFirebaseConfig: setFirebaseConfig, isDataLoading,
             purgeCache: () => {
