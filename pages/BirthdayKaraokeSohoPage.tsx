@@ -16,11 +16,11 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
     <div className="bg-[#0A0A0A] text-white">
       <Section className="border-b border-white/10" containerClassName="text-center">
         {birthdayPageData.heroImageUrl && (
-          <div className="mb-6 overflow-hidden rounded-2xl border border-white/10">
-            <img src={getMediaUrl(birthdayPageData.heroImageUrl)} alt="Birthday karaoke in Soho" className="max-h-[70vh] w-full object-contain bg-black" />
+          <div className="mx-auto mb-6 max-w-[980px] overflow-hidden rounded-3xl border border-white/10">
+            <img src={getMediaUrl(birthdayPageData.heroImageUrl)} alt="Birthday karaoke in Soho" className="max-h-[56vh] w-full object-contain bg-black" />
           </div>
         )}
-        <h1 className="mx-auto mb-4 max-w-[720px] text-4xl font-black leading-[1.1] tracking-[-0.02em] md:text-5xl md:leading-[1.05]">{birthdayPageData.heroTitle}</h1>
+        <h1 className="mx-auto mb-4 max-w-[720px] text-4xl font-black leading-[1.1] tracking-[-0.02em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-pink-300 md:text-5xl md:leading-[1.05]">{birthdayPageData.heroTitle}</h1>
         <p className="mx-auto mb-4 max-w-[720px] text-base leading-6 text-zinc-200 md:text-lg md:leading-7">{birthdayPageData.heroSubtitle}</p>
         <p className="mx-auto mb-4 max-w-[720px] text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{birthdayPageData.heroDescription}</p>
         <p className="mx-auto mb-5 max-w-[720px] text-sm leading-6 text-zinc-300 md:text-base md:leading-7">{birthdayPageData.heroHighlights}</p>
@@ -46,7 +46,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       )}
 
       <Section>
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.whyTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-pink-300 md:text-3xl">{birthdayPageData.whyTitle}</h2>
         <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{birthdayPageData.whyIntroA}</p>
         <p className="mb-5 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{birthdayPageData.whyIntroB}</p>
 
@@ -65,7 +65,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section className="border-t border-white/10">
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.milestonesTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-fuchsia-300 to-pink-200 md:text-3xl">{birthdayPageData.milestonesTitle}</h2>
         <p className="mb-4 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{birthdayPageData.milestonesIntro}</p>
         <ul className="mb-5 space-y-2 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
           {(birthdayPageData.milestonesBullets || []).map((item) => (
@@ -78,7 +78,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section className="border-t border-white/10">
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.drinksTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-cyan-300 md:text-3xl">{birthdayPageData.drinksTitle}</h2>
         <p className="mb-4 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{birthdayPageData.drinksIntro}</p>
         <ul className="mb-5 grid gap-3 md:grid-cols-2">
           {(birthdayPageData.drinksBullets || []).map((item) => (
@@ -92,7 +92,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section>
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.socialTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-yellow-300 md:text-3xl">{birthdayPageData.socialTitle}</h2>
         <div className="grid gap-6 md:grid-cols-2">
           {(birthdayPageData.testimonials || []).map((item, idx) => (
             <Card key={`${item.name}-${idx}`} className="p-6">
@@ -104,7 +104,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section className="border-t border-white/10">
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.seoTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-200 to-rose-300 md:text-3xl">{birthdayPageData.seoTitle}</h2>
         {(birthdayPageData.seoParagraphs || []).map((paragraph, idx) => (
           <p key={idx} className={`${idx === 0 ? '' : 'mt-4'} text-base leading-6 text-zinc-300 md:text-lg md:leading-7`}>
             {paragraph}
@@ -113,7 +113,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section>
-        <h2 className="mb-6 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.faqTitle}</h2>
+        <h2 className="mb-6 text-2xl font-black leading-tight text-violet-300 md:text-3xl">{birthdayPageData.faqTitle}</h2>
         <div className="space-y-4">
           {(birthdayPageData.faqs || []).map((faq, idx) => (
             <Card key={`${faq.question}-${idx}`} className="p-6">
@@ -125,7 +125,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section className="border-t border-white/10" containerClassName="text-center">
-        <h2 className="mb-3 text-2xl font-black leading-tight md:text-3xl">{birthdayPageData.finalTitle}</h2>
+        <h2 className="mb-3 text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-yellow-200 md:text-3xl">{birthdayPageData.finalTitle}</h2>
         <p className="mx-auto mb-4 max-w-[720px] text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{birthdayPageData.finalSubtitle}</p>
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Your Birthday Room</Button>

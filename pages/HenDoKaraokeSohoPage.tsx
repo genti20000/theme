@@ -16,11 +16,11 @@ const HenDoKaraokeSohoPage: React.FC = () => {
     <div className="bg-[#0A0A0A] text-white">
       <Section className="border-b border-white/10" containerClassName="text-center">
         {henDoPageData.heroImageUrl && (
-          <div className="mb-6 overflow-hidden rounded-2xl border border-white/10">
-            <img src={getMediaUrl(henDoPageData.heroImageUrl)} alt="Hen do karaoke in Soho" className="max-h-[70vh] w-full object-contain bg-black" />
+          <div className="mx-auto mb-6 max-w-[980px] overflow-hidden rounded-3xl border border-white/10">
+            <img src={getMediaUrl(henDoPageData.heroImageUrl)} alt="Hen do karaoke in Soho" className="max-h-[56vh] w-full object-contain bg-black" />
           </div>
         )}
-        <h1 className="mx-auto mb-4 max-w-[720px] text-4xl font-black leading-[1.1] tracking-[-0.02em] md:text-5xl md:leading-[1.05]">{henDoPageData.heroTitle}</h1>
+        <h1 className="mx-auto mb-4 max-w-[720px] text-4xl font-black leading-[1.1] tracking-[-0.02em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-purple-300 md:text-5xl md:leading-[1.05]">{henDoPageData.heroTitle}</h1>
         <p className="mx-auto mb-4 max-w-[720px] text-base leading-6 text-zinc-200 md:text-lg md:leading-7">{henDoPageData.heroSubtitle}</p>
         <p className="mx-auto mb-5 max-w-[720px] text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{henDoPageData.heroDescription}</p>
 
@@ -45,7 +45,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
       )}
 
       <Section>
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{henDoPageData.whyTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-fuchsia-300 md:text-3xl">{henDoPageData.whyTitle}</h2>
         <p className="mb-5 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{henDoPageData.whyIntro}</p>
         <p className="mb-4 text-sm font-semibold uppercase tracking-[0.08em] text-zinc-200">Your group gets:</p>
         <ul className="mb-6 grid gap-3 md:grid-cols-2">
@@ -60,7 +60,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section>
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{henDoPageData.drinksTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-cyan-300 md:text-3xl">{henDoPageData.drinksTitle}</h2>
         <p className="mb-4 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{henDoPageData.drinksIntro}</p>
         <ul className="mb-4 grid gap-3 md:grid-cols-2">
           {(henDoPageData.drinksBullets || []).map((item) => (
@@ -74,7 +74,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section className="border-t border-white/10">
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{henDoPageData.socialTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-yellow-300 md:text-3xl">{henDoPageData.socialTitle}</h2>
         <div className="grid gap-6 md:grid-cols-2">
           {(henDoPageData.testimonials || []).map((item, idx) => (
             <Card key={`${item.name}-${idx}`} className="p-6">
@@ -86,7 +86,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section>
-        <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{henDoPageData.seoTitle}</h2>
+        <h2 className="mb-4 text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-yellow-300 md:text-3xl">{henDoPageData.seoTitle}</h2>
         {(henDoPageData.seoParagraphs || []).map((paragraph, idx) => (
           <p key={idx} className={`${idx === 0 ? '' : 'mt-4'} text-base leading-6 text-zinc-300 md:text-lg md:leading-7`}>
             {paragraph}
@@ -95,7 +95,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section className="border-t border-white/10">
-        <h2 className="mb-6 text-2xl font-black leading-tight md:text-3xl">{henDoPageData.faqTitle}</h2>
+        <h2 className="mb-6 text-2xl font-black leading-tight text-violet-300 md:text-3xl">{henDoPageData.faqTitle}</h2>
         <div className="space-y-4">
           {(henDoPageData.faqs || []).map((faq, idx) => (
             <Card key={`${faq.question}-${idx}`} className="p-6">
@@ -107,7 +107,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
       </Section>
 
       <Section className="border-t border-white/10" containerClassName="text-center">
-        <h2 className="mb-3 text-2xl font-black leading-tight md:text-3xl">{henDoPageData.finalTitle}</h2>
+        <h2 className="mb-3 text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-pink-300 md:text-3xl">{henDoPageData.finalTitle}</h2>
         <p className="mx-auto mb-6 max-w-[720px] text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{henDoPageData.finalSubtitle}</p>
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Your Hen Party</Button>

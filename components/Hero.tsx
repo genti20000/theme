@@ -50,7 +50,7 @@ const Hero: React.FC = () => {
 
       <div className="relative z-20 mx-auto w-full max-w-[1200px] px-5 md:px-8">
         <div className="mx-auto max-w-[720px] text-center">
-          <h1 className="mb-4 text-4xl font-black leading-[1.1] tracking-[-0.02em] text-white md:text-5xl md:leading-[1.05]">
+          <h1 className="mb-4 text-4xl font-black leading-[1.1] tracking-[-0.02em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-pink-300 md:text-5xl md:leading-[1.05]">
             Private Karaoke in Soho
             <span className="block text-yellow-300">Open Until 3am</span>
           </h1>

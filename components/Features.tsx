@@ -17,7 +17,7 @@ const Features: React.FC = () => {
     <Section className="border-t border-white/10 bg-black">
       <div className="grid items-start gap-6 md:grid-cols-6 lg:grid-cols-12 lg:gap-10">
         <div className="md:col-span-3 lg:col-span-6">
-          <h2 className="mb-5 text-2xl font-black leading-tight text-white md:text-3xl">Ultimate Karaoke Experience</h2>
+          <h2 className="mb-5 text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-200 to-pink-300 md:text-3xl">Ultimate Karaoke Experience</h2>
           <p className="max-w-xl text-base leading-6 text-zinc-300 md:text-lg md:leading-7">{summary}</p>
 
           <ul className="mt-6 space-y-3 text-sm text-zinc-200">
@@ -59,7 +59,7 @@ const Features: React.FC = () => {
       </div>
 
       <div className="mt-14">
-        <h3 className="mb-5 text-2xl font-black text-white md:text-3xl">{grid?.heading}</h3>
+        <h3 className="mb-5 text-2xl font-black text-violet-300 md:text-3xl">{grid?.heading}</h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {(grid?.items || []).map((item, idx) => (
             <Card key={idx} className="overflow-hidden">

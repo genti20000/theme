@@ -11,7 +11,7 @@ const Testimonials: React.FC = () => {
   return (
     <Section className="border-t border-white/10 bg-[#0A0A0A]">
       <div className="mx-auto mb-12 max-w-[720px] text-center">
-        <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">{testimonialsData.heading}</h2>
+        <h2 className="text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-cyan-300 md:text-3xl">{testimonialsData.heading}</h2>
         <p className="mt-3 text-base leading-6 text-zinc-400 md:text-lg md:leading-7">{testimonialsData.subtext}</p>
       </div>
 

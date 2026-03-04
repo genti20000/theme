@@ -8,7 +8,7 @@ const HomeConversionBlocks: React.FC = () => {
   return (
     <Section className="border-t border-white/10 bg-[#0A0A0A]" containerClassName="space-y-16 md:space-y-20 lg:space-y-28">
       <section className="rounded-2xl border border-yellow-300/30 bg-white/[0.03] p-6 text-center md:p-8">
-        <h3 className="mb-3 text-2xl font-black text-white">Ready to lock in your date?</h3>
+        <h3 className="mb-3 text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-yellow-200">Ready to lock in your date?</h3>
         <p className="mb-5 text-zinc-300">Fridays & Saturdays sell out 1–2 weeks in advance.</p>
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Now</Button>
@@ -17,21 +17,21 @@ const HomeConversionBlocks: React.FC = () => {
       </section>
 
       <section id="seo-birthday" className="space-y-4">
-        <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">Private Karaoke Birthday Parties in Soho</h2>
+        <h2 className="text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-300 to-yellow-300 md:text-3xl">Private Karaoke Birthday Parties in Soho</h2>
         <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
           Planning a celebration that feels genuinely personal? London Karaoke Club is a leading choice for private karaoke Soho birthday nights with dedicated spaces for 10 to 50+ guests. If you are searching karaoke room hire Soho options, our setup gives your group privacy, premium sound, and a central location that is easy for everyone to reach. For planners comparing karaoke birthday London venues, we combine atmosphere, clear booking flow, and service that keeps the night moving. With 80,000+ songs, updated monthly, your group has the variety to satisfy every generation and genre preference. Prebook early to secure preferred times.
         </p>
       </section>
 
       <section id="seo-corporate" className="space-y-4">
-        <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">Corporate Karaoke Events in Central London</h2>
+        <h2 className="text-2xl font-black leading-tight text-cyan-300 md:text-3xl">Corporate Karaoke Events in Central London</h2>
         <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
           For teams and clients, our private karaoke Soho venue offers a polished nightlife setting without the friction of shared public spaces. Businesses evaluating karaoke room hire Soho locations choose London Karaoke Club for smooth hosting, private layouts, and flexible room formats for 10 to 50+ guests. If you are shortlisting corporate karaoke London venues, we deliver the right balance of fun, quality, and event control. 80,000+ songs, updated monthly, helps mixed teams engage quickly, while central Soho access keeps logistics simple for after-work gatherings, launches, and celebrations.
         </p>
       </section>
 
       <section id="seo-hen-stag" className="space-y-4">
-        <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">Hen & Stag Karaoke Nights in Soho</h2>
+        <h2 className="text-2xl font-black leading-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-300 to-yellow-300 md:text-3xl">Hen & Stag Karaoke Nights in Soho</h2>
         <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
           Hen and stag plans need high energy with minimal stress. Our private karaoke Soho experience gives your group a dedicated setting, strong service, and a premium party feel from arrival to final song. If you are comparing karaoke room hire Soho venues, London Karaoke Club supports 10 to 50+ guests with clear prebooking and layouts built for celebration. Many groups searching karaoke birthday London and pre-wedding party options choose us because the experience feels exclusive and effortless. With 80,000+ songs, updated monthly, your playlist stays broad and current, from classics to modern chart tracks.
         </p>
