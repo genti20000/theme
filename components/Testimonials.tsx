@@ -1,6 +1,5 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
-import Badge from './ui/Badge';
 import Card from './ui/Card';
 import Section from './ui/Section';
 
@@ -14,7 +13,6 @@ const Testimonials: React.FC = () => {
       <div className="mx-auto mb-12 max-w-[720px] text-center">
         <h2 className="text-2xl font-black leading-tight text-white md:text-3xl">{testimonialsData.heading}</h2>
         <p className="mt-3 text-base leading-6 text-zinc-400 md:text-lg md:leading-7">{testimonialsData.subtext}</p>
-        <Badge className="mt-5">★★★★★ 4.9 (128 Google Reviews)</Badge>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-10">

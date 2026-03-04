@@ -1,5 +1,4 @@
 import React from 'react';
-import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Section from '../components/ui/Section';
@@ -40,8 +39,6 @@ const HenDoKaraokeSohoPage: React.FC = () => {
         <p className="mx-auto mb-5 max-w-[720px] text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
           Planning the bride’s last big night? London Karaoke Club gives your group a fully private party space in the heart of Soho.
         </p>
-
-        <Badge className="mb-4">★★★★★ 4.9 (128 Google Reviews)</Badge>
 
         <div className="mb-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Your Hen Party Room</Button>
@@ -99,7 +96,6 @@ const HenDoKaraokeSohoPage: React.FC = () => {
 
       <Section className="border-t border-white/10">
         <h2 className="mb-4 text-2xl font-black leading-tight md:text-3xl">What Other Hen Groups Say</h2>
-        <Badge className="mb-6">★★★★★ 4.9 (128 Reviews)</Badge>
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="p-6">
             <p className="mb-4 text-base leading-6 text-zinc-300">“The perfect hen night. Private, loud, and so much fun.”</p>

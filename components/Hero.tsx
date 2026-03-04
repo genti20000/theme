@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useData } from '../context/DataContext';
 import { SUMUP_BOOKING_URL } from '../lib/nav';
 import Button from './ui/Button';
-import Badge from './ui/Badge';
 
 const Hero: React.FC = () => {
   const { heroData } = useData();
@@ -60,8 +59,6 @@ const Hero: React.FC = () => {
             80,000+ songs, updated monthly. Private spaces for 10–50+ guests.
             No chains. No boxes. Just your own club.
           </p>
-
-          <Badge className="mb-3">★★★★★ 4.9 (128 Google Reviews)</Badge>
 
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Your Private Room</Button>
