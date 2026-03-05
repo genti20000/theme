@@ -22,7 +22,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md">
-      <div className="mx-auto grid h-16 w-full max-w-[1200px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 md:h-[84px] md:px-8">
+      <div className="relative mx-auto flex h-16 w-full max-w-[1200px] items-center justify-center px-5 md:grid md:h-[84px] md:grid-cols-[1fr_auto_1fr] md:gap-3 md:px-8">
         <div className="hidden md:flex items-center gap-5">
           {navLinks.slice(0, 5).map((link) => (
             <Link key={link} to={getHref(link)} className="inline-flex h-10 items-center text-xs font-bold uppercase tracking-[0.08em] text-zinc-300 hover:text-white">
@@ -31,7 +31,7 @@ const Header: React.FC = () => {
           ))}
         </div>
 
-        <Link to="/" className="justify-self-center inline-flex items-center">
+        <Link to="/" className="inline-flex items-center md:justify-self-center">
           {headerData.logoUrl ? (
             <img src={getMediaUrl(headerData.logoUrl)} alt="London Karaoke Club" width={64} height={64} className="h-[53px] w-auto max-h-[64px] md:h-14 md:max-h-[64px] object-contain" loading="eager" />
           ) : (
@@ -39,7 +39,7 @@ const Header: React.FC = () => {
           )}
         </Link>
 
-        <div className="justify-self-end flex items-center gap-2 md:gap-3">
+        <div className="absolute right-5 flex items-center gap-2 md:static md:justify-self-end md:gap-3">
           <div className="hidden md:block">
             <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="min-w-[136px]">Book Now</Button>
           </div>
