@@ -33,9 +33,9 @@ const Header: React.FC = () => {
 
         <Link to="/" className="justify-self-center inline-flex items-center">
           {headerData.logoUrl ? (
-            <img src={getMediaUrl(headerData.logoUrl)} alt="London Karaoke Club" width={56} height={56} className="h-[46px] w-auto max-h-[56px] md:h-14 md:max-h-[64px] object-contain" loading="eager" />
+            <img src={getMediaUrl(headerData.logoUrl)} alt="London Karaoke Club" width={64} height={64} className="h-[53px] w-auto max-h-[64px] md:h-14 md:max-h-[64px] object-contain" loading="eager" />
           ) : (
-            <div className="h-[46px] w-[46px] rounded-full border border-zinc-700 bg-zinc-900 md:h-14 md:w-14" />
+            <div className="h-[53px] w-[53px] rounded-full border border-zinc-700 bg-zinc-900 md:h-14 md:w-14" />
           )}
         </Link>
 
