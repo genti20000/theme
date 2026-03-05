@@ -21,7 +21,7 @@ const Hero: React.FC = () => {
 
   return (
     <section className="relative isolate flex min-h-[calc(100svh-64px)] items-end overflow-hidden bg-black pb-16 md:min-h-[calc(100svh-84px)] md:pb-20">
-      <div className="absolute inset-x-0 bottom-0 top-16 z-0 md:top-0">
+      <div className="absolute inset-0 z-0">
         {slides.length > 0 ? slides.map((slide, index) => {
           const active = index === currentSlide;
           const mobileSlide = heroData.mobileSlides?.[index] || slide;
@@ -46,7 +46,7 @@ const Hero: React.FC = () => {
         }) : <div className="absolute inset-0 bg-zinc-950" />}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 top-16 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.75)_100%)] md:top-0" />
+      <div className="absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.75)_100%)]" />
 
       <div className="relative z-20 mx-auto w-full max-w-[1200px] px-5 md:px-8">
         <div className="mx-auto max-w-[720px] text-center">
