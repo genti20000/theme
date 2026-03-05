@@ -36,9 +36,9 @@ const Hero: React.FC = () => {
               </div>
               <div className="md:hidden block h-full w-full bg-black">
                 {isVideo(mobileSlide) ? (
-                  <video src={mobileSlide} autoPlay muted loop playsInline className="h-full w-full object-cover object-center" />
+                  <video src={mobileSlide} autoPlay muted loop playsInline className="h-full w-full object-contain object-center bg-black" />
                 ) : (
-                  <img src={mobileSlide} alt="London Karaoke Club Soho" width={1080} height={1920} className="h-full w-full object-cover object-center" loading={index === 0 ? 'eager' : 'lazy'} />
+                  <img src={mobileSlide} alt="London Karaoke Club Soho" width={1080} height={1920} className="h-full w-full object-contain object-center bg-black" loading={index === 0 ? 'eager' : 'lazy'} />
                 )}
               </div>
             </div>
