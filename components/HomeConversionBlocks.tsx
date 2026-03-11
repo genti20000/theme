@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { SUMUP_BOOKING_URL, WHATSAPP_URL } from '../lib/nav';
 import Button from './ui/Button';
-import Card from './ui/Card';
 import Section from './ui/Section';
 
 const HomeConversionBlocks: React.FC = () => {
@@ -47,49 +46,11 @@ const HomeConversionBlocks: React.FC = () => {
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card className="p-5">
-          <h3 className="mb-2 text-lg font-bold text-white">High-intent pages</h3>
-          <p className="text-sm leading-6 text-zinc-400">
-            Use our strongest booking pages to compare birthdays, hen dos, and private event formats before choosing a date.
-          </p>
-          <div className="mt-4 flex flex-col gap-2 text-sm">
-            <Link to="/birthday-karaoke-soho" className="text-yellow-300 hover:text-white">Birthday karaoke Soho</Link>
-            <Link to="/hen-do-karaoke-soho" className="text-yellow-300 hover:text-white">Hen do karaoke Soho</Link>
-            <Link to="/events" className="text-yellow-300 hover:text-white">Corporate karaoke events</Link>
-          </div>
-        </Card>
-
-        <Card className="p-5">
-          <h3 className="mb-2 text-lg font-bold text-white">Decision support</h3>
-          <p className="text-sm leading-6 text-zinc-400">
-            Gallery, menus, and songs help users validate the venue quickly and reduce booking hesitation.
-          </p>
-          <div className="mt-4 flex flex-col gap-2 text-sm">
-            <Link to="/gallery" className="text-cyan-300 hover:text-white">Gallery</Link>
-            <Link to="/drinks" className="text-cyan-300 hover:text-white">Drinks menu</Link>
-            <Link to="/songs" className="text-cyan-300 hover:text-white">Song library</Link>
-          </div>
-        </Card>
-
-        <Card className="p-5">
-          <h3 className="mb-2 text-lg font-bold text-white">Planning content</h3>
-          <p className="text-sm leading-6 text-zinc-400">
-            Internal guides strengthen SEO coverage and keep planners moving deeper into the site instead of bouncing.
-          </p>
-          <div className="mt-4 flex flex-col gap-2 text-sm">
-            <Link to="/blog" className="text-fuchsia-300 hover:text-white">Blog</Link>
-            <Link to="/instagram" className="text-fuchsia-300 hover:text-white">Instagram highlights</Link>
-            <Link to="/sitemap" className="text-fuchsia-300 hover:text-white">Sitemap</Link>
-          </div>
-        </Card>
-      </section>
-
       <section className="text-center">
-        <Card className="p-6 md:p-8">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
           <p className="mb-4 text-zinc-300">Need availability before you decide?</p>
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Check Availability</Button>
-        </Card>
+        </div>
       </section>
     </Section>
   );

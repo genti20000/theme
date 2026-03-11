@@ -57,22 +57,6 @@ const Footer: React.FC = () => {
           </Card>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-zinc-400">
-          Popular pages for planners:
-          {' '}
-          <Link to="/birthday-karaoke-soho" className="text-yellow-300 hover:text-white">birthday karaoke Soho</Link>,
-          {' '}
-          <Link to="/hen-do-karaoke-soho" className="text-yellow-300 hover:text-white">hen do karaoke Soho</Link>,
-          {' '}
-          <Link to="/events" className="text-yellow-300 hover:text-white">corporate karaoke London</Link>,
-          {' '}
-          <Link to="/gallery" className="text-yellow-300 hover:text-white">gallery</Link>,
-          {' '}
-          <Link to="/songs" className="text-yellow-300 hover:text-white">song library</Link>,
-          {' '}
-          <Link to="/drinks" className="text-yellow-300 hover:text-white">drinks menu</Link>.
-        </div>
-
         <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs md:flex-row md:items-center md:justify-between">
           <p>Copyright © {new Date().getFullYear()} London Karaoke Club. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
