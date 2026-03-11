@@ -96,7 +96,16 @@ export interface BlogPost {
 }
 export interface BlogData { heading: string; subtext: string; posts: BlogPost[]; }
 export interface Song { id: string; title: string; artist: string; genre?: string; fileUrl?: string; }
-export interface TestimonialItem { quote: string; name: string; avatar: string; rating?: number; date?: string; }
+export interface TestimonialItem {
+    quote: string;
+    name: string;
+    avatar: string;
+    rating?: number;
+    date?: string;
+    source?: string;
+    sourceUrl?: string;
+    featured?: boolean;
+}
 export interface TestimonialsData { enabled?: boolean; heading: string; subtext: string; items: TestimonialItem[]; }
 
 export interface InfoSectionData {
@@ -650,6 +659,13 @@ const INITIAL_TERMS: TermItem[] = [
     }
 ];
 
+const INITIAL_TESTIMONIALS: TestimonialsData = {
+    enabled: true,
+    heading: 'Google Reviews',
+    subtext: 'Curated 5-star reviews from real London Karaoke Club guests.',
+    items: []
+};
+
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -673,7 +689,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [faqData, setFaqData] = useState<FAQData>(() => init('faqData', INITIAL_FAQ));
     const [drinksData, setDrinksData] = useState<DrinksData>(() => init('drinksData', INITIAL_DRINKS));
     const [foodMenu, setFoodMenu] = useState<MenuCategory[]>(() => init('foodMenu', []));
-    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', { enabled: true, heading: "Client Reviews", subtext: "What people say about London's best karaoke.", items: [] }));
+    const [testimonialsData, setTestimonialsData] = useState<TestimonialsData>(() => init('testimonialsData', INITIAL_TESTIMONIALS));
     const [infoSectionData, setInfoSectionData] = useState<InfoSectionData>(() => init('infoSectionData', { enabled: true, heading: "Luxury Private Karaoke Soho", sections: [], footerTitle: "Ready to Sing?", footerText: "Book your private suite in Soho today.", footerHighlight: "No chains, just the London Karaoke Club." }));
     const [eventsData, setEventsData] = useState<EventsData>(() => init('eventsData', { hero: { title: "Corporate & Private Events", subtitle: "The ultimate venue for London group bookings.", image: "" }, sections: [] }));
     const [instagramHighlightsData, setInstagramHighlightsData] = useState<InstagramHighlightsData>(() => init('instagramHighlightsData', INITIAL_INSTAGRAM));

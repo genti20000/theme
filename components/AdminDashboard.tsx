@@ -1367,7 +1367,82 @@ const AdminDashboard: React.FC = () => {
                 <div className="space-y-3">
                   <input value={testimonialsData.heading} onChange={(e) => updateTestimonialsData(prev => ({ ...prev, heading: e.target.value }))} placeholder="Heading" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
                   <textarea value={testimonialsData.subtext} onChange={(e) => updateTestimonialsData(prev => ({ ...prev, subtext: e.target.value }))} rows={2} placeholder="Subtext" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
-                  <textarea value={(testimonialsData.items || []).map(i => `${i.quote}||${i.name}||${i.avatar || ''}`).join('\n')} onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: splitLines(e.target.value).map((line) => { const [quote = '', name = '', avatar = ''] = line.split('||'); return { quote, name, avatar }; }) }))} rows={6} placeholder="One testimonial per line: quote||name||avatarUrl" className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm" />
+                  <div className="space-y-4">
+                    {(testimonialsData.items || []).map((item, idx) => (
+                      <div key={`${item.name}-${idx}`} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-3">
+                        <textarea
+                          value={item.quote}
+                          onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).map((entry, i) => i === idx ? { ...entry, quote: e.target.value } : entry) }))}
+                          rows={3}
+                          placeholder="Review text"
+                          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <input
+                            value={item.name}
+                            onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).map((entry, i) => i === idx ? { ...entry, name: e.target.value } : entry) }))}
+                            placeholder="Reviewer name"
+                            className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                          />
+                          <input
+                            value={item.date || ''}
+                            onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).map((entry, i) => i === idx ? { ...entry, date: e.target.value } : entry) }))}
+                            placeholder="Date, e.g. Feb 2026"
+                            className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                          />
+                          <input
+                            value={item.source || 'Google Review'}
+                            onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).map((entry, i) => i === idx ? { ...entry, source: e.target.value } : entry) }))}
+                            placeholder="Source label"
+                            className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                          />
+                          <input
+                            value={item.sourceUrl || ''}
+                            onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).map((entry, i) => i === idx ? { ...entry, sourceUrl: e.target.value } : entry) }))}
+                            placeholder="Google review URL"
+                            className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 items-center">
+                          <input
+                            type="number"
+                            min={1}
+                            max={5}
+                            value={item.rating || 5}
+                            onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).map((entry, i) => i === idx ? { ...entry, rating: Number(e.target.value) || 5 } : entry) }))}
+                            placeholder="Rating"
+                            className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm"
+                          />
+                          <label className="flex items-center gap-2 text-xs uppercase font-black tracking-widest text-zinc-300">
+                            <input
+                              type="checkbox"
+                              checked={item.featured !== false}
+                              onChange={(e) => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).map((entry, i) => i === idx ? { ...entry, featured: e.target.checked } : entry) }))}
+                            />
+                            Featured
+                          </label>
+                          <button
+                            onClick={() => updateTestimonialsData(prev => ({ ...prev, items: (prev.items || []).filter((_, i) => i !== idx) }))}
+                            className="px-3 py-2 rounded-xl bg-red-600/20 text-red-300 text-xs uppercase font-black"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => updateTestimonialsData(prev => ({
+                        ...prev,
+                        items: [
+                          ...(prev.items || []),
+                          { quote: '', name: '', avatar: '', rating: 5, date: '', source: 'Google Review', sourceUrl: '', featured: true }
+                        ]
+                      }))}
+                      className="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-xs font-black uppercase"
+                    >
+                      + Add Google Review
+                    </button>
+                  </div>
                 </div>
               </Card>
             </div>
