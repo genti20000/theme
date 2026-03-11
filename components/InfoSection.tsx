@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Card from './ui/Card';
 import Section from './ui/Section';
 
@@ -11,7 +12,7 @@ const InfoSection: React.FC = () => {
             Welcome to <span className="font-bold text-white">London Karaoke Club</span>, Soho’s premier destination for private karaoke, <span className="font-semibold text-yellow-300">open until 3am</span>. Steps from Oxford Street, Bond Street, Tottenham Court Road, and minutes from London Bridge, Victoria, Marylebone, and the West End, we’re at the heart of London nightlife.
           </p>
           <p className="mt-5 text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
-            Say goodbye to chain karaoke’s claustrophobic, padded boxes. Our private spaces with dedicated <span className="font-semibold text-white">private entrances</span> host groups of 10 to 50+ for hen dos, birthdays, weddings, and corporate events, powered by <span className="font-semibold text-yellow-300">80,000+ songs, updated monthly</span>, through studio-quality sound equipment. Advance prebooking is essential — no walk-ins allowed.
+            Our private spaces with dedicated <span className="font-semibold text-white">private entrances</span> host groups of 10 to 50+ for hen dos, birthdays, weddings, and corporate events, powered by <span className="font-semibold text-yellow-300">80,000+ songs, updated monthly</span>, and studio-quality sound equipment. Advance prebooking is essential and we do not accept walk-ins. Browse the <Link to="/songs" className="text-yellow-300 hover:text-white">song library</Link>, see the <Link to="/gallery" className="text-yellow-300 hover:text-white">gallery</Link>, or review the <Link to="/drinks" className="text-yellow-300 hover:text-white">drinks menu</Link> while planning.
           </p>
         </Card>
 
@@ -19,7 +20,7 @@ const InfoSection: React.FC = () => {
           <article>
             <h3 className="mb-3 text-2xl font-black text-white md:text-3xl">No Boxes, Just Epic Sound</h3>
             <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
-              We’re not a franchise. No imprisoned, padded rooms or lifeless playlists. Our private spaces feel like your personal club: velvet drapes, fairy lights, open layouts, and studio-quality sound equipment that delivers crystal-clear audio. Guests browse and queue tracks from their phones, tune key and tempo, and keep the energy high all night.
+              This is private karaoke built for people who want more than a standard booth. Expect velvet drapes, fairy lights, open layouts, and clean, high-volume sound that still feels sharp. Guests browse and queue tracks from their phones, tune key and tempo, and keep the night moving without losing control of the room.
             </p>
           </article>
 
@@ -33,7 +34,7 @@ const InfoSection: React.FC = () => {
           <article>
             <h3 className="mb-3 text-2xl font-black text-white md:text-3xl">Gourmet Treats, Vibrant Nights</h3>
             <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
-              Enjoy sharing platters, gourmet snacks, and reasonably priced cocktails tailored for birthdays, hen and stag nights, and corporate events. Great food, strong sound, and private space make every booking feel premium.
+              Enjoy sharing platters, gourmet snacks, and reasonably priced cocktails tailored for birthdays, hen and stag nights, and corporate events. Explore the <Link to="/food" className="text-yellow-300 hover:text-white">food menu</Link> and <Link to="/drinks" className="text-yellow-300 hover:text-white">cocktails and drinks list</Link> before you book.
             </p>
           </article>
         </div>

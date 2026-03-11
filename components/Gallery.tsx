@@ -150,7 +150,7 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
                 >
                   <img src={getMediaUrl(img.url)} alt={img.caption || 'London Karaoke Club'} className="h-40 w-full object-cover md:h-48" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-                  <p className="absolute bottom-3 left-3 text-xs font-semibold text-white">{img.caption || 'LKC Soho'}</p>
+                  <p className="absolute bottom-3 left-3 text-xs font-semibold text-white">{img.caption || 'London Karaoke Club Soho'}</p>
                 </button>
               ))}
             </div>
@@ -175,7 +175,7 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
             <div className="relative aspect-video overflow-hidden rounded-[2rem] border border-white/10">
               <div className="absolute inset-0 flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
                 {images.map((img, i) => (
-                  <img key={i} src={getMediaUrl(img.url)} loading={i === currentIndex ? 'eager' : 'lazy'} className="h-full w-full flex-shrink-0 object-cover" alt="" />
+                  <img key={i} src={getMediaUrl(img.url)} loading={i === currentIndex ? 'eager' : 'lazy'} className="h-full w-full flex-shrink-0 object-cover" alt={img.caption || 'Private karaoke room at London Karaoke Club Soho'} />
                 ))}
               </div>
               <button onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/40 p-3 text-white">

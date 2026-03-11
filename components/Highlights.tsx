@@ -16,8 +16,8 @@ const Highlights: React.FC = () => {
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-950">
         {highlightsData.mainImageUrl ? (
           <>
-            <img src={getMediaUrl(highlightsData.mainImageUrl)} alt="Friends singing karaoke" className="hidden h-[60vh] w-full object-cover md:block" />
-            <img src={getMediaUrl(highlightsData.mobileMainImageUrl || highlightsData.mainImageUrl)} alt="Friends singing karaoke" className="block h-[52vh] w-full object-cover md:hidden" />
+            <img src={getMediaUrl(highlightsData.mainImageUrl)} alt="Group enjoying a private karaoke room at London Karaoke Club in Soho" className="hidden h-[60vh] w-full object-cover md:block" />
+            <img src={getMediaUrl(highlightsData.mobileMainImageUrl || highlightsData.mainImageUrl)} alt="Guests singing in a private karaoke space at London Karaoke Club Soho" className="block h-[52vh] w-full object-cover md:hidden" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10" />
           </>
         ) : (
@@ -41,7 +41,7 @@ const Highlights: React.FC = () => {
         <div className="md:col-span-3 lg:col-span-6">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950">
             {highlightsData.sideImageUrl ? (
-              <img src={getMediaUrl(highlightsData.sideImageUrl)} alt="Karaoke detail" className="h-[340px] w-full object-cover md:h-[420px]" loading="lazy" />
+              <img src={getMediaUrl(highlightsData.sideImageUrl)} alt="Cocktails and private karaoke details at London Karaoke Club in Soho" className="h-[340px] w-full object-cover md:h-[420px]" loading="lazy" />
             ) : (
               <div className="flex h-[340px] items-center justify-center px-6 text-center text-xs font-bold uppercase tracking-widest text-zinc-500 md:h-[420px]">Add Side Image In Admin</div>
             )}
