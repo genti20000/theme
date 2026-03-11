@@ -794,6 +794,20 @@ const INITIAL_TESTIMONIALS: TestimonialsData = {
     items: []
 };
 
+const mergeDefaultBlogPosts = (data: BlogData): BlogData => {
+    const safePosts = Array.isArray(data.posts) ? data.posts : [];
+    const existingIds = new Set(safePosts.map(post => post.id));
+    const existingTitles = new Set(safePosts.map(post => post.title.trim().toLowerCase()));
+
+    const missingPosts = INITIAL_BLOG.posts.filter(post => {
+        const normalizedTitle = post.title.trim().toLowerCase();
+        return !existingIds.has(post.id) && !existingTitles.has(normalizedTitle);
+    });
+
+    if (missingPosts.length === 0) return data;
+    return { ...data, posts: [...missingPosts, ...safePosts] };
+};
+
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -832,19 +846,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isDataLoading, setIsDataLoading] = useState(false);
 
     useEffect(() => {
-        setBlogData(prev => {
-            const safePosts = Array.isArray(prev.posts) ? prev.posts : [];
-            const existingIds = new Set(safePosts.map(post => post.id));
-            const existingTitles = new Set(safePosts.map(post => post.title.trim().toLowerCase()));
-
-            const missingPosts = INITIAL_BLOG.posts.filter(post => {
-                const normalizedTitle = post.title.trim().toLowerCase();
-                return !existingIds.has(post.id) && !existingTitles.has(normalizedTitle);
-            });
-
-            if (missingPosts.length === 0) return prev;
-            return { ...prev, posts: [...missingPosts, ...safePosts] };
-        });
+        setBlogData(prev => mergeDefaultBlogPosts(prev));
     }, []);
 
     useEffect(() => {
@@ -1018,7 +1020,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (c.pageGallerySettings) setPageGallerySettings(c.pageGallerySettings);
             if (c.homeSections) setHomeSections(c.homeSections);
             if (c.homeSectionRepeats) setHomeSectionRepeats(c.homeSectionRepeats);
-            if (next.blogData) setBlogData(next.blogData);
+            if (next.blogData) setBlogData(mergeDefaultBlogPosts(next.blogData));
             if (next.faqData) setFaqData(next.faqData);
             if (next.drinksData) setDrinksData(next.drinksData);
             if (next.foodMenu) setFoodMenu(next.foodMenu);
