@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useData, BlogPost } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
 import { getMediaUrl } from '../lib/media';
@@ -19,6 +20,17 @@ const BlogPage: React.FC = () => {
                         {blogData.heading}
                     </h2>
                     <p className="text-gray-400 text-xl max-w-2xl mx-auto">{blogData.subtext}</p>
+                    <p className="mt-4 text-sm leading-6 text-zinc-500 max-w-3xl mx-auto">
+                      Jump to the highest-intent pages:
+                      {' '}
+                      <Link to="/birthday-karaoke-soho" className="text-yellow-300 hover:text-white">birthday karaoke Soho</Link>,
+                      {' '}
+                      <Link to="/hen-do-karaoke-soho" className="text-yellow-300 hover:text-white">hen do karaoke Soho</Link>,
+                      {' '}
+                      <Link to="/events" className="text-yellow-300 hover:text-white">corporate events</Link>,
+                      {' '}
+                      <Link to="/gallery" className="text-yellow-300 hover:text-white">gallery</Link>.
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

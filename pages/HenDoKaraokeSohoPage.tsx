@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Section from '../components/ui/Section';
@@ -113,6 +114,19 @@ const HenDoKaraokeSohoPage: React.FC = () => {
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Your Hen Party</Button>
           <Button href={henWhatsAppUrl} target="_blank" rel="noopener noreferrer" variant="secondary">Message Us on WhatsApp</Button>
         </div>
+        <p className="mx-auto mt-5 max-w-[760px] text-sm leading-6 text-zinc-400">
+          Related planning pages:
+          {' '}
+          <Link to="/birthday-karaoke-soho" className="text-yellow-300 hover:text-white">birthday karaoke Soho</Link>,
+          {' '}
+          <Link to="/events" className="text-yellow-300 hover:text-white">private group events</Link>,
+          {' '}
+          <Link to="/gallery" className="text-yellow-300 hover:text-white">gallery</Link>,
+          {' '}
+          <Link to="/drinks" className="text-yellow-300 hover:text-white">drinks menu</Link>,
+          {' '}
+          <Link to="/blog" className="text-yellow-300 hover:text-white">planning blog</Link>.
+        </p>
       </Section>
     </div>
   );

@@ -821,9 +821,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     useEffect(() => {
-        document.title = headerData.siteTitle;
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) metaDesc.setAttribute('content', headerData.siteDescription);
         const favicon = document.querySelector('link[rel="icon"]');
         if (favicon) favicon.setAttribute('href', headerData.faviconUrl);
     }, [headerData]);

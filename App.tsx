@@ -15,6 +15,7 @@ import InstagramPage from './components/InstagramPage';
 import Menu from './components/Menu';
 import SitemapPage from './components/SitemapPage';
 import HashScroll from './components/HashScroll';
+import SeoManager from './components/SeoManager';
 import { DataProvider } from './context/DataContext';
 import DrinksPage from './pages/DrinksPage';
 import HomePage from './pages/HomePage';
@@ -26,6 +27,7 @@ const AppShell: React.FC = () => {
   return (
     <>
       <VisualEffects />
+      <SeoManager />
       <Header />
       <main>
         <Outlet />
