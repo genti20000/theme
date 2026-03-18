@@ -340,7 +340,7 @@ const INITIAL_SEO: HeaderData = {
     siteTitle: "London Karaoke Club | Private Karaoke Bar & Cocktails in Soho",
     siteDescription: "Luxury private karaoke suites in Soho, London. Over 80,000 songs, signature cocktails, and premium service. Perfect for hen parties and birthdays. Book online.",
     faviconUrl: "/favicon.svg",
-    navOrder: ["menu", "gallery", "birthday-karaoke-soho", "hen-do-karaoke-soho", "blog", "drinks", "songs"],
+    navOrder: ["menu", "gallery", "birthday-karaoke-soho", "hen-do-karaoke-soho", "guides", "drinks", "songs"],
     customScripts: { header: "", footer: "" }
 };
 
@@ -381,8 +381,8 @@ const INITIAL_PAGE_GALLERY_SETTINGS: PageGallerySettings = {
     instagram: { enabled: false, collectionId: 'default', viewMode: 'carousel' }
 };
 const INITIAL_BLOG: BlogData = {
-    heading: "London Karaoke News",
-    subtext: "Stay updated with events and nightlife tips.",
+    heading: "Karaoke Planning Guides",
+    subtext: "Useful Soho planning guides for birthdays, hen dos, and private karaoke nights in London.",
     posts: [
         {
             id: '1',
@@ -456,7 +456,7 @@ Birthday nights should feel effortless. We help you set it up fast so your group
             excerpt: 'Karaoke is a fun and effective team-building activity that helps colleagues relax, connect, and create memorable shared experiences in a private social setting.',
             metaTitle: 'Why Karaoke Is Perfect for Team-Building Events in London',
             metaDescription: 'Karaoke is one of the best team-building activities in London. Discover how it breaks down barriers, boosts morale, and creates memorable company events.',
-            canonical: 'https://www.londonkaraoke.club/blog/karaoke-team-building',
+            canonical: 'https://www.londonkaraoke.club/guides/karaoke-team-building',
             content: `Why Karaoke Is Perfect for Team-Building Events
 
 Corporate team-building events often struggle to get the balance right. Some feel too formal. Others feel forced. And a lot of them are forgotten almost immediately.
@@ -570,7 +570,7 @@ If you are planning a corporate event, office party, or team social in Soho, Lon
 Suggested internal links:
 /events
 /corporate-karaoke-soho
-/blog/private-karaoke-rooms-london
+/guides/private-karaoke-rooms-london
 /birthday-karaoke-soho`,
             imageUrl: ''
         },
@@ -584,7 +584,7 @@ Suggested internal links:
             excerpt: 'A private karaoke birthday creates more energy, more shared moments, and a much better group experience than a standard bar booking.',
             metaTitle: 'Why Karaoke Nights Make Better Birthdays Than a Normal Bar Booking in London',
             metaDescription: 'Discover why private karaoke makes a better birthday than a standard bar booking. More fun, more personal, more memorable, and ideal for groups in London.',
-            canonical: 'https://www.londonkaraoke.club/blog/karaoke-birthday-vs-bar',
+            canonical: 'https://www.londonkaraoke.club/guides/karaoke-birthday-vs-bar',
             content: `Why Karaoke Nights Make Better Birthdays Than a Normal Bar Booking
 
 Birthday plans often fall into the same pattern. Someone books a bar, people arrive in small groups, half the table cannot hear each other, and the night ends up feeling like every other night out.
@@ -720,7 +720,7 @@ group booking pages`,
             excerpt: 'Looking for private karaoke rooms in London? Here is what actually matters before you book, from privacy and sound quality to location, drinks, and group fit.',
             metaTitle: 'Private Karaoke Rooms in London: What to Look For Before You Book',
             metaDescription: 'Looking for private karaoke rooms in London? Learn what matters before you book, including privacy, sound, location, drinks, group size, and overall experience.',
-            canonical: 'https://www.londonkaraoke.club/blog/private-karaoke-rooms-london',
+            canonical: 'https://www.londonkaraoke.club/guides/private-karaoke-rooms-london',
             content: `Private Karaoke Rooms in London: What to Look For Before You Book
 
 Private karaoke rooms in London can look similar at first glance. A venue shows a few photos, promises a big song list, and says it is ideal for groups. But once you start comparing options properly, the differences become clear very quickly.

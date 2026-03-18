@@ -140,7 +140,7 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
               { to: '/events', label: 'private group events page' },
               { to: '/gallery', label: 'gallery' },
               { to: '/drinks', label: 'drinks menu' },
-              { to: '/blog', label: 'planning blog' },
+              { to: '/guides', label: 'karaoke planning guides' },
             ]}
           />
         </div>

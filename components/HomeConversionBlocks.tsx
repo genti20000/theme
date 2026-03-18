@@ -32,7 +32,7 @@ const HomeConversionBlocks: React.FC = () => {
           For team socials, client entertainment, and wrap parties, our Soho venue offers a private setting that feels more polished than a shared karaoke bar. Groups can settle in quickly, control the room, and keep the schedule simple in a central London location that works well after work. If you are weighing up corporate karaoke London options, this is designed for easy hosting, clear logistics, and broad appeal. The 80,000+ song library, updated monthly, helps mixed groups get involved fast without the awkward start that often slows down event nights.
         </p>
         <p className="text-sm leading-6 text-zinc-400">
-          Compare <Link to="/events" className="text-cyan-300 hover:text-white">corporate karaoke events</Link> with the <Link to="/songs" className="text-cyan-300 hover:text-white">song library</Link> and recent <Link to="/blog" className="text-cyan-300 hover:text-white">planning guides</Link>.
+          Compare <Link to="/events" className="text-cyan-300 hover:text-white">corporate karaoke events</Link> with the <Link to="/songs" className="text-cyan-300 hover:text-white">song library</Link> and recent <Link to="/guides" className="text-cyan-300 hover:text-white">Soho karaoke guides</Link>.
         </p>
       </section>
 

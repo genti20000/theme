@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /privacy
+Disallow: /terms
+Disallow: /booking-policy
 
 Sitemap: https://www.londonkaraoke.club/sitemap.xml

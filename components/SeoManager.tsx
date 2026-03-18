@@ -17,8 +17,7 @@ const VALID_PUBLIC_PATHS = new Set([
   '/',
   '/about',
   '/birthday-karaoke-soho',
-  '/blog',
-  '/booking-policy',
+  '/guides',
   '/careers',
   '/contact',
   '/drinks',
@@ -28,9 +27,7 @@ const VALID_PUBLIC_PATHS = new Set([
   '/gallery',
   '/hen-do-karaoke-soho',
   '/instagram',
-  '/privacy',
   '/songs',
-  '/terms',
 ]);
 
 type SeoConfig = {
@@ -187,12 +184,12 @@ const SeoManager: React.FC = () => {
         keywords: 'karaoke gallery Soho, private karaoke venue photos London',
         image: heroImage,
       },
-      '/blog': {
-        title: 'Karaoke Planning Blog Soho | London Karaoke Club',
+      '/guides': {
+        title: 'Karaoke Planning Guides Soho | London Karaoke Club',
         description:
           'Read London Karaoke Club guides for birthday karaoke Soho, hen party ideas, private karaoke planning, and group night tips in Central London.',
-        canonical: `${SITE_URL}/blog`,
-        keywords: 'birthday karaoke Soho blog, hen do karaoke Soho blog, private karaoke London tips',
+        canonical: `${SITE_URL}/guides`,
+        keywords: 'karaoke planning guides Soho, birthday karaoke Soho guide, hen do karaoke Soho guide',
         image: heroImage,
       },
       '/events': {
@@ -302,10 +299,10 @@ const SeoManager: React.FC = () => {
       },
     };
 
-    const blogPost = location.pathname.startsWith('/blog/')
+    const blogPost = location.pathname.startsWith('/guides/')
       ? blogData.posts.find((post) => {
           const slug = post.slug || post.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-          return `/blog/${slug}` === location.pathname;
+          return `/guides/${slug}` === location.pathname;
         })
       : null;
 
@@ -322,20 +319,20 @@ const SeoManager: React.FC = () => {
       ? {
           title: blogPost.metaTitle || blogPost.title,
           description: blogPost.metaDescription || blogPost.excerpt,
-          canonical: blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
-          keywords: 'karaoke blog London, private karaoke Soho, London Karaoke Club blog',
+          canonical: blogPost.canonical || `${SITE_URL}/guides/${blogPost.slug}`,
+          keywords: 'karaoke guide London, private karaoke Soho, London Karaoke Club guides',
           image: blogPost.ogImage || blogPost.imageUrl || heroImage,
           schema: {
             '@context': 'https://schema.org',
             '@graph': [
               {
                 '@type': 'BlogPosting',
-                '@id': `${blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`}#blogposting`,
+                '@id': `${blogPost.canonical || `${SITE_URL}/guides/${blogPost.slug}`}#blogposting`,
                 headline: blogPost.title,
                 description: blogPost.metaDescription || blogPost.excerpt,
                 image: [toAbsoluteUrl(blogPost.ogImage || blogPost.imageUrl || heroImage)],
-                url: blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
-                mainEntityOfPage: blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
+                url: blogPost.canonical || `${SITE_URL}/guides/${blogPost.slug}`,
+                mainEntityOfPage: blogPost.canonical || `${SITE_URL}/guides/${blogPost.slug}`,
                 publisher: {
                   '@type': 'Organization',
                   name: 'London Karaoke Club',
@@ -343,7 +340,7 @@ const SeoManager: React.FC = () => {
                 },
               },
               pageSchema(
-                blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
+                blogPost.canonical || `${SITE_URL}/guides/${blogPost.slug}`,
                 blogPost.metaTitle || blogPost.title,
                 blogPost.metaDescription || blogPost.excerpt,
               )['@graph'][0],
@@ -430,7 +427,12 @@ const SeoManager: React.FC = () => {
       const tag = document.createElement('meta');
       tag.setAttribute('name', 'robots');
       return tag;
-    }).setAttribute('content', isAdmin || (!isKnownPublicPath && !blogPost) ? 'noindex, nofollow, noarchive' : 'index, follow');
+    }).setAttribute(
+      'content',
+      isAdmin || location.pathname === '/privacy' || location.pathname === '/terms' || location.pathname === '/booking-policy' || (!isKnownPublicPath && !blogPost)
+        ? 'noindex, nofollow, noarchive'
+        : 'index, follow',
+    );
 
     const favicon = document.querySelector('link[rel="icon"]');
     if (favicon && headerData.faviconUrl) favicon.setAttribute('href', getMediaUrl(headerData.faviconUrl));

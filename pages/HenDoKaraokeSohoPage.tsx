@@ -125,7 +125,7 @@ const HenDoKaraokeSohoPage: React.FC = () => {
           {' '}
           <Link to="/drinks" className="text-yellow-300 hover:text-white">drinks menu</Link>,
           {' '}
-          <Link to="/blog" className="text-yellow-300 hover:text-white">planning blog</Link>.
+          <Link to="/guides" className="text-yellow-300 hover:text-white">karaoke planning guides</Link>.
         </p>
       </Section>
     </div>

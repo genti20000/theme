@@ -47,7 +47,7 @@ const pageGalleryLabels: Record<PageGalleryKey, string> = {
   home: 'Home',
   drinks: 'Drinks',
   food: 'Food',
-  blog: 'Blog',
+  blog: 'Guides',
   events: 'Events',
   songs: 'Songs',
   instagram: 'Instagram'
@@ -160,7 +160,8 @@ const AdminDashboard: React.FC = () => {
     return counts;
   }, [homeSections]);
 
-  const navOrder = headerData.navOrder || ['menu', 'gallery', 'birthday-karaoke-soho', 'hen-do-karaoke-soho', 'blog', 'drinks', 'songs'];
+  const navOrder = (headerData.navOrder || ['menu', 'gallery', 'birthday-karaoke-soho', 'hen-do-karaoke-soho', 'guides', 'drinks', 'songs'])
+    .map((key) => key === 'blog' ? 'guides' : key);
   const navCandidates = Object.keys(ROUTES).filter(k => k !== 'home');
 
   const selectedBlog = useMemo(() => {

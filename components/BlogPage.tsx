@@ -27,9 +27,9 @@ const BlogPage: React.FC = () => {
         {!selectedPost ? (
             <>
                 <div className="text-center mb-16">
-                    <h2 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-400">
+                    <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-400">
                         {blogData.heading}
-                    </h2>
+                    </h1>
                     <p className="text-gray-400 text-xl max-w-2xl mx-auto">{blogData.subtext}</p>
                     <p className="mt-4 text-sm leading-6 text-zinc-500 max-w-3xl mx-auto">
                       Jump to the highest-intent pages:
@@ -55,7 +55,7 @@ const BlogPage: React.FC = () => {
                     {blogData.posts.map((post) => (
                         <Link
                             key={post.id} 
-                            to={`/blog/${post.slug || slugifyFallback(post.title)}`}
+                            to={`/guides/${post.slug || slugifyFallback(post.title)}`}
                             className="bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-zinc-800 group cursor-pointer transition-all hover:border-pink-500/50 hover:shadow-[0_0_30px_rgba(236,72,153,0.1)]"
                         >
                             <div className="aspect-video relative overflow-hidden">
@@ -84,7 +84,7 @@ const BlogPage: React.FC = () => {
         ) : (
             <div className="max-w-4xl mx-auto animate-fade-in-up">
                 <Link
-                    to="/blog"
+                    to="/guides"
                     className="mb-12 inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-widest text-xs"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -107,12 +107,12 @@ const BlogPage: React.FC = () => {
 
                 <RelatedPlanningLinks
                   className="mt-12"
-                  title="Related booking pages"
+                  title="Plan your night:"
                   intro="If this article is part of a group booking plan, continue with the"
                   links={[
-                    { to: '/hen-do-karaoke-soho', label: 'hen do karaoke Soho guide' },
-                    { to: '/birthday-karaoke-soho', label: 'birthday karaoke Soho page' },
-                    { to: '/events', label: 'private events page' },
+                    { to: '/birthday-karaoke-soho', label: 'Birthday karaoke in Soho' },
+                    { to: '/hen-do-karaoke-soho', label: 'Hen do karaoke in Soho' },
+                    { to: '/events', label: 'Corporate karaoke events in London' },
                   ]}
                 />
             </div>

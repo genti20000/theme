@@ -18,7 +18,7 @@ const NotFoundPage: React.FC = () => {
       </div>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-zinc-400">
         <Link to="/gallery" className="hover:text-white">Gallery</Link>
-        <Link to="/blog" className="hover:text-white">Blog</Link>
+        <Link to="/guides" className="hover:text-white">Guides</Link>
         <Link to="/events" className="hover:text-white">Events</Link>
         <Link to="/terms" className="hover:text-white">Terms</Link>
       </div>

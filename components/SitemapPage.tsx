@@ -18,7 +18,7 @@ const SitemapPage: React.FC = () => {
         { label: "Events & Occasions", to: ROUTES.events },
         { label: "Birthday Karaoke Soho", to: ROUTES["birthday-karaoke-soho"] },
         { label: "Hen Do Karaoke Soho", to: ROUTES["hen-do-karaoke-soho"] },
-        { label: "Nightlife Blog", to: ROUTES.blog },
+        { label: "Karaoke Planning Guides", to: ROUTES.guides },
         { label: "Social Hub", to: ROUTES.instagram },
       ]
     },
@@ -30,7 +30,7 @@ const SitemapPage: React.FC = () => {
       }))
     },
     {
-      title: "Recent Blog Posts",
+      title: "Recent Guides",
       links: blogData.posts.slice(0, 5).map(p => ({
         label: p.title,
         to: ROUTES.blog

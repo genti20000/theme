@@ -5,6 +5,10 @@ RewriteEngine On
 RewriteCond %{HTTP_HOST} ^londonkaraoke\.club$ [NC]
 RewriteRule ^ https://www.londonkaraoke.club%{REQUEST_URI} [L,R=301,NE]
 
+# Content hub migration: blog -> guides
+RewriteRule ^blog/?$ /guides [L,R=301,NC]
+RewriteRule ^blog/(.+)$ /guides/$1 [L,R=301,NC]
+
 # Legacy URL redirects with SEO value
 RewriteRule ^sitemap/?$ /sitemap.xml [L,R=301,NC]
 RewriteRule ^terms-and-conditions/?$ /terms [L,R=301,NC]
@@ -25,7 +29,7 @@ RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 # Only known SPA routes should resolve to index.html
-RewriteRule ^(about|admin|birthday-karaoke-soho|blog(/[^/]+)?|booking-policy|careers|contact|drinks|events|faqs|food|gallery|hen-do-karaoke-soho|instagram|privacy|songs|terms)/?$ /index.html [L]
+RewriteRule ^(about|admin|birthday-karaoke-soho|booking-policy|careers|contact|drinks|events|faqs|food|gallery|guides(/[^/]+)?|hen-do-karaoke-soho|instagram|privacy|songs|terms)/?$ /index.html [L]
 RewriteRule ^$ /index.html [L]
 
 # Everything else is a real 404

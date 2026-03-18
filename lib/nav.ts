@@ -4,7 +4,7 @@ export type NavKey =
   | 'menu'
   | 'drinks'
   | 'gallery'
-  | 'blog'
+  | 'guides'
   | 'events'
   | 'songs'
   | 'instagram'
@@ -34,7 +34,7 @@ export const ROUTES: Record<NavKey, string> = {
   menu: "/food",
   drinks: "/drinks",
   gallery: "/gallery",
-  blog: "/blog",
+  guides: "/guides",
   events: "/events",
   songs: "/songs",
   instagram: "/instagram",
@@ -55,7 +55,7 @@ export const NAV_LABELS: Record<NavKey, string> = {
   menu: "Food Menu",
   drinks: "Drinks Menu",
   gallery: "Gallery",
-  blog: "Blog",
+  guides: "Guides",
   events: "Events",
   songs: "Songs",
   instagram: "Instagram",
@@ -75,7 +75,7 @@ export const NAV: NavItem[] = [
   // Explore
   { label: "Home", href: ROUTES.home, section: "Explore" },
   { label: "Gallery", href: ROUTES.gallery, section: "Explore" },
-  { label: "Blog", href: ROUTES.blog, section: "Explore" },
+  { label: "Guides", href: ROUTES.guides, section: "Explore" },
   { label: "Food Menu", href: ROUTES.menu, section: "Explore" },
   { label: "Drinks Menu", href: ROUTES.drinks, section: "Explore" },
   { label: "Songs", href: ROUTES.songs, section: "Explore" },

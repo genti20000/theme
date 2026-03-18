@@ -9,9 +9,10 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerData } = useData();
 
-  const navLinks = (headerData.navOrder || ['menu', 'gallery', 'birthday-karaoke-soho', 'hen-do-karaoke-soho', 'blog', 'drinks', 'songs']).filter(
-    (link) => link in ROUTES
-  );
+  const navLinks = (headerData.navOrder || ['menu', 'gallery', 'birthday-karaoke-soho', 'hen-do-karaoke-soho', 'guides', 'drinks', 'songs'])
+    .map((link) => (link === 'blog' ? 'guides' : link))
+    .filter((link, index, arr) => arr.indexOf(link) === index)
+    .filter((link) => link in ROUTES);
 
   const getLabel = (key: string) => {
     const label = NAV_LABELS[key as keyof typeof NAV_LABELS];
