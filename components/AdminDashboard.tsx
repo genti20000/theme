@@ -861,7 +861,7 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-xs uppercase tracking-widest text-zinc-500">Title</p>
                 <p className="text-lg font-bold mt-1">{headerData.siteTitle || 'Untitled page'}</p>
                 <p className="text-xs text-zinc-500 mt-3 uppercase tracking-widest">URL</p>
-                <p className="text-sm text-emerald-400 mt-1">https://londonkaraoke.club</p>
+                <p className="text-sm text-emerald-400 mt-1">https://www.londonkaraoke.club</p>
                 <p className="text-sm text-zinc-300 mt-3 leading-relaxed">{headerData.siteDescription || 'No meta description yet.'}</p>
               </Card>
             </div>

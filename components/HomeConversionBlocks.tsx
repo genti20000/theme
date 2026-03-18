@@ -52,6 +52,25 @@ const HomeConversionBlocks: React.FC = () => {
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Check Availability</Button>
         </div>
       </section>
+
+      <section className="rounded-2xl border border-fuchsia-300/20 bg-white/[0.03] p-6 md:p-8">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-[760px]">
+            <h2 className="mb-3 text-2xl font-black leading-tight text-fuchsia-300 md:text-3xl">Planning a Soho hen party?</h2>
+            <p className="text-base leading-6 text-zinc-300 md:text-lg md:leading-7">
+              If the group is comparing bars, brunches, and private karaoke, go straight to the
+              {' '}
+              <Link to="/hen-do-karaoke-soho" className="text-yellow-300 hover:text-white">hen do karaoke Soho page</Link>
+              {' '}
+              for the clearest overview of how the night works, what to book, and what to check before you lock a date.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button href="/hen-do-karaoke-soho" variant="secondary">Hen Do Karaoke Soho</Button>
+            <Button href="/gallery" variant="ghost">View Party Gallery</Button>
+          </div>
+        </div>
+      </section>
     </Section>
   );
 };

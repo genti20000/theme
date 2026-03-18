@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
+import RelatedPlanningLinks from './RelatedPlanningLinks';
 
 const SongLibrary: React.FC = () => {
   const { songs, isDataLoading } = useData();
@@ -83,6 +84,18 @@ const SongLibrary: React.FC = () => {
                     <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-zinc-800 rounded hover:bg-zinc-700 disabled:opacity-50">Next</button>
                 </div>
             )}
+
+            <div className="max-w-4xl mx-auto mt-10">
+              <RelatedPlanningLinks
+                intro="Once you have checked the song list, compare the main booking pages:"
+                links={[
+                  { to: '/birthday-karaoke-soho', label: 'birthday karaoke Soho' },
+                  { to: '/hen-do-karaoke-soho', label: 'hen do karaoke Soho' },
+                  { to: '/events', label: 'private events' },
+                  { to: '/gallery', label: 'gallery' },
+                ]}
+              />
+            </div>
         </div>
     </div>
     <PageGallerySection pageKey="songs" />

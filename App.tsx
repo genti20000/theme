@@ -13,7 +13,6 @@ import BlogPage from './components/BlogPage';
 import VisualEffects from './components/VisualEffects';
 import InstagramPage from './components/InstagramPage';
 import Menu from './components/Menu';
-import SitemapPage from './components/SitemapPage';
 import HashScroll from './components/HashScroll';
 import SeoManager from './components/SeoManager';
 import { DataProvider } from './context/DataContext';
@@ -22,12 +21,12 @@ import HomePage from './pages/HomePage';
 import HenDoKaraokeSohoPage from './pages/HenDoKaraokeSohoPage';
 import BirthdayKaraokeSohoPage from './pages/BirthdayKaraokeSohoPage';
 import StubPage from './pages/StubPage';
+import NotFoundPage from './components/NotFoundPage';
 
 const AppShell: React.FC = () => {
   return (
     <>
       <VisualEffects />
-      <SeoManager />
       <Header />
       <main>
         <Outlet />
@@ -43,6 +42,7 @@ const App: React.FC = () => {
     <DataProvider>
       <div className="bg-black text-white min-h-screen relative selection:bg-pink-500 selection:text-white">
         <HashScroll />
+        <SeoManager />
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<HomePage />} />
@@ -50,6 +50,7 @@ const App: React.FC = () => {
             <Route path="food" element={<Menu />} />
             <Route path="gallery" element={<Gallery />} />
             <Route path="blog" element={<BlogPage />} />
+            <Route path="blog/:slug" element={<BlogPage />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="songs" element={<SongLibrary />} />
             <Route path="faqs" element={<StubPage title="FAQs" />} />
@@ -59,11 +60,10 @@ const App: React.FC = () => {
             <Route path="privacy" element={<StubPage title="Privacy Policy" />} />
             <Route path="booking-policy" element={<StubPage title="Booking Policy" />} />
             <Route path="terms" element={<Terms />} />
-            <Route path="sitemap" element={<SitemapPage />} />
             <Route path="instagram" element={<InstagramPage />} />
             <Route path="hen-do-karaoke-soho" element={<HenDoKaraokeSohoPage />} />
             <Route path="birthday-karaoke-soho" element={<BirthdayKaraokeSohoPage />} />
-            <Route path="*" element={<StubPage title="Page Not Found" />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
           <Route path="admin" element={<AdminDashboard />} />
         </Routes>

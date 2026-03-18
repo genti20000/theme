@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GalleryViewMode, useData } from '../context/DataContext';
 import { getMediaUrl } from '../lib/media';
+import RelatedPlanningLinks from './RelatedPlanningLinks';
 
 interface GalleryProps {
   embedded?: boolean;
@@ -185,6 +186,20 @@ const Gallery: React.FC<GalleryProps> = ({ embedded = false, forcedCollectionId,
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
               </button>
             </div>
+          </div>
+        )}
+
+        {!embedded && (
+          <div className="mx-auto mt-10 max-w-5xl">
+            <RelatedPlanningLinks
+              intro="After reviewing the venue photos, move into the main booking pages:"
+              links={[
+                { to: '/birthday-karaoke-soho', label: 'birthday karaoke Soho' },
+                { to: '/hen-do-karaoke-soho', label: 'hen do karaoke Soho' },
+                { to: '/events', label: 'private events' },
+                { to: '/drinks', label: 'drinks menu' },
+              ]}
+            />
           </div>
         )}
       </div>

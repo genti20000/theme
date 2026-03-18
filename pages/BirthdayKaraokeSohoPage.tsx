@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Section from '../components/ui/Section';
+import RelatedPlanningLinks from '../components/RelatedPlanningLinks';
 import { useData } from '../context/DataContext';
 import { getMediaUrl } from '../lib/media';
 import { SUMUP_BOOKING_URL } from '../lib/nav';
@@ -132,19 +132,18 @@ const BirthdayKaraokeSohoPage: React.FC = () => {
           <Button href={SUMUP_BOOKING_URL} target="_blank" rel="noopener noreferrer">Book Your Birthday Room</Button>
           <Button href={birthdayWhatsAppUrl} target="_blank" rel="noopener noreferrer" variant="secondary">Message Us on WhatsApp</Button>
         </div>
-        <p className="mx-auto mt-5 max-w-[760px] text-sm leading-6 text-zinc-400">
-          Related planning pages:
-          {' '}
-          <Link to="/hen-do-karaoke-soho" className="text-yellow-300 hover:text-white">hen do karaoke Soho</Link>,
-          {' '}
-          <Link to="/events" className="text-yellow-300 hover:text-white">private group events</Link>,
-          {' '}
-          <Link to="/gallery" className="text-yellow-300 hover:text-white">gallery</Link>,
-          {' '}
-          <Link to="/drinks" className="text-yellow-300 hover:text-white">drinks menu</Link>,
-          {' '}
-          <Link to="/blog" className="text-yellow-300 hover:text-white">planning blog</Link>.
-        </p>
+        <div className="mx-auto mt-5 max-w-[860px] text-left">
+          <RelatedPlanningLinks
+            intro="Compare this booking with the"
+            links={[
+              { to: '/hen-do-karaoke-soho', label: 'hen do karaoke Soho page' },
+              { to: '/events', label: 'private group events page' },
+              { to: '/gallery', label: 'gallery' },
+              { to: '/drinks', label: 'drinks menu' },
+              { to: '/blog', label: 'planning blog' },
+            ]}
+          />
+        </div>
       </Section>
     </div>
   );

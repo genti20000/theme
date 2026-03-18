@@ -4,6 +4,34 @@ import { useData } from '../context/DataContext';
 import { getMediaUrl } from '../lib/media';
 
 const SITE_URL = 'https://www.londonkaraoke.club';
+const DAY_OF_WEEK = [
+  'https://schema.org/Monday',
+  'https://schema.org/Tuesday',
+  'https://schema.org/Wednesday',
+  'https://schema.org/Thursday',
+  'https://schema.org/Friday',
+  'https://schema.org/Saturday',
+  'https://schema.org/Sunday',
+];
+const VALID_PUBLIC_PATHS = new Set([
+  '/',
+  '/about',
+  '/birthday-karaoke-soho',
+  '/blog',
+  '/booking-policy',
+  '/careers',
+  '/contact',
+  '/drinks',
+  '/events',
+  '/faqs',
+  '/food',
+  '/gallery',
+  '/hen-do-karaoke-soho',
+  '/instagram',
+  '/privacy',
+  '/songs',
+  '/terms',
+]);
 
 type SeoConfig = {
   title: string;
@@ -91,15 +119,7 @@ const homeSchema = (description: string) => ({
       openingHoursSpecification: [
         {
           '@type': 'OpeningHoursSpecification',
-          dayOfWeek: [
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
-            'Sunday',
-          ],
+          dayOfWeek: DAY_OF_WEEK,
           opens: '14:00',
           closes: '03:00',
         },
@@ -140,7 +160,7 @@ const homeSchema = (description: string) => ({
 
 const SeoManager: React.FC = () => {
   const location = useLocation();
-  const { headerData, heroData } = useData();
+  const { blogData, headerData, heroData } = useData();
 
   useEffect(() => {
     const heroImage = heroData.mobileSlides?.[0] || heroData.slides?.[0] || heroData.backgroundImageUrl || headerData.logoUrl;
@@ -238,22 +258,105 @@ const SeoManager: React.FC = () => {
         keywords: 'London Karaoke Club terms, booking terms Soho',
         image: heroImage,
       },
-      '/sitemap': {
-        title: 'Sitemap | London Karaoke Club',
-        description: 'Browse the London Karaoke Club sitemap to access key pages, booking information, menus, gallery, and event pages.',
-        canonical: `${SITE_URL}/sitemap`,
-        keywords: 'London Karaoke Club sitemap',
+      '/about': {
+        title: 'About London Karaoke Club | Soho Private Karaoke',
+        description: 'Learn more about London Karaoke Club, our private karaoke setup in Soho, and what makes our venue different for group nights out.',
+        canonical: `${SITE_URL}/about`,
+        keywords: 'about London Karaoke Club, Soho karaoke venue',
+        image: heroImage,
+      },
+      '/contact': {
+        title: 'Contact London Karaoke Club | Soho Location',
+        description: 'Find London Karaoke Club in Soho and get booking support for private karaoke nights, birthdays, hen dos, and group events.',
+        canonical: `${SITE_URL}/contact`,
+        keywords: 'contact London Karaoke Club, Soho karaoke location',
+        image: heroImage,
+      },
+      '/careers': {
+        title: 'Careers | London Karaoke Club',
+        description: 'Explore career opportunities at London Karaoke Club in Soho and check for future hospitality, venue, and events roles.',
+        canonical: `${SITE_URL}/careers`,
+        keywords: 'London Karaoke Club careers, Soho hospitality jobs',
+        image: heroImage,
+      },
+      '/privacy': {
+        title: 'Privacy Policy | London Karaoke Club',
+        description: 'Read the London Karaoke Club privacy policy and how personal data is handled for bookings and customer enquiries.',
+        canonical: `${SITE_URL}/privacy`,
+        keywords: 'London Karaoke Club privacy policy',
+        image: heroImage,
+      },
+      '/booking-policy': {
+        title: 'Booking Policy | London Karaoke Club',
+        description: 'Review the London Karaoke Club booking policy for deposits, cancellations, amendments, and venue rules.',
+        canonical: `${SITE_URL}/booking-policy`,
+        keywords: 'London Karaoke Club booking policy',
+        image: heroImage,
+      },
+      '/faqs': {
+        title: 'FAQs | London Karaoke Club Soho',
+        description: 'Read London Karaoke Club FAQs covering booking, opening hours, age policy, song library, food, drinks, and private karaoke nights in Soho.',
+        canonical: `${SITE_URL}/faqs`,
+        keywords: 'London Karaoke Club FAQs, private karaoke Soho FAQ',
         image: heroImage,
       },
     };
 
-    const current = configs[location.pathname] || {
-      title: headerData.siteTitle || 'London Karaoke Club',
-      description: fallbackDescription,
-      canonical: `${SITE_URL}${location.pathname === '/' ? '/' : location.pathname}`,
-      image: heroImage,
-      schema: pageSchema(`${SITE_URL}${location.pathname === '/' ? '/' : location.pathname}`, headerData.siteTitle || 'London Karaoke Club', fallbackDescription),
-    };
+    const blogPost = location.pathname.startsWith('/blog/')
+      ? blogData.posts.find((post) => {
+          const slug = post.slug || post.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+          return `/blog/${slug}` === location.pathname;
+        })
+      : null;
+
+    const isAdmin = location.pathname === '/admin';
+    const isKnownPublicPath = VALID_PUBLIC_PATHS.has(location.pathname);
+    const current = isAdmin
+      ? {
+          title: 'Admin | London Karaoke Club',
+          description: 'Private admin area.',
+          canonical: `${SITE_URL}/admin`,
+          image: heroImage,
+        }
+      : blogPost
+      ? {
+          title: blogPost.metaTitle || blogPost.title,
+          description: blogPost.metaDescription || blogPost.excerpt,
+          canonical: blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
+          keywords: 'karaoke blog London, private karaoke Soho, London Karaoke Club blog',
+          image: blogPost.ogImage || blogPost.imageUrl || heroImage,
+          schema: {
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'BlogPosting',
+                '@id': `${blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`}#blogposting`,
+                headline: blogPost.title,
+                description: blogPost.metaDescription || blogPost.excerpt,
+                image: [toAbsoluteUrl(blogPost.ogImage || blogPost.imageUrl || heroImage)],
+                url: blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
+                mainEntityOfPage: blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
+                publisher: {
+                  '@type': 'Organization',
+                  name: 'London Karaoke Club',
+                  url: `${SITE_URL}/`,
+                },
+              },
+              pageSchema(
+                blogPost.canonical || `${SITE_URL}/blog/${blogPost.slug}`,
+                blogPost.metaTitle || blogPost.title,
+                blogPost.metaDescription || blogPost.excerpt,
+              )['@graph'][0],
+            ],
+          },
+        }
+      : configs[location.pathname] || {
+          title: 'Page Not Found | London Karaoke Club',
+          description: 'The requested page could not be found.',
+          canonical: `${SITE_URL}${location.pathname === '/' ? '/' : location.pathname}`,
+          image: heroImage,
+          schema: pageSchema(`${SITE_URL}${location.pathname === '/' ? '/' : location.pathname}`, 'Page Not Found | London Karaoke Club', 'The requested page could not be found.'),
+        };
 
     document.title = current.title;
 
@@ -323,6 +426,12 @@ const SeoManager: React.FC = () => {
       return link;
     }).setAttribute('href', current.canonical);
 
+    ensureMeta('meta[name="robots"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('name', 'robots');
+      return tag;
+    }).setAttribute('content', isAdmin || (!isKnownPublicPath && !blogPost) ? 'noindex, nofollow, noarchive' : 'index, follow');
+
     const favicon = document.querySelector('link[rel="icon"]');
     if (favicon && headerData.faviconUrl) favicon.setAttribute('href', getMediaUrl(headerData.faviconUrl));
 
@@ -336,7 +445,7 @@ const SeoManager: React.FC = () => {
     }
     const schema = current.schema || pageSchema(current.canonical, current.title, current.description);
     schemaTag.textContent = JSON.stringify(schema);
-  }, [headerData, heroData, location.pathname]);
+  }, [blogData.posts, headerData, heroData, location.pathname]);
 
   return null;
 };

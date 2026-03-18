@@ -2,6 +2,7 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
+import RelatedPlanningLinks from './RelatedPlanningLinks';
 
 const Menu: React.FC = () => {
   const { foodMenu } = useData();
@@ -39,6 +40,18 @@ const Menu: React.FC = () => {
               </ul>
             </div>
           ))}
+        </div>
+
+        <div className="max-w-5xl mx-auto mt-12">
+          <RelatedPlanningLinks
+            intro="Once food is sorted, continue with the main group-booking pages:"
+            links={[
+              { to: '/hen-do-karaoke-soho', label: 'hen do karaoke Soho' },
+              { to: '/birthday-karaoke-soho', label: 'birthday karaoke Soho' },
+              { to: '/events', label: 'private events' },
+              { to: '/drinks', label: 'drinks menu' },
+            ]}
+          />
         </div>
       </div>
     </section>

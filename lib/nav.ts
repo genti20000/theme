@@ -10,7 +10,6 @@ export type NavKey =
   | 'instagram'
   | 'hen-do-karaoke-soho'
   | 'birthday-karaoke-soho'
-  | 'sitemap'
   | 'faqs'
   | 'about'
   | 'contact'
@@ -41,7 +40,6 @@ export const ROUTES: Record<NavKey, string> = {
   instagram: "/instagram",
   "hen-do-karaoke-soho": "/hen-do-karaoke-soho",
   "birthday-karaoke-soho": "/birthday-karaoke-soho",
-  sitemap: "/sitemap",
   faqs: "/faqs",
   about: "/about",
   contact: "/contact",
@@ -63,7 +61,6 @@ export const NAV_LABELS: Record<NavKey, string> = {
   instagram: "Instagram",
   "hen-do-karaoke-soho": "Hen Do Karaoke Soho",
   "birthday-karaoke-soho": "Birthday Karaoke Soho",
-  sitemap: "Sitemap",
   faqs: "FAQs",
   about: "About Us",
   contact: "Contact & Location",
@@ -97,8 +94,6 @@ export const NAV: NavItem[] = [
   { label: "About Us", href: ROUTES.about, section: "LKC" },
   { label: "Contact & Location", href: ROUTES.contact, section: "LKC" },
   { label: "Careers", href: ROUTES.careers, section: "LKC" },
-  { label: "Sitemap", href: ROUTES.sitemap, section: "LKC" },
-
   // Legal
   { label: "Privacy Policy", href: ROUTES.privacy, section: "Legal" },
   { label: "Terms of Use", href: ROUTES.terms, section: "Legal" },

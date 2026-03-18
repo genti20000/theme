@@ -43,7 +43,6 @@ const SitemapPage: React.FC = () => {
         { label: "Privacy Policy", to: ROUTES.privacy },
         { label: "Booking Policy", to: ROUTES["booking-policy"] },
         { label: "FAQ", to: ROUTES.faqs },
-        { label: "Sitemap", to: ROUTES.sitemap },
       ]
     }
   ];
@@ -79,6 +78,15 @@ const SitemapPage: React.FC = () => {
                                 </Link>
                             </li>
                         ))}
+                        <li>
+                            <a
+                                href="/sitemap.xml"
+                                className="text-zinc-400 hover:text-white transition-all text-sm font-bold hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] flex items-center group"
+                            >
+                                <span className="w-0 group-hover:w-3 transition-all h-[1px] bg-yellow-400 mr-0 group-hover:mr-2"></span>
+                                XML Sitemap
+                            </a>
+                        </li>
                     </ul>
                 </div>
             ))}

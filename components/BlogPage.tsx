@@ -1,13 +1,24 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { useData, BlogPost } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
 import { getMediaUrl } from '../lib/media';
+import RelatedPlanningLinks from './RelatedPlanningLinks';
+
+const slugifyFallback = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 const BlogPage: React.FC = () => {
   const { blogData } = useData();
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const { slug } = useParams();
+  const selectedPost: BlogPost | null = slug
+    ? blogData.posts.find((post) => (post.slug || slugifyFallback(post.title)) === slug) || null
+    : null;
 
   return (
     <>
@@ -31,13 +42,20 @@ const BlogPage: React.FC = () => {
                       {' '}
                       <Link to="/gallery" className="text-yellow-300 hover:text-white">gallery</Link>.
                     </p>
+                    <p className="mt-3 text-sm leading-6 text-zinc-400 max-w-3xl mx-auto">
+                      For pre-wedding groups specifically, use the dedicated
+                      {' '}
+                      <Link to="/hen-do-karaoke-soho" className="text-fuchsia-300 hover:text-white">hen do karaoke Soho landing page</Link>
+                      {' '}
+                      before comparing dates and menus.
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {blogData.posts.map((post) => (
-                        <article 
+                        <Link
                             key={post.id} 
-                            onClick={() => setSelectedPost(post)}
+                            to={`/blog/${post.slug || slugifyFallback(post.title)}`}
                             className="bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-zinc-800 group cursor-pointer transition-all hover:border-pink-500/50 hover:shadow-[0_0_30px_rgba(236,72,153,0.1)]"
                         >
                             <div className="aspect-video relative overflow-hidden">
@@ -59,19 +77,19 @@ const BlogPage: React.FC = () => {
                                     Read Full Story <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                                 </div>
                             </div>
-                        </article>
+                        </Link>
                     ))}
                 </div>
             </>
         ) : (
             <div className="max-w-4xl mx-auto animate-fade-in-up">
-                <button 
-                    onClick={() => setSelectedPost(null)}
-                    className="mb-12 flex items-center gap-2 text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-widest text-xs"
+                <Link
+                    to="/blog"
+                    className="mb-12 inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-widest text-xs"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                     Back to Feed
-                </button>
+                </Link>
                 
                 {selectedPost.imageUrl ? (
                   <img src={getMediaUrl(selectedPost.imageUrl)} className="w-full h-[50vh] object-cover rounded-[3rem] mb-12 shadow-2xl border border-zinc-800" alt="" />
@@ -86,6 +104,17 @@ const BlogPage: React.FC = () => {
                 <div className="prose prose-invert prose-pink max-w-none text-gray-300 text-lg leading-relaxed whitespace-pre-line">
                     {selectedPost.content}
                 </div>
+
+                <RelatedPlanningLinks
+                  className="mt-12"
+                  title="Related booking pages"
+                  intro="If this article is part of a group booking plan, continue with the"
+                  links={[
+                    { to: '/hen-do-karaoke-soho', label: 'hen do karaoke Soho guide' },
+                    { to: '/birthday-karaoke-soho', label: 'birthday karaoke Soho page' },
+                    { to: '/events', label: 'private events page' },
+                  ]}
+                />
             </div>
         )}
       </div>

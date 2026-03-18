@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import PageGallerySection from './PageGallerySection';
 import { getMediaUrl } from '../lib/media';
@@ -70,6 +71,24 @@ const EventsPage: React.FC = () => {
 
       {/* Sections */}
       <div className="container mx-auto px-6 py-12">
+        <div className="mb-12 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+          <h2 className="mb-3 text-2xl font-black text-white md:text-3xl">Planning a hen do instead of a corporate night?</h2>
+          <p className="max-w-4xl text-base leading-7 text-zinc-300 md:text-lg">
+            If the booking is for a pre-wedding group, skip straight to the
+            {' '}
+            <Link to="/hen-do-karaoke-soho" className="text-yellow-300 hover:text-white">hen do karaoke Soho page</Link>
+            {' '}
+            for the dedicated planning guide, then review the
+            {' '}
+            <Link to="/gallery" className="text-yellow-300 hover:text-white">gallery</Link>
+            {' '}
+            and
+            {' '}
+            <Link to="/drinks" className="text-yellow-300 hover:text-white">drinks menu</Link>
+            {' '}
+            before you book.
+          </p>
+        </div>
         {eventsData.sections && eventsData.sections.map((section, index) => (
             <FadeInScrollSection key={section.id} className={`flex flex-col md:flex-row gap-12 items-center mb-32 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
                 {/* Image Side */}
