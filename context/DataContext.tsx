@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { MediaRecord, getMediaUrl, isInvalidMediaRef, normalizeMediaRecord } from '../lib/media';
+import { SeoActionResponse, SeoDashboardState, SeoPageType } from '../lib/seoIndexing';
 
 // --- Types ---
 export interface MenuItem { name: string; description: string; price: string; note?: string; }
@@ -332,6 +333,8 @@ interface DataContextType {
     fetchServerFiles: () => Promise<MediaRecord[]>;
     repairMediaLibrary: () => Promise<MediaRepairResult>;
     cleanupMediaLibrary: () => Promise<MediaRepairResult>;
+    fetchSeoDashboard: () => Promise<SeoDashboardState | null>;
+    runSeoAction: (input: { url: string; pageType: SeoPageType; action: string }) => Promise<SeoActionResponse>;
     isDataLoading: boolean;
 }
 
@@ -1487,6 +1490,54 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const seoEndpoint = () => `${window.location.origin}/db.php`;
+
+    const fetchSeoDashboard = async (): Promise<SeoDashboardState | null> => {
+        if (!adminPassword) return null;
+        try {
+            const response = await fetch(`${seoEndpoint()}?seo=1`, {
+                headers: { 'Authorization': `Bearer ${adminPassword}` },
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => null);
+            if (!response.ok || !data?.success) return null;
+            return {
+                canonicalSiteUrl: data.canonicalSiteUrl || '',
+                logs: Array.isArray(data.logs) ? data.logs : [],
+                capabilities: {
+                    revalidate: Boolean(data.capabilities?.revalidate),
+                    indexNow: Boolean(data.capabilities?.indexNow),
+                    searchConsoleInspection: Boolean(data.capabilities?.searchConsoleInspection),
+                    googleIndexingApi: Boolean(data.capabilities?.googleIndexingApi),
+                }
+            };
+        } catch {
+            return null;
+        }
+    };
+
+    const runSeoAction = async (input: { url: string; pageType: SeoPageType; action: string }): Promise<SeoActionResponse> => {
+        if (!adminPassword) return { success: false, error: 'Missing admin key' };
+        try {
+            const response = await fetch(`${seoEndpoint()}?seo=1`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminPassword}`
+                },
+                body: JSON.stringify(input),
+                cache: 'no-store'
+            });
+            const data = await response.json().catch(() => null);
+            if (!response.ok || !data?.success) {
+                return { success: false, error: data?.error || `SEO action failed (${response.status})` };
+            }
+            return { success: true, result: data.result };
+        } catch {
+            return { success: false, error: 'Network error while running SEO action' };
+        }
+    };
+
     useEffect(() => {
         loadFromHostinger();
     }, []);
@@ -1518,7 +1569,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 window.location.reload();
             },
             importDatabase, exportDatabase, saveToHostinger, loadFromHostinger, saveToFirebase, loadFromFirebase, uploadFile,
-            fetchServerFiles, repairMediaLibrary, cleanupMediaLibrary
+            fetchServerFiles, repairMediaLibrary, cleanupMediaLibrary, fetchSeoDashboard, runSeoAction
         }}>
             {children}
         </DataContext.Provider>

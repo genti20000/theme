@@ -66,6 +66,7 @@ const App: React.FC = () => {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
           <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin/seo" element={<AdminDashboard />} />
         </Routes>
       </div>
     </DataProvider>

@@ -306,7 +306,7 @@ const SeoManager: React.FC = () => {
         })
       : null;
 
-    const isAdmin = location.pathname === '/admin';
+    const isAdmin = location.pathname.startsWith('/admin');
     const isKnownPublicPath = VALID_PUBLIC_PATHS.has(location.pathname);
     const current = isAdmin
       ? {

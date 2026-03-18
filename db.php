@@ -18,6 +18,18 @@ function json_response(array $payload, int $status = 200): void
     exit;
 }
 
+function env_bool(string $key, bool $default = false): bool
+{
+    $value = getenv($key);
+    if ($value === false || $value === null || $value === "") return $default;
+    return in_array(strtolower((string)$value), ["1", "true", "yes", "on"], true);
+}
+
+function current_iso(): string
+{
+    return gmdate("c");
+}
+
 function detect_scheme(): string
 {
     if (!empty($_SERVER["HTTP_X_FORWARDED_PROTO"])) return (string)$_SERVER["HTTP_X_FORWARDED_PROTO"];
@@ -28,6 +40,424 @@ function detect_scheme(): string
 function is_absolute_url(string $value): bool
 {
     return (bool)preg_match("/^https?:\/\//i", $value);
+}
+
+function request_json(): array
+{
+    $raw = file_get_contents("php://input");
+    if (!$raw || trim($raw) === "") return [];
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function seo_logs_path(): string
+{
+    return __DIR__ . "/seo_indexing_logs.json";
+}
+
+function load_seo_logs(): array
+{
+    $path = seo_logs_path();
+    if (!is_file($path)) return [];
+    $raw = @file_get_contents($path);
+    if (!$raw) return [];
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function save_seo_logs(array $logs): void
+{
+    @file_put_contents(seo_logs_path(), json_encode(array_values($logs), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+function append_seo_log(array $entry): void
+{
+    $logs = load_seo_logs();
+    array_unshift($logs, $entry);
+    if (count($logs) > 200) $logs = array_slice($logs, 0, 200);
+    save_seo_logs($logs);
+}
+
+function rate_limit_path(): string
+{
+    return __DIR__ . "/seo_rate_limit.json";
+}
+
+function enforce_rate_limit(string $key, int $limit = 12, int $windowSeconds = 60): void
+{
+    $path = rate_limit_path();
+    $state = [];
+    if (is_file($path)) {
+        $decoded = json_decode((string)@file_get_contents($path), true);
+        if (is_array($decoded)) $state = $decoded;
+    }
+    $now = time();
+    $bucket = array_values(array_filter($state[$key] ?? [], static fn($ts) => is_int($ts) && $ts >= ($now - $windowSeconds)));
+    if (count($bucket) >= $limit) {
+        json_response([
+            "success" => false,
+            "error" => "Rate limit exceeded. Try again shortly."
+        ], 429);
+    }
+    $bucket[] = $now;
+    $state[$key] = $bucket;
+    @file_put_contents($path, json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+function canonical_site_url(): string
+{
+    return rtrim((string)(getenv("LKC_CANONICAL_SITE_URL") ?: "https://www.londonkaraoke.club"), "/");
+}
+
+function canonical_host(): string
+{
+    return (string)(parse_url(canonical_site_url(), PHP_URL_HOST) ?: "www.londonkaraoke.club");
+}
+
+function normalize_site_url(string $raw, array $allowedQueryKeys = []): array
+{
+    $raw = trim($raw);
+    if ($raw === "") return ["ok" => false, "error" => "Missing URL"];
+    $raw = preg_replace("/#.*$/", "", $raw);
+    if (!$raw || !is_absolute_url($raw)) return ["ok" => false, "error" => "URL must be absolute"];
+
+    $parts = parse_url($raw);
+    if (!$parts || empty($parts["host"])) return ["ok" => false, "error" => "Invalid URL"];
+    $host = strtolower((string)$parts["host"]);
+    $path = (string)($parts["path"] ?? "/");
+    if ($path === "") $path = "/";
+    if ($path !== "/" && str_ends_with($path, "/")) $path = rtrim($path, "/");
+    $allowedHosts = array_unique([
+        canonical_host(),
+        "londonkaraoke.club",
+        "www.londonkaraoke.club"
+    ]);
+    if (!in_array($host, $allowedHosts, true)) {
+        return ["ok" => false, "error" => "URL host is not allowed"];
+    }
+
+    $query = "";
+    if (!empty($parts["query"])) {
+        parse_str((string)$parts["query"], $queryParts);
+        if (!empty($allowedQueryKeys)) {
+            $queryParts = array_intersect_key($queryParts, array_flip($allowedQueryKeys));
+        } else {
+            $queryParts = [];
+        }
+        if (!empty($queryParts)) {
+            $query = "?" . http_build_query($queryParts);
+        }
+    }
+
+    $normalized = canonical_site_url() . $path . $query;
+    return [
+        "ok" => true,
+        "url" => $normalized,
+        "path" => $path,
+        "host" => canonical_host()
+    ];
+}
+
+function http_json(string $url, array $payload, array $headers = [], int $timeout = 20): array
+{
+    $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
+    $headerLines = array_merge([
+        "Content-Type: application/json",
+        "Content-Length: " . strlen((string)$body),
+    ], $headers);
+    $context = stream_context_create([
+        "http" => [
+            "method" => "POST",
+            "header" => implode("\r\n", $headerLines),
+            "content" => $body,
+            "ignore_errors" => true,
+            "timeout" => $timeout,
+        ],
+    ]);
+    $response = @file_get_contents($url, false, $context);
+    $statusLine = $http_response_header[0] ?? "";
+    preg_match('/\s(\d{3})\s/', $statusLine, $m);
+    $status = isset($m[1]) ? (int)$m[1] : 0;
+    $decoded = json_decode((string)$response, true);
+    return [
+        "status" => $status,
+        "body" => $response === false ? "" : (string)$response,
+        "json" => is_array($decoded) ? $decoded : null,
+    ];
+}
+
+function http_head(string $url, int $timeout = 12): array
+{
+    $context = stream_context_create([
+        "http" => [
+            "method" => "HEAD",
+            "ignore_errors" => true,
+            "timeout" => $timeout,
+        ],
+    ]);
+    @file_get_contents($url, false, $context);
+    $statusLine = $http_response_header[0] ?? "";
+    preg_match('/\s(\d{3})\s/', $statusLine, $m);
+    $status = isset($m[1]) ? (int)$m[1] : 0;
+    return [
+        "status" => $status,
+        "headers" => $http_response_header ?? [],
+    ];
+}
+
+function base64url_encode(string $data): string
+{
+    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+}
+
+function google_service_access_token(array $scopes): array
+{
+    $clientEmail = (string)(getenv("LKC_GOOGLE_SERVICE_ACCOUNT_EMAIL") ?: "");
+    $privateKey = (string)(getenv("LKC_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY") ?: "");
+    $privateKey = str_replace("\\n", "\n", $privateKey);
+    if ($clientEmail === "" || $privateKey === "") {
+        return ["ok" => false, "error" => "Google service account credentials are not configured"];
+    }
+
+    $header = ["alg" => "RS256", "typ" => "JWT"];
+    $now = time();
+    $claims = [
+        "iss" => $clientEmail,
+        "scope" => implode(" ", $scopes),
+        "aud" => "https://oauth2.googleapis.com/token",
+        "iat" => $now,
+        "exp" => $now + 3600,
+    ];
+    $jwtBase = base64url_encode(json_encode($header)) . "." . base64url_encode(json_encode($claims));
+    $signature = "";
+    $key = openssl_pkey_get_private($privateKey);
+    if (!$key || !openssl_sign($jwtBase, $signature, $key, OPENSSL_ALGO_SHA256)) {
+        return ["ok" => false, "error" => "Failed to sign Google JWT"];
+    }
+    $jwt = $jwtBase . "." . base64url_encode($signature);
+
+    $context = stream_context_create([
+        "http" => [
+            "method" => "POST",
+            "header" => "Content-Type: application/x-www-form-urlencoded\r\n",
+            "content" => http_build_query([
+                "grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                "assertion" => $jwt,
+            ]),
+            "ignore_errors" => true,
+            "timeout" => 20,
+        ],
+    ]);
+    $response = @file_get_contents("https://oauth2.googleapis.com/token", false, $context);
+    $decoded = json_decode((string)$response, true);
+    if (!is_array($decoded) || empty($decoded["access_token"])) {
+        return ["ok" => false, "error" => "Failed to obtain Google access token", "details" => $decoded];
+    }
+    return ["ok" => true, "token" => (string)$decoded["access_token"]];
+}
+
+function search_console_inspect(string $url): array
+{
+    $siteUrl = (string)(getenv("LKC_GSC_SITE_URL") ?: canonical_site_url() . "/");
+    $tokenResult = google_service_access_token(["https://www.googleapis.com/auth/webmasters.readonly"]);
+    if (!$tokenResult["ok"]) return ["ok" => false, "error" => $tokenResult["error"]];
+    $result = http_json(
+        "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect",
+        ["inspectionUrl" => $url, "siteUrl" => $siteUrl],
+        ["Authorization: Bearer " . $tokenResult["token"]]
+    );
+    if ($result["status"] < 200 || $result["status"] >= 300 || !is_array($result["json"])) {
+        return ["ok" => false, "error" => "Search Console inspection failed", "details" => $result["json"] ?: $result["body"], "statusCode" => $result["status"]];
+    }
+    $inspection = $result["json"]["inspectionResult"]["indexStatusResult"] ?? [];
+    return [
+        "ok" => true,
+        "statusCode" => $result["status"],
+        "summary" => [
+            "verdict" => $inspection["verdict"] ?? null,
+            "coverageState" => $inspection["coverageState"] ?? null,
+            "indexingState" => $inspection["indexingState"] ?? null,
+            "lastCrawlTime" => $inspection["lastCrawlTime"] ?? null,
+            "googleCanonical" => $inspection["googleCanonical"] ?? null,
+            "userCanonical" => $inspection["userCanonical"] ?? null,
+            "referringUrls" => $inspection["referringUrls"] ?? [],
+        ],
+    ];
+}
+
+function submit_indexnow(array $urls): array
+{
+    $key = (string)(getenv("LKC_INDEXNOW_KEY") ?: "");
+    if ($key === "") return ["ok" => false, "error" => "IndexNow key is not configured"];
+    $site = canonical_site_url();
+    $host = canonical_host();
+    $keyLocation = rtrim($site, "/") . "/" . rawurlencode($key) . ".txt";
+    $payload = [
+        "host" => $host,
+        "key" => $key,
+        "keyLocation" => $keyLocation,
+        "urlList" => array_values($urls),
+    ];
+    $result = http_json("https://api.indexnow.org/indexnow", $payload);
+    $keyCheck = http_head($keyLocation);
+    return [
+        "ok" => $result["status"] >= 200 && $result["status"] < 300,
+        "statusCode" => $result["status"],
+        "summary" => [
+            "keyLocation" => $keyLocation,
+            "keyFileStatus" => $keyCheck["status"],
+            "body" => $result["body"],
+        ],
+    ];
+}
+
+function submit_google_indexing_api(string $url, string $pageType): array
+{
+    if (!in_array($pageType, ["job_posting", "livestream"], true)) {
+        return ["ok" => false, "error" => "Google Indexing API is only allowed for job posting or livestream content"];
+    }
+    if (!env_bool("LKC_ENABLE_GOOGLE_INDEXING_API", false)) {
+        return ["ok" => false, "error" => "Google Indexing API is disabled by configuration"];
+    }
+    $tokenResult = google_service_access_token(["https://www.googleapis.com/auth/indexing"]);
+    if (!$tokenResult["ok"]) return ["ok" => false, "error" => $tokenResult["error"]];
+    $result = http_json(
+        "https://indexing.googleapis.com/v3/urlNotifications:publish",
+        [
+            "url" => $url,
+            "type" => "URL_UPDATED",
+        ],
+        ["Authorization: Bearer " . $tokenResult["token"]]
+    );
+    return [
+        "ok" => $result["status"] >= 200 && $result["status"] < 300,
+        "statusCode" => $result["status"],
+        "summary" => $result["json"] ?: $result["body"],
+    ];
+}
+
+function maybe_ping_sitemap(string $sitemapUrl): array
+{
+    $targets = [];
+    if (env_bool("LKC_ENABLE_BING_SITEMAP_PING", true)) {
+        $targets["bing"] = "https://www.bing.com/ping?sitemap=" . rawurlencode($sitemapUrl);
+    }
+    if (env_bool("LKC_ENABLE_GOOGLE_SITEMAP_PING", false)) {
+        // Google no longer provides a supported general sitemap ping endpoint for normal indexing workflows.
+        $targets["google"] = "https://www.google.com/ping?sitemap=" . rawurlencode($sitemapUrl);
+    }
+    $results = [];
+    foreach ($targets as $name => $target) {
+        $head = http_head($target);
+        $results[$name] = ["statusCode" => $head["status"], "target" => $target];
+    }
+    return ["ok" => true, "summary" => $results];
+}
+
+function seo_action_result(string $actionType, string $status, array $summary, string $url, string $path, string $pageType, string $initiatedBy): array
+{
+    $entry = [
+        "id" => sha1($actionType . "|" . $url . "|" . microtime(true)),
+        "url" => $url,
+        "normalized_path" => $path,
+        "page_type" => $pageType,
+        "action_type" => $actionType,
+        "status" => $status,
+        "response_summary" => $summary,
+        "created_at" => current_iso(),
+        "initiated_by" => $initiatedBy,
+    ];
+    append_seo_log($entry);
+    return $entry;
+}
+
+function handle_seo_request(): void
+{
+    $input = request_json();
+    $action = (string)($input["action"] ?? "");
+    $pageType = (string)($input["pageType"] ?? "normal");
+    $initiatedBy = "admin_key";
+    $normalize = normalize_site_url((string)($input["url"] ?? ""));
+    if (!$normalize["ok"]) {
+        json_response(["success" => false, "error" => $normalize["error"]], 400);
+    }
+    $url = (string)$normalize["url"];
+    $path = (string)$normalize["path"];
+    $rateKey = sha1(($path ?: "/") . "|" . ($_SERVER["REMOTE_ADDR"] ?? "unknown"));
+    enforce_rate_limit($rateKey);
+
+    $runSingle = static function (string $singleAction) use ($url, $path, $pageType, $initiatedBy): array {
+        switch ($singleAction) {
+            case "revalidate":
+                return seo_action_result(
+                    "revalidate",
+                    "warning",
+                    [
+                        "message" => "Static Hostinger deployment does not support Next.js/Vercel cache revalidation. Use this workflow with sitemap refresh, internal links, and inspection instead.",
+                    ],
+                    $url,
+                    $path,
+                    $pageType,
+                    $initiatedBy
+                );
+            case "sitemap_ping":
+                $result = maybe_ping_sitemap(canonical_site_url() . "/sitemap.xml");
+                return seo_action_result("sitemap_ping", $result["ok"] ? "success" : "error", $result["summary"] ?? ["error" => $result["error"] ?? "Ping failed"], $url, $path, $pageType, $initiatedBy);
+            case "indexnow":
+                $result = submit_indexnow([$url]);
+                return seo_action_result("indexnow", $result["ok"] ? "success" : "error", $result["summary"] ?? ["error" => $result["error"] ?? "IndexNow failed"], $url, $path, $pageType, $initiatedBy);
+            case "inspect":
+                $result = search_console_inspect($url);
+                return seo_action_result("inspect", $result["ok"] ? "success" : "error", $result["summary"] ?? ["error" => $result["error"] ?? "Inspection failed", "details" => $result["details"] ?? null], $url, $path, $pageType, $initiatedBy);
+            case "google_indexing_api":
+                $result = submit_google_indexing_api($url, $pageType);
+                return seo_action_result("google_indexing_api", $result["ok"] ? "success" : "warning", $result["summary"] ?? ["error" => $result["error"] ?? "Submission failed"], $url, $path, $pageType, $initiatedBy);
+            case "full_workflow":
+                $steps = [];
+                $steps[] = $runSingle("revalidate");
+                $steps[] = $runSingle("sitemap_ping");
+                $steps[] = $runSingle("indexnow");
+                $steps[] = $runSingle("inspect");
+                if (in_array($pageType, ["job_posting", "livestream"], true)) {
+                    $steps[] = $runSingle("google_indexing_api");
+                }
+                return seo_action_result(
+                    "full_workflow",
+                    "success",
+                    [
+                        "steps" => $steps,
+                        "note" => "Google does not support true instant indexing for normal pages. This workflow only uses legitimate discovery and inspection methods.",
+                    ],
+                    $url,
+                    $path,
+                    $pageType,
+                    $initiatedBy
+                );
+            default:
+                return seo_action_result("unknown", "error", ["error" => "Unsupported action"], $url, $path, $pageType, $initiatedBy);
+        }
+    };
+
+    if ($_SERVER["REQUEST_METHOD"] === "GET") {
+        $logs = load_seo_logs();
+        json_response([
+            "success" => true,
+            "canonicalSiteUrl" => canonical_site_url(),
+            "logs" => array_slice($logs, 0, 50),
+            "capabilities" => [
+                "revalidate" => false,
+                "indexNow" => getenv("LKC_INDEXNOW_KEY") ? true : false,
+                "searchConsoleInspection" => getenv("LKC_GOOGLE_SERVICE_ACCOUNT_EMAIL") && getenv("LKC_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY") ? true : false,
+                "googleIndexingApi" => env_bool("LKC_ENABLE_GOOGLE_INDEXING_API", false),
+            ],
+        ]);
+    }
+
+    if ($action === "") {
+        json_response(["success" => false, "error" => "Missing seo action"], 400);
+    }
+    $result = $runSingle($action);
+    json_response(["success" => true, "result" => $result]);
 }
 
 function iso_from_mtime(string $path): string
@@ -361,6 +791,10 @@ $createSql = "CREATE TABLE IF NOT EXISTS lkc_site_data (
 )";
 if (!$mysqli->query($createSql)) {
     json_response(["success" => false, "error" => "Failed to prepare DB table"], 500);
+}
+
+if (isset($_GET["seo"])) {
+    handle_seo_request();
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_GET["repair"])) {

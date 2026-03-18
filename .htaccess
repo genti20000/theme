@@ -21,7 +21,7 @@ RewriteRule ^corporate-karaoke-soho/?$ /events [L,R=301,NC]
 RewriteRule ^wp-content/uploads/2024/05/song_catalog_over-60K\.pdf$ /songs [L,R=301,NC]
 
 # Flag admin for noindex headers
-RewriteRule ^admin/?$ - [E=IS_ADMIN:1]
+RewriteRule ^admin(/.*)?$ - [E=IS_ADMIN:1]
 
 # Serve existing files/directories normally
 RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -29,7 +29,7 @@ RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 # Only known SPA routes should resolve to index.html
-RewriteRule ^(about|admin|birthday-karaoke-soho|booking-policy|careers|contact|drinks|events|faqs|food|gallery|guides(/[^/]+)?|hen-do-karaoke-soho|instagram|privacy|songs|terms)/?$ /index.html [L]
+RewriteRule ^(about|admin(/seo)?|birthday-karaoke-soho|booking-policy|careers|contact|drinks|events|faqs|food|gallery|guides(/[^/]+)?|hen-do-karaoke-soho|instagram|privacy|songs|terms)/?$ /index.html [L]
 RewriteRule ^$ /index.html [L]
 
 # Everything else is a real 404

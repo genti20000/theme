@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { HomeSectionType, PageGalleryKey, useData } from '../context/DataContext';
 import { NAV_LABELS, ROUTES } from '../lib/nav';
 import { MediaRecord, getMediaKey, getMediaUrl } from '../lib/media';
 import MediaLibraryModal from './MediaLibraryModal';
+import SeoIndexingPanel from './SeoIndexingPanel';
 
 const TABS = [
   'Dashboard',
@@ -72,6 +74,7 @@ const Card: React.FC<{ title: string; children: React.ReactNode; className?: str
 );
 
 const AdminDashboard: React.FC = () => {
+  const location = useLocation();
   const [tab, setTab] = useState<string>('Homepage');
   const [syncStatus, setSyncStatus] = useState<'Idle' | 'Saving' | 'Error'>('Idle');
   const [syncError, setSyncError] = useState('');
@@ -210,6 +213,10 @@ const AdminDashboard: React.FC = () => {
         return [];
     }
   }, [tab, headerData.logoUrl, headerData.faviconUrl, heroData.backgroundImageUrl, heroData.slides, heroData.mobileSlides, highlightsData.mainImageUrl, highlightsData.mobileMainImageUrl, highlightsData.sideImageUrl, featuresData.experience.image, featuresData.experience.mobileImage, featuresData.grid, vibeData.videoUrl, vibeData.mobileVideoUrl, vibeData.image1, vibeData.image2, vibeData.bigImage, vibeData.mobileBigImage, testimonialsData.items, drinksData.headerImageUrl, eventsData.hero, eventsData.sections, blogData.posts, instagramHighlightsData.highlights, instagramHighlightsData.posts, activeGallery]);
+
+  useEffect(() => {
+    if (location.pathname === '/admin/seo') setTab('SEO');
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!selectedGalleryId && activeGallery?.id) setSelectedGalleryId(activeGallery.id);
@@ -865,6 +872,8 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-sm text-emerald-400 mt-1">https://www.londonkaraoke.club</p>
                 <p className="text-sm text-zinc-300 mt-3 leading-relaxed">{headerData.siteDescription || 'No meta description yet.'}</p>
               </Card>
+
+              <SeoIndexingPanel />
             </div>
           )}
 
